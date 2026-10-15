@@ -1,0 +1,42 @@
+# ---- 依賴 ----
+node_modules/
+
+# ---- macOS 垃圾檔 ----
+.DS_Store
+**/.DS_Store
+
+# ---- 微信開發者工具 ----
+# project.private.config.json 含個人本地設定（libVersion / 編譯條件），
+# 依微信官方建議不納入版本控制。
+project.private.config.json
+
+# ---- 日誌與暫存 ----
+*.log
+npm-debug.log*
+yarn-error.log*
+.idea/
+.vscode/
+*.swp
+*.tmp
+
+# ---- ESLint 快取 ----
+.eslintcache
+
+# ---- 測試與覆蓋率（目前無，預留）----
+coverage/
+.nyc_output/
+
+# ---- 密鑰與環境變數（重要：禁止入庫）----
+.env
+.env.*
+!.env.example
+*.pem
+*.p12
+apiclient_key.pem
+apiclient_cert.pem
+
+# ---- 注意 ----
+# miniprogram_npm/ 目前「刻意納入版本控制」。
+# 原因：本專案 node_modules 不存在，miniprogram_npm 是唯一可執行的
+# TDesign 執行期，為了讓 baseline 成為可還原的完整狀態而保留。
+# 若日後改為由 npm install + 「建構 npm」產生，可移到此處忽略。
