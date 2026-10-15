@@ -1,0 +1,7 @@
+{
+  "name": "@repair/application",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Use Cases：編排 domain 與 ports。所有依賴以建構子注入，不得在 Use Case 內 new adapter。",
+  "main": "index.js"
+}

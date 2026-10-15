@@ -1,0 +1,7 @@
+{
+  "name": "@repair/shared-kernel",
+  "version": "0.0.0",
+  "private": true,
+  "description": "零依賴的核心值物件：Money、Result、錯誤型別。所有層皆可依賴。",
+  "main": "index.js"
+}

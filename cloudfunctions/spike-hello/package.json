@@ -1,0 +1,11 @@
+{
+  "name": "spike-hello",
+  "version": "1.0.0",
+  "private": true,
+  "description": "P0 驗證用雲函數：確認 packages/* 能同步進雲函數並在雲端載入。驗證通過後可刪除。",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  },
+  "repairSharedHash": "af3481f358b327331f351e0ce0c9d7ef8f0a96a38444034e4dedb4cc5eac9ec1"
+}

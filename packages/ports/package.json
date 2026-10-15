@@ -1,0 +1,7 @@
+{
+  "name": "@repair/ports",
+  "version": "0.0.0",
+  "private": true,
+  "description": "介面定義（Java 所謂 interface）。只描述契約，零實作。可依賴 @repair/shared-kernel 與 @repair/domain。",
+  "main": "index.js"
+}

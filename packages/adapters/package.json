@@ -1,0 +1,7 @@
+{
+  "name": "@repair/adapters",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Ports 的具體實作。唯一允許接觸外部世界（雲開發、微信支付、HTTP）的層。只做翻譯，零業務邏輯。",
+  "main": "index.js"
+}

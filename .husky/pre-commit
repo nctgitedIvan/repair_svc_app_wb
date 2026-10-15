@@ -1,0 +1,19 @@
+#!/bin/sh
+# 提交前守衛（由 husky 掛載）。
+#
+# 兩個守衛的理由：
+#   check:layering —— 架構規則一旦破口，後面每個 commit 都會踩上去，越晚修越貴
+#   sync:check     —— 改了 packages/ 卻忘記同步，會讓雲函數用舊版 domain 規則處理金流
+#
+# 注意：husky 需要 `npm install`（觸發 prepare script）後才會生效。
+
+echo "→ 檢查依賴方向..."
+node scripts/check-layering.js || exit 1
+
+echo "→ 檢查共享碼同步狀態..."
+node scripts/sync-shared.js --check || exit 1
+
+echo "→ 執行單元測試..."
+node --test tests/ || exit 1
+
+echo "✓ 提交前檢查通過"

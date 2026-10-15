@@ -1,0 +1,7 @@
+{
+  "name": "@repair/domain",
+  "version": "0.0.0",
+  "private": true,
+  "description": "領域層：實體、值物件、狀態機、領域策略。零外部依賴（僅允許 @repair/shared-kernel）。",
+  "main": "index.js"
+}

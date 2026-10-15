@@ -35,6 +35,12 @@ coverage/
 apiclient_key.pem
 apiclient_cert.pem
 
+# ---- 共享碼同步產物 ----
+# packages/* 是唯一真實來源（入版控）；
+# cloudfunctions/*/node_modules/@repair/* 由 scripts/sync-shared.js 產生，不入版控。
+# 「是否同步」由各雲函數 package.json 的 repairSharedHash 偵測（該欄位入版控）。
+cloudfunctions/*/node_modules/
+
 # ---- 注意 ----
 # miniprogram_npm/ 目前「刻意納入版本控制」。
 # 原因：本專案 node_modules 不存在，miniprogram_npm 是唯一可執行的
