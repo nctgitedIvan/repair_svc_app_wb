@@ -1,450 +1,308 @@
 import Toast from 'tdesign-miniprogram/toast/index';
-import { fetchGood } from '../../../services/good/fetchGood';
-import { fetchActivityList } from '../../../services/activity/fetchActivityList';
-import {
-  getGoodsDetailsCommentList,
-  getGoodsDetailsCommentsCount,
-} from '../../../services/good/fetchGoodsDetailsComments';
+import { fetchProductDetail, fetchServiceDetail } from '../../../services/api/index';
 
-import { cdnBase } from '../../../config/index';
+const detailView = require('../../../utils/detailView.js');
+const favorite = require('../../../utils/favorite.js');
+const cartRules = require('../../../utils/cart.js');
+const { CartCode } = require('../../../utils/cartCodes.js');
+const { ItemType } = require('../../../utils/catalogView.js');
 
-const imgPrefix = `${cdnBase}/`;
+/**
+ * 詳情頁（**商品與服務共用**）。
+ *
+ * ## T6a 做了什麼（2026-10-17）
+ *
+ * 這一頁原本是完整的電商詳情頁，資料來自舊 mock（`model/good.js`）——
+ * 而那個 mock 對 `prd-*` **查不到東西**，導致畫面顯示 ¥0.00、無圖、無規格
+ * （見 `docs/P7a-2a-T3.6.1-診斷報告.md` §1.1）。
+ *
+ * T6a 把資料層換成新的 API，並移除沒有資料來源的電商區塊
+ * （商品評價、領劵／優惠券、長圖詳情）。同時：
+ * - **左下角**由「首頁／購物車」改為「**客服／收藏**」
+ * - **右下角**移除「立即購買」（商品不得有立即下單，P7a2a-C2）
+ * - 商品可加入購物車（無規格直接加、有規格開彈窗）
+ * - 服務：顯示時長與技能標籤、**不進購物車**（§3.7.2）
+ *
+ * ## 資料流
+ *
+ * ```
+ * fetchProductDetail / fetchServiceDetail（services/api）
+ *        ↓
+ * utils/detailView.js（純函式：view model ＋ 規格彈窗 model）
+ *        ↓
+ * 本頁（只負責事件、Toast、Storage 寫入）
+ * ```
+ *
+ * ## ⚠️ 參數契約
+ *
+ * | 參數 | 用途 |
+ * |---|---|
+ * | `productId` | 商品（**正式**） |
+ * | `serviceId` | 服務（T6a 新增） |
+ * | `spuId` | **過渡期相容**：T4／T3.6 目前同時帶它，值與 `productId` 相同 |
+ *
+ * 「立即預約」與「加購零件」屬 **P7a-2b**（依賴 T7 的結算頁），本頁先不提供。
+ */
 
-const recLeftImg = `${imgPrefix}common/rec-left.png`;
-const recRightImg = `${imgPrefix}common/rec-right.png`;
-const obj2Params = (obj = {}, encode = false) => {
-  const result = [];
-  Object.keys(obj).forEach((key) => result.push(`${key}=${encode ? encodeURIComponent(obj[key]) : obj[key]}`));
-
-  return result.join('&');
-};
+/** 左下角入口。⚠️ 傳 action key，不是 url（見 buy-bar 的說明） */
+function buildJumpArray({ isFavorite, canFavorite }) {
+  const list = [{ key: 'cs', title: '客服', iconName: 'service' }];
+  if (canFavorite) {
+    list.push({ key: 'favorite', title: isFavorite ? '已收藏' : '收藏', iconName: 'star' });
+  }
+  return list;
+}
 
 Page({
+  /** 原始項目（加入購物車與收藏時要 name／priceCents／thumb） */
+  item: null,
+  /** 收藏資料（本機 Storage） */
+  favoriteStore: null,
+  /** 規格彈窗回報的 { [維度id]: 選中的規格值 } */
+  selectedSku: {},
+
   data: {
-    commentsList: [],
-    commentsStatistics: {
-      badCount: 0,
-      commentCount: 0,
-      goodCount: 0,
-      goodRate: 0,
-      hasImageCount: 0,
-      middleCount: 0,
-    },
-    isShowPromotionPop: false,
-    activityList: [],
-    recLeftImg,
-    recRightImg,
-    details: {},
-    goodsTabArray: [
-      {
-        name: '商品',
-        value: '', // 空字符串代表置顶
-      },
-      {
-        name: '详情',
-        value: 'goods-page',
-      },
-    ],
-    storeLogo: `${imgPrefix}common/store-logo.png`,
-    storeName: '云mall标准版旗舰店',
-    jumpArray: [
-      {
-        title: '首页',
-        url: '/pages/home/home',
-        iconName: 'home',
-      },
-      {
-        title: '购物车',
-        url: '/pages/cart/index',
-        iconName: 'cart',
-        showCartNum: true,
-      },
-    ],
-    /** 商品查不到（見 `getDetail()` 的說明）—— 顯示明確訊息而不是停在空白初始狀態 */
+    ready: false,
+    /** 查不到商品（見 T3.6.1：不再讓整頁停在初始空白狀態） */
     loadFailed: false,
-    isStock: true,
-    cartNum: 0,
+    /** `utils/detailView.buildDetailView()` 的結果 */
+    detail: {},
+    isFavorite: false,
+    jumpArray: [],
+    /** 1 = 顯示「加入購物車」（商品且上架有庫存）；0 = 不顯示（服務／售完／下架） */
+    buttonType: 0,
     soldout: false,
-    buttonType: 1,
+    isStock: true,
+    // ── 規格彈窗 ──
+    isSpecsPopupShow: false,
+    specList: [],
+    skuList: [],
     buyNum: 1,
     selectedAttrStr: '',
-    skuArray: [],
-    primaryImage: '',
-    specImg: '',
-    isSpuSelectPopupShow: false,
-    isAllSelectedSku: false,
-    buyType: 0,
-    outOperateStatus: false, // 是否外层加入购物车
-    operateType: 0,
-    selectSkuSellsPrice: 0,
-    maxLinePrice: 0,
-    minSalePrice: 0,
-    maxSalePrice: 0,
-    list: [],
-    spuId: '',
-    navigation: { type: 'fraction' },
-    current: 0,
-    autoplay: true,
-    duration: 500,
-    interval: 5000,
-    soldNum: 0, // 已售数量
   },
 
-  /** 「商品查不到」畫面按「返回」（T3.6.1） */
+  onLoad(query) {
+    const serviceId = query.serviceId;
+    const productId = query.productId || query.spuId;
+    this.favoriteStore = favorite.loadFavorites();
+
+    if (serviceId) {
+      this.loadService(serviceId);
+    } else if (productId) {
+      this.loadProduct(productId);
+    } else {
+      // 連 id 都沒有（例如舊的 order 頁帶 skuId）→ 明確告知
+      this.setData({ ready: true, loadFailed: true });
+    }
+  },
+
+  /** 商品 */
+  async loadProduct(productId) {
+    try {
+      const product = await fetchProductDetail(productId);
+      this.item = { ...product, itemType: ItemType.PRODUCT };
+      this.applyDetail(detailView.buildDetailView({ item: product, itemType: ItemType.PRODUCT }));
+    } catch (err) {
+      this.onLoadFailed(err);
+    }
+  },
+
+  /** 服務（顯示層；預約與加購零件屬 P7a-2b） */
+  async loadService(serviceId) {
+    try {
+      const { service } = await fetchServiceDetail(serviceId);
+      this.item = { ...service, itemType: ItemType.SERVICE };
+      this.applyDetail(detailView.buildDetailView({ item: service, itemType: ItemType.SERVICE }));
+    } catch (err) {
+      this.onLoadFailed(err);
+    }
+  },
+
+  onLoadFailed(err) {
+    console.warn('[details] 查不到項目資料', err);
+    this.item = null;
+    this.setData({ ready: true, loadFailed: true });
+  },
+
+  /** 把 view model 套進畫面 */
+  applyDetail(detail) {
+    const isFavorite = detail ? favorite.isFavorite(this.favoriteStore, detail.id) : false;
+    this.setData({
+      ready: true,
+      loadFailed: !detail,
+      detail: detail || {},
+      isFavorite,
+      // 收藏只服務「商品」—— `favorites` 集合的鍵是 product_id（docs/01 §7.2 第 9 點）
+      jumpArray: buildJumpArray({ isFavorite, canFavorite: detail.itemType === ItemType.PRODUCT }),
+      buttonType: detail.showBuyButtons ? 1 : 0,
+      soldout: detail.isDelisted,
+      isStock: !detail.isSoldOut && !detail.isDelisted,
+    });
+  },
+
+  /** 「商品查不到」畫面按「返回」 */
   onLoadFailedBack() {
     wx.navigateBack({
-      // 直接開這個頁（沒有上一頁）時退回分類頁，避免按了沒反應
       fail: () => wx.switchTab({ url: '/pages/category/index' }),
     });
   },
 
-  handlePopupHide() {
-    this.setData({
-      isSpuSelectPopupShow: false,
-    });
-  },
+  // ── 左下角入口（客服／收藏） ──
 
-  showSkuSelectPopup(type) {
-    this.setData({
-      buyType: type || 0,
-      outOperateStatus: type >= 1,
-      isSpuSelectPopupShow: true,
-    });
-  },
-
-  buyItNow() {
-    this.showSkuSelectPopup(1);
-  },
-
-  toAddCart() {
-    this.showSkuSelectPopup(2);
-  },
-
-  toNav(e) {
-    const { url } = e.detail;
-    wx.switchTab({
-      url: url,
-    });
-  },
-
-  showCurImg(e) {
-    const { index } = e.detail;
-    const { images } = this.data.details;
-    wx.previewImage({
-      current: images[index],
-      urls: images, // 需要预览的图片http链接列表
-    });
-  },
-
-  onPageScroll({ scrollTop }) {
-    const goodsTab = this.selectComponent('#goodsTab');
-    goodsTab && goodsTab.onScroll(scrollTop);
-  },
-
-  chooseSpecItem(e) {
-    const { specList } = this.data.details;
-    const { selectedSku, isAllSelectedSku } = e.detail;
-    if (!isAllSelectedSku) {
-      this.setData({
-        selectSkuSellsPrice: 0,
-      });
-    }
-    this.setData({
-      isAllSelectedSku,
-    });
-    this.getSkuItem(specList, selectedSku);
-  },
-
-  getSkuItem(specList, selectedSku) {
-    const { skuArray, primaryImage } = this.data;
-    const selectedSkuValues = this.getSelectedSkuValues(specList, selectedSku);
-    let selectedAttrStr = ` 件  `;
-    selectedSkuValues.forEach((item) => {
-      selectedAttrStr += `，${item.specValue}  `;
-    });
-    // eslint-disable-next-line array-callback-return
-    const skuItem = skuArray.filter((item) => {
-      let status = true;
-      (item.specInfo || []).forEach((subItem) => {
-        if (!selectedSku[subItem.specId] || selectedSku[subItem.specId] !== subItem.specValueId) {
-          status = false;
-        }
-      });
-      if (status) return item;
-    });
-    this.selectSpecsName(selectedSkuValues.length > 0 ? selectedAttrStr : '');
-    if (skuItem) {
-      this.setData({
-        selectItem: skuItem,
-        selectSkuSellsPrice: skuItem.price || 0,
-      });
-    } else {
-      this.setData({
-        selectItem: null,
-        selectSkuSellsPrice: 0,
-      });
-    }
-    this.setData({
-      specImg: skuItem && skuItem.skuImage ? skuItem.skuImage : primaryImage,
-    });
-  },
-
-  // 获取已选择的sku名称
-  getSelectedSkuValues(skuTree, selectedSku) {
-    const normalizedTree = this.normalizeSkuTree(skuTree);
-    return Object.keys(selectedSku).reduce((selectedValues, skuKeyStr) => {
-      const skuValues = normalizedTree[skuKeyStr];
-      const skuValueId = selectedSku[skuKeyStr];
-      if (skuValueId !== '') {
-        const skuValue = skuValues.filter((value) => {
-          return value.specValueId === skuValueId;
-        })[0];
-        skuValue && selectedValues.push(skuValue);
-      }
-      return selectedValues;
-    }, []);
-  },
-
-  normalizeSkuTree(skuTree) {
-    const normalizedTree = {};
-    skuTree.forEach((treeItem) => {
-      normalizedTree[treeItem.specId] = treeItem.specValueList;
-    });
-    return normalizedTree;
-  },
-
-  selectSpecsName(selectSpecsName) {
-    if (selectSpecsName) {
-      this.setData({
-        selectedAttrStr: selectSpecsName,
-      });
-    } else {
-      this.setData({
-        selectedAttrStr: '',
-      });
-    }
-  },
-
-  addCart() {
-    const { isAllSelectedSku } = this.data;
-    Toast({
-      context: this,
-      selector: '#t-toast',
-      message: isAllSelectedSku ? '点击加入购物车' : '请选择规格',
-      icon: '',
-      duration: 1000,
-    });
-  },
-
-  gotoBuy(type) {
-    const { isAllSelectedSku, buyNum } = this.data;
-    if (!isAllSelectedSku) {
-      Toast({
-        context: this,
-        selector: '#t-toast',
-        message: '请选择规格',
-        icon: '',
-        duration: 1000,
-      });
+  onBuyBarNav(e) {
+    const { key } = e.detail || {};
+    if (key === 'favorite') {
+      this.onToggleFavorite();
       return;
     }
-    this.handlePopupHide();
-    const query = {
-      quantity: buyNum,
-      storeId: '1',
-      spuId: this.data.spuId,
-      goodsName: this.data.details.title,
-      skuId: type === 1 ? this.data.skuList[0].skuId : this.data.selectItem.skuId,
-      available: this.data.details.available,
-      price: this.data.details.minSalePrice,
-      specInfo: this.data.details.specList?.map((item) => ({
-        specTitle: item.title,
-        specValue: item.specValueList[0].specValue,
-      })),
-      primaryImage: this.data.details.primaryImage,
-      spuId: this.data.details.spuId,
-      thumb: this.data.details.primaryImage,
-      title: this.data.details.title,
-    };
-    let urlQueryStr = obj2Params({
-      goodsRequestList: JSON.stringify([query]),
-    });
-    urlQueryStr = urlQueryStr ? `?${urlQueryStr}` : '';
-    const path = `/pages/order/order-confirm/index${urlQueryStr}`;
-    wx.navigateTo({
-      url: path,
-    });
-  },
-
-  specsConfirm() {
-    const { buyType } = this.data;
-    if (buyType === 1) {
-      this.gotoBuy();
-    } else {
-      this.addCart();
+    if (key === 'cs') {
+      // ⚠️ T6b 才會實作（會開彈窗並寫入 inquiries）
+      Toast({ context: this, selector: '#t-toast', message: '客服詢問功能建置中', icon: '' });
+      return;
     }
-    // this.handlePopupHide();
+    // 保留支援舊的 url 型入口（其他頁面日後若複用這個元件）
+    const target = { home: '/pages/home/home', cart: '/pages/cart/index' }[key];
+    if (target) wx.switchTab({ url: target });
   },
 
-  changeNum(e) {
-    this.setData({
-      buyNum: e.detail.buyNum,
+  onToggleFavorite() {
+    const { detail } = this.data;
+    if (!detail.id) return;
+
+    const result = favorite.toggleFavorite(this.favoriteStore || favorite.loadFavorites(), {
+      productId: detail.id,
+      item: this.item,
+      now: Date.now(),
     });
-  },
 
-  closePromotionPopup() {
-    this.setData({
-      isShowPromotionPop: false,
-    });
-  },
-
-  promotionChange(e) {
-    const { index } = e.detail;
-    wx.navigateTo({
-      url: `/pages/promotion/promotion-detail/index?promotion_id=${index}`,
-    });
-  },
-
-  showPromotionPopup() {
-    this.setData({
-      isShowPromotionPop: true,
-    });
-  },
-
-  getDetail(spuId) {
-    Promise.all([fetchGood(spuId), fetchActivityList()]).then((res) => {
-      const [details, activityList] = res;
-
-      /**
-       * ⚠️ **T3.6.1 修正：這裡原本直接 `skuList.forEach`，沒有防護。**
-       *
-       * `fetchGood` 的 mock 用 `allGoods[id % allGoods.length]` 取值
-       * （`model/good.js`），遇到**非數字 id**（例如分類頁帶過來的 `prd-1`）
-       * 會得到 `NaN` 索引 → `undefined` → 回傳的物件**沒有 `skuList`**
-       * → `skuList.forEach` 拋 TypeError → 後面的 `setData` 全部沒跑
-       * → 畫面停在初始值（`minSalePrice: 0` → 顯示 **¥0.00**、無圖、無規格）
-       * 而**沒有任何錯誤訊息**。
-       *
-       * 現在改成明確告知。真正的修復是 **T6a**（詳情頁接上新 API），
-       * 這裡只保證「查不到資料時不再讓整頁靜默失敗」。
-       */
-      if (!details || !Array.isArray(details.skuList)) {
-        console.warn('[details] 查不到商品資料，spuId =', spuId);
-        this.setData({ loadFailed: true });
-        return;
-      }
-
-      const skuArray = [];
-      const { skuList, primaryImage, isPutOnSale, minSalePrice, maxSalePrice, maxLinePrice, soldNum } = details;
-      skuList.forEach((item) => {
-        skuArray.push({
-          skuId: item.skuId,
-          quantity: item.stockInfo ? item.stockInfo.stockQuantity : 0,
-          specInfo: item.specInfo,
-        });
-      });
-      const promotionArray = [];
-      activityList.forEach((item) => {
-        promotionArray.push({
-          tag: item.promotionSubCode === 'MYJ' ? '满减' : '满折',
-          label: '满100元减99.9元',
-        });
-      });
-      this.setData({
-        details,
-        activityList,
-        isStock: details.spuStockQuantity > 0,
-        maxSalePrice: maxSalePrice ? parseInt(maxSalePrice) : 0,
-        maxLinePrice: maxLinePrice ? parseInt(maxLinePrice) : 0,
-        minSalePrice: minSalePrice ? parseInt(minSalePrice) : 0,
-        list: promotionArray,
-        skuArray: skuArray,
-        primaryImage,
-        soldout: isPutOnSale === 0,
-        soldNum,
-      });
-    });
-  },
-
-  async getCommentsList() {
-    try {
-      const code = 'Success';
-      const data = await getGoodsDetailsCommentList();
-      const { homePageComments } = data;
-      if (code.toUpperCase() === 'SUCCESS') {
-        const nextState = {
-          commentsList: homePageComments.map((item) => {
-            return {
-              goodsSpu: item.spuId,
-              userName: item.userName || '',
-              commentScore: item.commentScore,
-              commentContent: item.commentContent || '用户未填写评价',
-              userHeadUrl: item.isAnonymity ? this.anonymityAvatar : item.userHeadUrl || this.anonymityAvatar,
-            };
-          }),
-        };
-        this.setData(nextState);
-      }
-    } catch (error) {
-      console.error('comments error:', error);
+    if (!result.ok) {
+      const message =
+        result.code === favorite.FavoriteCode.LIMIT_EXCEEDED ? '收藏已達上限' : '收藏失敗，請稍後再試';
+      Toast({ context: this, selector: '#t-toast', message, icon: '' });
+      return;
     }
+
+    this.favoriteStore = result.store;
+    if (!favorite.saveFavorites(result.store)) {
+      Toast({ context: this, selector: '#t-toast', message: '儲存失敗，請稍後再試', icon: '' });
+      return;
+    }
+
+    const favorited = result.favorited;
+    this.setData({
+      isFavorite: favorited,
+      jumpArray: buildJumpArray({ isFavorite: favorited, canFavorite: true }),
+    });
+    Toast({ context: this, selector: '#t-toast', message: favorited ? '已加入收藏' : '已取消收藏', icon: '' });
   },
 
+  // ── 加入購物車 ──
+
+  /**
+   * 按「加入購物車」。
+   *
+   * - **無規格** → 直接加入（不必開彈窗問一個只有一個選項的問題）
+   * - **有規格** → 開彈窗選規格
+   *
+   * 這個分流規則住在 `utils/detailView.toSpecPopupModel()`（無規格回 `null`），
+   * 頁面只負責照結果執行。
+   */
+  onAddToCart() {
+    const { detail } = this.data;
+    if (!detail.id || !detail.canAddToCart) return;
+
+    const model = detailView.toSpecPopupModel({ item: this.item, itemType: this.item.itemType });
+    if (!model) {
+      this.commitAddToCart(null, 1);
+      return;
+    }
+
+    this.selectedSku = {};
+    this.setData({
+      isSpecsPopupShow: true,
+      specList: model.specList,
+      skuList: model.skuList,
+      buyNum: 1,
+      selectedAttrStr: '',
+    });
+  },
+
+  /** 彈窗內選了規格 */
+  onSpecChange(e) {
+    const { selectedSku, specList } = e.detail || {};
+    this.selectedSku = selectedSku || {};
+    // 已選規格的顯示文字（彈窗與列表頁共用同一個字串）
+    const names = [];
+    (specList || []).forEach((spec) => {
+      (spec.specValueList || []).forEach((value) => {
+        if (value.isSelected) names.push(value.specValue);
+      });
+    });
+    this.setData({ selectedAttrStr: names.join('、') });
+  },
+
+  onBuyNumChange(e) {
+    this.setData({ buyNum: e.detail.buyNum });
+  },
+
+  /** 彈窗內按「加入購物車」 */
+  onPopupAddCart() {
+    const specId = detailView.selectedSpecIdOf(this.selectedSku);
+    if (this.data.detail.hasSpecs && !specId) {
+      Toast({ context: this, selector: '#t-toast', message: '請先選擇規格', icon: '' });
+      return;
+    }
+    this.commitAddToCart(specId, this.data.buyNum);
+  },
+
+  /**
+   * 實際寫入購物車。
+   *
+   * ⚠️ 規則一律交給 `utils/cart.js`（它也會擋下服務、超上限、數量不合法）——
+   *    本頁不重複實作。
+   */
+  commitAddToCart(specId, quantity) {
+    const { detail } = this.data;
+    const result = cartRules.addItem(
+      cartRules.loadCart(),
+      {
+        itemType: 'product',
+        productId: detail.id,
+        specId: specId || null,
+        quantity,
+        priceCents: detail.priceCents,
+      },
+      Date.now(),
+    );
+
+    if (!result.ok) {
+      const message =
+        result.code === CartCode.LIMIT_EXCEEDED ? '購物車已滿（上限 50 項）' : '加入購物車失敗';
+      Toast({ context: this, selector: '#t-toast', message, icon: '' });
+      return;
+    }
+
+    if (!cartRules.saveCart(result.cart)) {
+      Toast({ context: this, selector: '#t-toast', message: '儲存失敗，請稍後再試', icon: '' });
+      return;
+    }
+
+    this.setData({ isSpecsPopupShow: false });
+    Toast({ context: this, selector: '#t-toast', message: '已加入購物車', icon: '' });
+  },
+
+  onSpecsPopupHide() {
+    this.setData({ isSpecsPopupShow: false });
+  },
+
+  /** 分享（微信原生） */
   onShareAppMessage() {
-    // 自定义的返回信息
-    const { selectedAttrStr } = this.data;
-    let shareSubTitle = '';
-    if (selectedAttrStr.indexOf('件') > -1) {
-      const count = selectedAttrStr.indexOf('件');
-      shareSubTitle = selectedAttrStr.slice(count + 1, selectedAttrStr.length);
-    }
-    const customInfo = {
-      imageUrl: this.data.details.primaryImage,
-      title: this.data.details.title + shareSubTitle,
-      path: `/pages/goods/details/index?spuId=${this.data.spuId}`,
+    const { detail } = this.data;
+    return {
+      title: detail.title || '維修服務平台',
+      path: detail.itemType === ItemType.SERVICE
+        ? `/pages/goods/details/index?serviceId=${detail.id}`
+        : `/pages/goods/details/index?productId=${detail.id}`,
     };
-    return customInfo;
-  },
-
-  /** 获取评价统计 */
-  async getCommentsStatistics() {
-    try {
-      const code = 'Success';
-      const data = await getGoodsDetailsCommentsCount();
-      if (code.toUpperCase() === 'SUCCESS') {
-        const { badCount, commentCount, goodCount, goodRate, hasImageCount, middleCount } = data;
-        const nextState = {
-          commentsStatistics: {
-            badCount: parseInt(`${badCount}`),
-            commentCount: parseInt(`${commentCount}`),
-            goodCount: parseInt(`${goodCount}`),
-            /** 后端返回百分比后数据但没有限制位数 */
-            goodRate: Math.floor(goodRate * 10) / 10,
-            hasImageCount: parseInt(`${hasImageCount}`),
-            middleCount: parseInt(`${middleCount}`),
-          },
-        };
-        this.setData(nextState);
-      }
-    } catch (error) {
-      console.error('comments statiistics error:', error);
-    }
-  },
-
-  /** 跳转到评价列表 */
-  navToCommentsListPage() {
-    wx.navigateTo({
-      url: `/pages/goods/comments/index?spuId=${this.data.spuId}`,
-    });
-  },
-
-  onLoad(query) {
-    const { spuId } = query;
-    this.setData({
-      spuId: spuId,
-    });
-    this.getDetail(spuId);
-    this.getCommentsList(spuId);
-    this.getCommentsStatistics(spuId);
   },
 });

@@ -54,6 +54,61 @@ page {
   justify-content: space-between;
 }
 
+/*
+ * ⚠️ T6a 之後，下列規則已**沒有對應的 WXML 節點**（本檔不再使用）：
+ *   - `.sold-num`（已售數量：新資料模型沒有這個欄位）
+ *   - `.goods-activity*` / `.activity-show*`（領劵與優惠券：A7 已下線）
+ *   - `.comments-*` / `.comment-item-*`（商品評價：沒有新資料源）
+ *   - `.desc-content__img` / `.desc-content__title .img`（長圖詳情：新模型只有文字，
+ *     多圖詳情列為 P2 的新欄位）
+ *
+ * **刻意先不刪**：本檔 379 行，逐條刪除的收益很小，而誤刪的風險不小
+ * （看不到畫面，無法驗證）。留待 **T5 或 P7a-2b 動到這一頁時一併清理**，
+ * 屆時會有實際的畫面可以對照。
+ */
+
+/* 型別標籤（服務／零件） */
+.goods-detail-page .goods-info .goods-number .goods-type {
+  font-size: 24rpx;
+  color: #999999;
+  line-height: 40rpx;
+}
+
+/* 服務的時長／技能標籤；商品的庫存／狀態 */
+.goods-detail-page .goods-info .goods-meta {
+  margin-top: 12rpx;
+}
+.goods-detail-page .goods-info .goods-meta .goods-meta__row {
+  font-size: 24rpx;
+  color: #999999;
+  line-height: 36rpx;
+}
+.goods-detail-page .goods-info .goods-meta .goods-meta__tags {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 8rpx;
+}
+.goods-detail-page .goods-info .goods-meta .goods-meta__tag {
+  font-size: 22rpx;
+  color: #fa4126;
+  border: 1rpx solid #fa4126;
+  border-radius: 16rpx;
+  padding: 0 12rpx;
+  line-height: 30rpx;
+  margin: 0 12rpx 8rpx 0;
+}
+
+/* 詳情介紹的文字（舊版是長圖） */
+.goods-detail-page .desc-content .desc-content__text {
+  padding: 0 40rpx 40rpx;
+  font-size: 28rpx;
+  color: #333333;
+  line-height: 44rpx;
+  white-space: pre-wrap;
+}
+
+/* ⚠️ 以下（`.sold-num` 起）為已無對應節點的舊區塊樣式，見上方說明 */
+
 .goods-detail-page .goods-info .goods-number .sold-num {
   font-size: 24rpx;
   color: #999999;

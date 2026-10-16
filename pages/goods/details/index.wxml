@@ -1,42 +1,38 @@
+<!--
+  詳情頁（商品與服務共用）。
+
+  ⚠️ T6a：資料全部來自 utils/detailView.js 的 view model，本檔不做任何判斷。
+     移除的區塊（沒有新資料源／已下線）：商品評價、領劵與優惠券、長圖詳情、
+     已售數量、「立即購買」。
+-->
 <view class="goods-detail-page">
   <view class="goods-head">
     <t-swiper
-      wx:if="{{details.images.length > 0}}"
+      wx:if="{{detail.images.length > 0}}"
       height="750rpx"
-      current="{{current}}"
-      autoplay="{{autoplay}}"
-      duration="{{duration}}"
-      interval="{{interval}}"
-      navigation="{{navigation}}"
-      list="{{details.images}}"
+      current="{{0}}"
+      autoplay="{{true}}"
+      duration="{{500}}"
+      interval="{{5000}}"
+      list="{{detail.images}}"
     ></t-swiper>
+
     <view class="goods-info">
       <view class="goods-number">
         <view class="goods-price">
           <price
             wr-class="class-goods-price"
             symbol-class="class-goods-symbol"
-            price="{{minSalePrice}}"
+            price="{{detail.priceCents}}"
             type="lighter"
           />
-          <view class="goods-price-up">起</view>
-          <price wr-class="class-goods-del" price="{{maxLinePrice}}" type="delthrough" />
+          <view class="goods-price-up">{{detail.itemType === 'service' ? '起' : ''}}</view>
         </view>
-        <view class="sold-num">已售{{soldNum}}</view>
+        <view class="goods-type">{{detail.itemType === 'service' ? '服務' : '零件'}}</view>
       </view>
-      <view wx:if="{{activityList.length > 0}}" class="goods-activity" bindtap="showPromotionPopup">
-        <view class="tags-container">
-          <view wx:for="{{activityList}}" data-promotionId="{{item.promotionId}}" wx:key="index" wx:if="{{index<4}}">
-            <view class="goods-activity-tag">{{item.tag}}</view>
-          </view>
-        </view>
-        <view class="activity-show">
-          <view class="activity-show-text">领劵</view>
-          <t-icon name="chevron-right" size="42rpx" />
-        </view>
-      </view>
+
       <view class="goods-title">
-        <view class="goods-name">{{details.title}}</view>
+        <view class="goods-name">{{detail.title}}</view>
         <view class="goods-tag">
           <t-button open-type="share" t-class="shareBtn" variant="text">
             <view class="btn-icon">
@@ -46,115 +42,85 @@
           </t-button>
         </view>
       </view>
-      <view class="goods-intro">{{intro}}</view>
-    </view>
-    <view class="spu-select" bindtap="showSkuSelectPopup">
-      <view class="label">已选</view>
-      <view class="content">
-        <view class="{{!selectedAttrStr ? 'tintColor' : ''}}">
-          {{selectedAttrStr ? buyNum : ''}}{{selectedAttrStr || '请选择'}}
+
+      <view class="goods-intro">{{detail.description}}</view>
+
+      <!-- 服務：時長與技能標籤（商品的庫存另外顯示） -->
+      <view class="goods-meta" wx:if="{{detail.itemType === 'service'}}">
+        <view class="goods-meta__row" wx:if="{{detail.durationMinutes}}">
+          服務時長約 {{detail.durationMinutes}} 分鐘
         </view>
+        <view class="goods-meta__tags" wx:if="{{detail.skillTags.length > 0}}">
+          <view class="goods-meta__tag" wx:for="{{detail.skillTags}}" wx:key="index">{{item}}</view>
+        </view>
+      </view>
+      <view class="goods-meta" wx:else>
+        <view class="goods-meta__row" wx:if="{{detail.isDelisted}}">此商品已下架</view>
+        <view class="goods-meta__row" wx:elif="{{detail.isSoldOut}}">此商品已售完</view>
+        <view class="goods-meta__row" wx:else>庫存 {{detail.stock}} 件</view>
+      </view>
+    </view>
+
+    <!-- 已選規格（只有有規格的商品才有；點它等於按加入購物車） -->
+    <view class="spu-select" wx:if="{{detail.hasSpecs}}" bindtap="onAddToCart">
+      <view class="label">已選</view>
+      <view class="content">
+        <view class="{{!selectedAttrStr ? 'tintColor' : ''}}">{{selectedAttrStr || '請選擇規格'}}</view>
         <t-icon name="chevron-right" size="40rpx" color="#BBBBBB" />
       </view>
     </view>
-    <view wx:if="{{ commentsStatistics.commentCount > 0 }}" class="comments-wrap">
-      <view class="comments-head" bindtap="navToCommentsListPage">
-        <view class="comments-title-wrap">
-          <view class="comments-title-label">商品评价</view>
-          <view class="comments-title-count"> ({{ commentsStatistics.commentCount }}) </view>
-        </view>
-        <view class="comments-rate-wrap">
-          <view class="comments-good-rate">{{commentsStatistics.goodRate}}% 好评</view>
-          <t-icon name="chevron-right" size="40rpx" color="#BBBBBB" />
-        </view>
+
+    <view class="desc-content">
+      <view class="desc-content__title">
+        <span class="desc-content__title--text">詳情介紹</span>
       </view>
-      <view class="comment-item-wrap" wx:for="{{ commentsList }}" wx:for-item="commentItem" wx:key="goodsSpu">
-        <view class="comment-item-head">
-          <t-image src="{{commentItem.userHeadUrl}}" t-class="comment-item-avatar" />
-          <view class="comment-head-right">
-            <view class="comment-username">{{commentItem.userName}}</view>
-            <t-rate
-              value="{{ commentItem.commentScore }}"
-              count="{{5}}"
-              size="12"
-              gap="2"
-              color="{{['#ffc51c', '#ddd']}}"
-            />
-          </view>
-        </view>
-        <view class="comment-item-content"> {{commentItem.commentContent}} </view>
-      </view>
+      <!-- ⚠️ 新資料模型只有文字描述；多圖詳情是 P2 的新欄位（T6a §11 Q-5） -->
+      <view class="desc-content__text">{{detail.description}}</view>
     </view>
   </view>
-  <view class="desc-content">
-    <view class="desc-content__title" wx:if="{{details.desc.length > 0}}">
-      <t-image t-class="img" src="{{recLeftImg}}" />
-      <span class="desc-content__title--text">详情介绍</span>
-      <t-image t-class="img" src="{{recRightImg}}" />
-    </view>
-    <view wx:if="{{details.desc.length > 0}}" wx:for="{{details.desc}}" wx:key="index">
-      <t-image t-class="desc-content__img" src="{{item}}" mode="widthFix" />
-    </view>
-  </view>
+
   <view class="goods-bottom-operation">
     <buy-bar
-      jumpArray="{{jumpArray}}"
+      jump-array="{{jumpArray}}"
       soldout="{{soldout}}"
-      isStock="{{isStock}}"
-      shopCartNum="{{cartNum}}"
-      buttonType="{{buttonType}}"
-      bind:toAddCart="toAddCart"
-      bind:toNav="toNav"
-      bind:toBuyNow="buyItNow"
+      is-stock="{{isStock}}"
+      button-type="{{buttonType}}"
+      bind:toAddCart="onAddToCart"
+      bind:toNav="onBuyBarNav"
       class="goods-details-card"
     />
   </view>
+
   <goods-specs-popup
     id="goodsSpecsPopup"
-    show="{{isSpuSelectPopupShow}}"
-    title="{{details.title || ''}}"
-    src="{{specImg ? specImg : primaryImage}}"
-    specList="{{details.specList || []}}"
-    skuList="{{skuArray}}"
-    limitBuyInfo="{{details.limitInfo[0].text || ''}}"
-    bind:closeSpecsPopup="handlePopupHide"
-    bind:change="chooseSpecItem"
-    bind:changeNum="changeNum"
-    bind:addCart="addCart"
-    bind:buyNow="gotoBuy"
-    bind:specsConfirm="specsConfirm"
-    isStock="{{isStock}}"
-    outOperateStatus="{{outOperateStatus}}"
+    show="{{isSpecsPopupShow}}"
+    title="{{detail.title}}"
+    src="{{detail.thumb}}"
+    spec-list="{{specList}}"
+    sku-list="{{skuList}}"
+    limit-max-count="{{detail.maxBuyQuantity}}"
+    is-stock="{{isStock}}"
+    count="{{buyNum}}"
+    bind:closeSpecsPopup="onSpecsPopupHide"
+    bind:change="onSpecChange"
+    bind:changeNum="onBuyNumChange"
+    bind:addCart="onPopupAddCart"
+    bind:specsConfirm="onPopupAddCart"
   >
     <view slot="goods-price">
       <view class="popup-sku__price">
         <price
-          wx:if="{{!isAllSelectedSku || (!promotionSubCode && isAllSelectedSku)}}"
-          price="{{selectSkuSellsPrice ? selectSkuSellsPrice : minSalePrice }}"
+          price="{{detail.priceCents}}"
           wr-class="popup-sku__price-num"
           symbol-class="popup-sku__price-symbol"
-        />
-        <price
-          wx:if="{{selectSkuSellsPrice === 0 && minSalePrice !== maxSalePrice && !isAllSelectedSku}}"
-          price="{{maxSalePrice}}"
-          wr-class="popup-sku__price-del"
-          type="delthrough"
         />
       </view>
     </view>
   </goods-specs-popup>
-  <promotion-popup
-    list="{{list}}"
-    bind:closePromotionPopup="closePromotionPopup"
-    show="{{isShowPromotionPop}}"
-    bind:promotionChange="promotionChange"
-  />
 
   <!--
-    ⚠️ T3.6.1：查不到商品時的明確畫面。
-    原本這種情況會拋 TypeError，讓整頁停在初始空白狀態（¥0.00、無圖、無規格）
-    且沒有任何訊息。真正的修復是 T6a（詳情頁接上新 API）。
-    用 fixed 覆蓋層，不動原有的版面結構。
+    ⚠️ T3.6.1：查不到項目時的明確畫面。
+    （原本這種情況會拋 TypeError，讓整頁停在初始空白狀態且沒有任何訊息。）
   -->
   <view class="detail-load-failed" wx:if="{{loadFailed}}">
     <view class="detail-load-failed__text">找不到這件商品</view>

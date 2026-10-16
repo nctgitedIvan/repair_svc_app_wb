@@ -2,15 +2,18 @@
 	{{soldout ? '商品已下架' : '商品已售完'}}
 </view>
 <view class="footer-cont flex flex-between wr-class">
+	<!--
+		左側入口（客服／收藏）。⚠️ T6a-5 起傳的是 **action key** 而不是 url ——
+		「客服」與「收藏」都不是 tabBar 頁面，不能用 switchTab。
+	-->
 	<view class="flex flex-between bottom-operate-left" wx:if="{{jumpArray.length > 0}}">
 		<view
 		  wx:for="{{jumpArray}}"
-		  wx:key="index"
+		  wx:key="key"
 		  class="icon-warp operate-wrap"
 		  bindtap="toNav"
-		  data-ele="foot_navigation"
 		  data-index="{{index}}"
-		  data-url="{{item.url}}"
+		  data-key="{{item.key}}"
 		>
 			<view>
 				<text wx:if="{{shopCartNum > 0 && item.showCartNum}}" class="tag-cart-num">
