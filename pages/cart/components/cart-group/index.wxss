@@ -1,3 +1,15 @@
+/*
+ * 購物車清單樣式。
+ *
+ * ⚠️ T4 移除了電商版的三塊樣式（連同它們的 WXML 節點）：
+ *    - 門店列與優惠券入口（.cart-store / .store-title / .get-coupon）
+ *    - 促銷活動列（.promotion-wrap / .promotion-line）
+ *    - 缺貨分組（.shortage-*）—— 改由「失效商品」區塊呈現
+ *    維修場景只有一個平台，沒有門店分組的概念（docs/P7a-2a-T4-計畫.md §6）。
+ *
+ * 其餘數值皆未改動 —— 保留原本調好的排版，避免在看不到畫面的情況下重構樣式。
+ */
+
 .cart-group {
   border-radius: 8rpx;
 }
@@ -10,107 +22,7 @@
 .cart-group .goods-wrap:first-of-type {
   margin-top: 0;
 }
-.cart-group .cart-store {
-  height: 96rpx;
-  background-color: #fff;
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  padding: 0rpx 24rpx 0rpx 36rpx;
-}
-.cart-group .cart-store .cart-store__check {
-  padding: 28rpx 32rpx 28rpx 0rpx;
-}
-.cart-group .cart-store__content {
-  box-sizing: border-box;
-  flex: auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-.cart-group .cart-store__content .store-title {
-  flex: auto;
-  font-size: 28rpx;
-  line-height: 40rpx;
-  color: #333333;
-  display: flex;
-  align-items: center;
-  font-weight: bold;
-  overflow: hidden;
-}
 
-.cart-group .cart-store__content .store-title .wr-store {
-  font-size: 32rpx;
-}
-.cart-group .cart-store__content .store-title .store-name {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
-  margin-left: 12rpx;
-}
-.cart-group .cart-store__content .get-coupon {
-  width: 112rpx;
-  height: 40rpx;
-  border-radius: 20rpx;
-  background-color: #ffecf9;
-  line-height: 40rpx;
-  text-align: center;
-  font-size: 26rpx;
-  color: #fa4126;
-}
-
-.cart-group .promotion-wrap {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0rpx 24rpx 32rpx 36rpx;
-  background-color: #ffffff;
-  font-size: 24rpx;
-  line-height: 36rpx;
-  color: #222427;
-}
-.cart-group .promotion-wrap .promotion-title {
-  font-weight: bold;
-  flex: auto;
-  overflow: hidden;
-  margin-right: 20rpx;
-  display: flex;
-  align-items: center;
-}
-.cart-group .promotion-wrap .promotion-title .promotion-icon {
-  flex: none;
-  font-weight: normal;
-  display: inline-block;
-  padding: 0 8rpx;
-  color: #ffffff;
-  background: #fa4126;
-  font-size: 20rpx;
-  height: 32rpx;
-  line-height: 32rpx;
-  margin-right: 16rpx;
-  border-radius: 16rpx;
-}
-.cart-group .promotion-wrap .promotion-title .promotion-text {
-  flex: auto;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.cart-group .promotion-wrap .promotion-action {
-  flex: none;
-  color: #333333;
-}
-.cart-group .promotion-line-wrap {
-  background-color: #fff;
-  height: 2rpx;
-  display: flex;
-  justify-content: flex-end;
-}
-.cart-group .promotion-line-wrap .promotion-line {
-  width: 684rpx;
-  height: 2rpx;
-  background-color: #e6e6e6;
-}
 .cart-group .goods-item-info {
   display: flex;
   background-color: #fff;
@@ -121,6 +33,7 @@
   padding: 20rpx 28rpx 20rpx 36rpx;
 }
 
+/* 失效商品沒有勾選框，用一個灰色圓點佔同一個位置（維持排版對齊） */
 .cart-group .goods-item-info .check-wrap .unCheck-icon {
   box-sizing: border-box;
   width: 36rpx;
@@ -134,51 +47,36 @@
   padding: 0rpx 32rpx 40rpx 0;
   flex-grow: 1;
 }
-.cart-group .goods-item-info .goods-sku-info .stock-mask {
-  position: absolute;
-  color: #fff;
-  font-size: 24rpx;
-  bottom: 0rpx;
-  background-color: rgba(0, 0, 0, 0.5);
-  width: 100%;
-  height: 40rpx;
-  line-height: 40rpx;
-  text-align: center;
-}
 .cart-group .goods-item-info .goods-sku-info .goods-stepper {
   position: absolute;
   right: 0;
   bottom: 8rpx;
 }
-.cart-group .goods-item-info .goods-sku-info .goods-stepper .stepper-tip {
-  position: absolute;
-  top: -36rpx;
-  right: 0;
-  height: 28rpx;
-  color: #ff2525;
-  font-size: 20rpx;
-  line-height: 28rpx;
+
+/* 價格已變動的提示（主價格仍是加入時價格，這裡只是把現價講清楚） */
+.price-changed {
+  display: flex;
+  align-items: center;
+  font-size: 22rpx;
+  line-height: 32rpx;
+  margin-top: 8rpx;
+}
+.price-changed .price-changed__tip {
+  color: #fa4126;
+  border: 2rpx solid #fa4126;
+  border-radius: 4rpx;
+  padding: 0 8rpx;
+  margin-right: 12rpx;
+}
+.price-changed .price-changed__now {
+  color: #999999;
 }
 
-.cart-group .shortage-line {
-  width: 662rpx;
-  height: 2rpx;
-  background-color: #e6e6e6;
-  margin: 0 auto;
-}
-.cart-group .shortage-goods-wrap {
-  background-color: #fff;
-}
-.cart-group .shortage-goods-wrap .shortage-tip-title {
-  height: 72rpx;
-  line-height: 72rpx;
-  padding-left: 28rpx;
-  font-size: 24rpx;
-  color: #999;
-}
 .stepper-info {
   margin-left: auto;
 }
+
+/* ══ 失效商品區 ══ */
 .invalid-goods-wrap {
   background-color: #fff;
   border-radius: 8rpx;
@@ -198,44 +96,6 @@
 }
 .invalid-goods-wrap .invalid-head .invalid-clear {
   color: #fa4126;
-}
-.invalid-goods-wrap .toggle {
-  display: flex;
-  height: 80rpx;
-  justify-content: center;
-  align-items: center;
-  font-size: 24rpx;
-  color: #fa4126;
-}
-.invalid-goods-wrap .toggle .m-r-6 {
-  margin-right: 6rpx;
-}
-.invalid-goods-wrap .toggle .top-icon {
-  display: inline-block;
-  width: 0;
-  height: 0;
-  border-left: 10rpx solid transparent;
-  border-right: 10rpx solid transparent;
-  border-bottom: 10rpx solid #fa4126;
-}
-.invalid-goods-wrap .toggle .down-icon {
-  display: inline-block;
-  width: 0;
-  height: 0;
-  border-left: 10rpx solid transparent;
-  border-right: 10rpx solid transparent;
-  border-top: 10rpx solid #fa4126;
-}
-.action-btn {
-  display: flex;
-  align-items: center;
-}
-.action-btn .action-btn-arrow {
-  font-size: 20rpx;
-  margin-left: 8rpx;
-}
-.action-btn--active {
-  opacity: 0.5;
 }
 
 .swiper-right-del {
@@ -310,6 +170,7 @@
   align-items: center;
 }
 
+/* 縮圖上的失效遮罩（售完／下架／失效） */
 .goods-sku-info .no-storage-mask {
   position: absolute;
   color: #fff;

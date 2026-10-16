@@ -1,162 +1,156 @@
 import Toast from 'tdesign-miniprogram/toast/index';
 
-const shortageImg = 'https://tdesign.gtimg.com/miniprogram/template/retail/cart/shortage.png';
-
+/**
+ * 購物車清單（**正常商品**＋**失效商品**兩個區塊）。
+ *
+ * ## 與改造前（電商版）的差別
+ *
+ * 舊版是「門店 → 促銷活動 → 商品」三層結構，因為電商一個購物車會跨多間店。
+ * **維修場景只有一個平台，沒有門店概念**，因此改成扁平清單（`docs/P7a-2a-T4-計畫.md` §6）。
+ * 一併移除：門店列、優惠券入口、促銷活動列、「去凑单／再逛逛」、缺貨分組。
+ *
+ * ## ⚠️ 本元件**不持有任何選取狀態**
+ *
+ * 舊版直接改 `goods.isSelected`（改的是 property 傳進來的物件，**沒有 setData**）——
+ * 那是一個隱性 bug：畫面會不會更新取決於別的地方有沒有觸發重繪。
+ * 現在本元件只把事件往上送，**狀態一律由頁面持有**。
+ *
+ * 本元件同樣**不知道**商品庫存／價格的規則 —— 那些都在 `utils/cartView.js` 算好，
+ * 它拿到的 `lines` 已經是完整的 view model。
+ */
 Component({
-  isSpecsTap: false, // 标记本次点击事件是否因为点击specs触发（由于底层goods-card组件没有catch specs点击事件，只能在此处加状态来避免点击specs时触发跳转商品详情）
   externalClasses: ['wr-class'],
-  properties: {
-    storeGoods: {
-      type: Array,
-      observer(storeGoods) {
-        for (const store of storeGoods) {
-          for (const activity of store.promotionGoodsList) {
-            for (const goods of activity.goodsPromotionList) {
-              goods.specs = goods.specInfo.map((item) => item.specValue); // 目前仅展示商品已选规格的值
-            }
-          }
-          for (const goods of store.shortageGoodsList) {
-            goods.specs = goods.specInfo.map((item) => item.specValue); // 目前仅展示商品已选规格的值
-          }
-        }
 
-        this.setData({ _storeGoods: storeGoods });
-      },
-    },
-    invalidGoodItems: {
+  /**
+   * 標記本次點擊是否因為點「規格」觸發。
+   *
+   * 底層 `goods-card` 沒有 catch 規格點擊，所以點規格會連帶觸發卡片的 click；
+   * 用它來避免「點規格卻跳去商品詳情」。
+   */
+  isSpecsTap: false,
+
+  properties: {
+    /** 正常商品（`utils/cartView.js` 的 `lines`） */
+    lines: {
       type: Array,
-      observer(invalidGoodItems) {
-        invalidGoodItems.forEach((goods) => {
-          goods.specs = goods.specInfo.map((item) => item.specValue); // 目前仅展示商品已选规格的值
-        });
-        this.setData({ _invalidGoodItems: invalidGoodItems });
-      },
+      value: [],
+    },
+    /** 失效商品（售完／下架／不存在）：不可勾選、不可結算 */
+    invalidLines: {
+      type: Array,
+      value: [],
     },
     thumbWidth: { type: null },
     thumbHeight: { type: null },
   },
 
   data: {
-    shortageImg,
     isShowSpecs: false,
     currentGoods: {},
-    isShowToggle: false,
-    _storeGoods: [],
-    _invalidGoodItems: [],
   },
 
   methods: {
-    // 删除商品
-    deleteGoods(e) {
-      const { goods } = e.currentTarget.dataset;
-      this.triggerEvent('delete', { goods });
+    /** 從當前的 lines 找出某一筆（找不到回 undefined，呼叫端需自行防護） */
+    findLine(lineId) {
+      const all = (this.data.lines || []).concat(this.data.invalidLines || []);
+      return all.find((line) => line.lineId === lineId);
     },
 
-    // 清空失效商品
-    clearInvalidGoods() {
-      this.triggerEvent('clearinvalidgoods');
-    },
-
-    // 选中商品
+    /** 勾選／取消勾選（失效商品不綁這個事件） */
     selectGoods(e) {
-      const { goods } = e.currentTarget.dataset;
-      this.triggerEvent('selectgoods', {
-        goods,
-        isSelected: !goods.isSelected,
-      });
+      const { lineId } = e.currentTarget.dataset;
+      const line = this.findLine(lineId);
+      this.triggerEvent('select', { lineId, isSelected: !(line && line.isSelected) });
     },
 
-    changeQuantity(num, goods) {
-      this.triggerEvent('changequantity', {
-        goods,
-        quantity: num,
-      });
-    },
+    /** 數量變更（stepper 的 + / −） */
     changeStepper(e) {
       const { value } = e.detail;
-      const { goods } = e.currentTarget.dataset;
-      let num = value;
-      if (value > goods.stack) {
-        num = goods.stack;
-      }
-      this.changeQuantity(num, goods);
+      this.commitQuantity(e.currentTarget.dataset.lineId, value);
     },
 
+    /** 手動輸入數量（失焦時觸發） */
     input(e) {
-      const { value } = e.detail;
-      const { goods } = e.currentTarget.dataset;
-      const num = value;
-      this.changeQuantity(num, goods);
+      this.commitQuantity(e.currentTarget.dataset.lineId, e.detail.value);
     },
 
-    overlimit(e) {
-      const text = e.detail.type === 'minus' ? '该商品数量不能减少了哦' : '同一商品最多购买999件';
-      Toast({
-        context: this,
-        selector: '#t-toast',
-        message: text,
-      });
-    },
+    /**
+     * 送出數量，**超過庫存就地擋下**。
+     *
+     * 這裡的即時上限是 UX（不要讓使用者改了才在結算被擋）；
+     * 真正的庫存校驗仍在結算時由 `cartView` 重做一次 —— 瀏覽期間庫存可能變動。
+     */
+    commitQuantity(lineId, rawValue) {
+      const line = this.findLine(lineId);
+      if (!line) return;
 
-    // 去凑单/再逛逛
-    gotoBuyMore(e) {
-      const { promotion, storeId = '' } = e.currentTarget.dataset;
-      this.triggerEvent('gocollect', { promotion, storeId });
-    },
+      const value = Number(rawValue);
+      if (!Number.isInteger(value) || value < 1) return; // 清空或亂打：不送出，維持原值
 
-    // 选中门店
-    selectStore(e) {
-      const { storeIndex } = e.currentTarget.dataset;
-      const store = this.data.storeGoods[storeIndex];
-      const isSelected = !store.isSelected;
-      if (store.storeStockShortage && isSelected) {
+      const max = Number.isInteger(line.maxQuantity) ? line.maxQuantity : value;
+      if (value > max) {
         Toast({
           context: this,
           selector: '#t-toast',
-          message: '部分商品库存不足',
+          message: `庫存不足，最多 ${max} 件`,
         });
+        // 已經在上限就不動；否則帶到上限（與舊版行為一致）
+        if (line.quantity >= max) return;
+        this.triggerEvent('quantitychange', { lineId, quantity: max });
         return;
       }
-      this.triggerEvent('selectstore', {
-        store,
-        isSelected,
-      });
+
+      if (value === line.quantity) return; // 沒有變化就不送事件
+      this.triggerEvent('quantitychange', { lineId, quantity: value });
     },
 
-    // 展开/收起切换
-    showToggle() {
-      this.setData({
-        isShowToggle: !this.data.isShowToggle,
-      });
+    /** stepper 自己擋下的超限（例如長按連續加） */
+    overlimit(e) {
+      const text = e.detail.type === 'minus' ? '數量不能再少了' : '已達可購買上限';
+      Toast({ context: this, selector: '#t-toast', message: text });
     },
 
-    // 展示规格popup
-    specsTap(e) {
-      this.isSpecsTap = true;
-      const { goods } = e.currentTarget.dataset;
-      this.setData({
-        isShowSpecs: true,
-        currentGoods: goods,
-      });
+    deleteGoods(e) {
+      this.triggerEvent('delete', { lineId: e.currentTarget.dataset.lineId });
     },
 
-    hideSpecsPopup() {
-      this.setData({
-        isShowSpecs: false,
-      });
+    clearInvalidGoods() {
+      this.triggerEvent('clearinvalid');
     },
 
+    /** 空車或失效區的「去逛逛零件」 */
+    gotoBuyMore() {
+      this.triggerEvent('gocollect');
+    },
+
+    /** 點商品 → 頁面決定跳去哪裡 */
     goGoodsDetail(e) {
       if (this.isSpecsTap) {
         this.isSpecsTap = false;
         return;
       }
-      const { goods } = e.currentTarget.dataset;
-      this.triggerEvent('goodsclick', { goods });
+      const { lineId } = e.currentTarget.dataset;
+      const line = this.findLine(lineId);
+      if (!line) return;
+      this.triggerEvent('goodsclick', {
+        lineId: line.lineId,
+        productId: line.productId,
+        specId: line.specId,
+      });
     },
 
-    gotoCoupons() {
-      wx.navigateTo({ url: '/pages/coupon/coupon-list/index' });
+    // 展示規格 popup
+    specsTap(e) {
+      this.isSpecsTap = true;
+      const { lineId } = e.currentTarget.dataset;
+      this.setData({
+        isShowSpecs: true,
+        currentGoods: this.findLine(lineId) || {},
+      });
+    },
+
+    hideSpecsPopup() {
+      this.setData({ isShowSpecs: false });
     },
   },
 });

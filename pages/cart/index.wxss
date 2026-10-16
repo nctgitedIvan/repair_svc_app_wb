@@ -11,3 +11,25 @@
   --td-button-default-color: #000;
   --td-button-primary-text-color: #fa4126;
 }
+
+/* 商品資料載入失敗（見 index.wxml 的說明：不顯示空車態） */
+.cart-error {
+  padding: 160rpx 40rpx 0;
+  text-align: center;
+}
+.cart-error .cart-error__text {
+  font-size: 28rpx;
+  color: #999999;
+  line-height: 44rpx;
+}
+.cart-error .cart-error__btn {
+  display: inline-block;
+  margin-top: 40rpx;
+  padding: 0 48rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  border-radius: 32rpx;
+  border: 2rpx solid #fa4126;
+  color: #fa4126;
+  font-size: 28rpx;
+}

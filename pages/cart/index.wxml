@@ -1,31 +1,53 @@
-<!-- 分层购物车 -->
-<block wx:if="{{cartGroupData.isNotEmpty}}">
+<!--
+  購物車（維修零件）。
+
+  ⚠️ 資料形狀全部來自 utils/cartView.js，本檔不做任何判斷。
+     `ready` 之前不渲染，避免「先閃一下空車再跳出商品」。
+
+  ⚠️ 空車態用獨立的 wx:if（不用 wx:elif）—— 兩者之間夾著註解，
+     而 wx:elif 必須緊鄰 wx:if，這裡刻意避開那個不確定性。
+-->
+<block wx:if="{{ready && !isEmpty && !loadError}}">
   <cart-group
-    store-goods="{{ cartGroupData.storeGoods }}"
-    invalid-good-items="{{ cartGroupData.invalidGoodItems }}"
-    bindselectgoods="onGoodsSelect"
-    bindselectstore="onStoreSelect"
-    bindchangequantity="onQuantityChange"
-    bindgocollect="goCollect"
-    bindgoodsclick="goGoodsDetail"
-    bindclearinvalidgoods="clearInvalidGoods"
-    binddelete="onGoodsDelete"
+    lines="{{lines}}"
+    invalid-lines="{{invalidLines}}"
+    bind:select="onLineSelect"
+    bind:quantitychange="onQuantityChange"
+    bind:delete="onLineDelete"
+    bind:goodsclick="onLineTap"
+    bind:clearinvalid="onClearInvalid"
+    bind:gocollect="onGotoShop"
   />
 
   <view class="gap" />
-  <!-- 商品小计以及结算按钮 -->
+  <!-- 商品小計以及結算按鈕 -->
   <cart-bar
-    is-all-selected="{{cartGroupData.isAllSelected}}"
-    total-amount="{{cartGroupData.totalAmount}}"
-    total-goods-num="{{cartGroupData.selectedGoodsCount}}"
-    total-discount-amount="{{cartGroupData.totalDiscountAmount}}"
+    is-all-selected="{{allSelected}}"
+    total-amount="{{totalCents}}"
+    total-goods-num="{{selectedCount}}"
     fixed="{{true}}"
     bottomHeight="{{110}}"
-    bindhandleSelectAll="onSelectAll"
-    bindhandleToSettle="onToSettle"
+    bind:selectall="onSelectAll"
+    bind:settle="onToSettle"
   />
 </block>
-<!-- 购物车空态 -->
-<cart-empty wx:else bind:handleClick="onGotoHome" />
+
+<!-- 空車態 -->
+<cart-empty
+  wx:if="{{ready && isEmpty && !loadError}}"
+  tip="購物車是空的"
+  btn-text="去逛逛零件"
+  bind:handleClick="onGotoShop"
+/>
+
+<!--
+  商品現況取不到（後端未就緒／離線）。
+  ⚠️ 刻意**不顯示空車態** —— 那會讓使用者以為購物車被清空了。
+-->
+<view class="cart-error" wx:if="{{loadError}}">
+  <view class="cart-error__text">商品資料載入失敗</view>
+  <view class="cart-error__btn" catchtap="onRetry">重新載入</view>
+</view>
+
 <t-toast id="t-toast" />
 <t-dialog id="t-dialog" />

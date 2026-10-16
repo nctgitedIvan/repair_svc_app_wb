@@ -7,25 +7,25 @@
 	 class="cart-bar__check"
 	 catchtap="handleSelectAll"
 	/>
-	<text>全选</text>
+	<text>全選</text>
 	<view class="cart-bar__total flex1">
 		<view>
-			<text class="cart-bar__total--bold text-padding-right">总计</text>
+			<!-- 合計用「加入時的價格」計算（§3.7.6 第 3 點），與列表顯示的價格一致 -->
+			<text class="cart-bar__total--bold text-padding-right">合計</text>
 			<price
 			 price="{{totalAmount || '0'}}"
 			 fill="{{false}}"
 			 decimalSmaller
 			 class="cart-bar__total--bold cart-bar__total--price"
 			/>
-			<text class="cart-bar__total--normal">（不含运费）</text>
-		</view>
-		<view wx:if="{{totalDiscountAmount}}">
-			<text class="cart-bar__total--normal text-padding-right">已优惠</text>
-			<price class="cart-bar__total--normal" price="{{totalDiscountAmount || '0'}}" fill="{{false}}" />
 		</view>
 	</view>
-	<view catchtap="handleToSettle" class="{{!isDisabled ? '' : 'disabled-btn'}} account-btn" hover-class="{{!isDisabled ? '' : 'hover-btn'}}">
-		去结算({{totalGoodsNum}})
+	<!-- 可用狀態直接由件數算出來，不另外維護一份 isDisabled -->
+	<view
+	 catchtap="handleToSettle"
+	 class="{{totalGoodsNum > 0 ? '' : 'disabled-btn'}} account-btn"
+	 hover-class="{{totalGoodsNum > 0 ? '' : 'hover-btn'}}"
+	>
+		去結算({{totalGoodsNum}})
 	</view>
 </view>
-

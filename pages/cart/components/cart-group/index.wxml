@@ -1,145 +1,108 @@
-<wxs src="./index.wxs" module="handlePromotion" />
-
 <wxs src="./utils.wxs" module="utils" />
 
+<!--
+  購物車清單。扁平結構（沒有門店／促銷分組）—— 維修場景只有一個平台。
+
+  ⚠️ 資料全部來自 utils/cartView.js 的 view model：
+     庫存、價格、問題碼都在那裡算好，本檔不做任何判斷。
+-->
 <view class="cart-group">
-  <view class="goods-wrap" wx:for="{{_storeGoods}}" wx:for-item="store" wx:for-index="si" wx:key="storeId">
-    <view class="cart-store">
-      <t-icon
-        size="40rpx"
-        color="{{store.isSelected ? '#FA4126' : '#BBBBBB'}}"
-        name="{{store.isSelected ? 'check-circle-filled' : 'circle'}}"
-        class="cart-store__check"
-        bindtap="selectStore"
-        data-store-index="{{si}}"
-      />
-      <view class="cart-store__content">
-        <view class="store-title">
-          <t-icon prefix="wr" size="40rpx" color="#333333" name="store" />
-          <view class="store-name">{{store.storeName}}</view>
+  <!-- ══ 正常商品 ══ -->
+  <view class="goods-wrap">
+    <view class="goods-item" wx:for="{{lines}}" wx:for-item="line" wx:key="lineId">
+      <swipeout right-width="{{72}}">
+        <view class="goods-item-info">
+          <view class="check-wrap" catchtap="selectGoods" data-line-id="{{line.lineId}}">
+            <t-icon
+              size="40rpx"
+              color="{{line.isSelected ? '#FA4126' : '#BBBBBB'}}"
+              name="{{line.isSelected ? 'check-circle-filled' : 'circle'}}"
+              class="check"
+            />
+          </view>
+          <view class="goods-sku-info">
+            <goods-card
+              layout="horizontal-wrap"
+              thumb-width="{{thumbWidth}}"
+              thumb-height="{{thumbHeight}}"
+              centered="{{true}}"
+              data="{{line}}"
+              data-line-id="{{line.lineId}}"
+              catchspecs="specsTap"
+              catchclick="goGoodsDetail"
+            >
+              <!-- 現價（僅在價格已變動時出現；主價格仍是「加入時價格」） -->
+              <view
+                slot="after-desc"
+                class="price-changed"
+                wx:if="{{line.isPriceChanged && line.currentPriceText}}"
+              >
+                <text class="price-changed__tip">{{line.issueText}}</text>
+                <text class="price-changed__now">現價 ¥{{line.currentPriceText}}</text>
+              </view>
+              <view slot="append-body" class="goods-stepper">
+                <t-stepper
+                  classname="stepper-info"
+                  value="{{line.quantity}}"
+                  min="{{1}}"
+                  max="{{line.maxQuantity}}"
+                  data-line-id="{{line.lineId}}"
+                  catchchange="changeStepper"
+                  catchblur="input"
+                  catchoverlimit="overlimit"
+                  theme="filled"
+                />
+              </view>
+            </goods-card>
+          </view>
         </view>
-        <view class="get-coupon" catch:tap="gotoCoupons">优惠券</view>
-      </view>
+        <view slot="right" class="swiper-right-del" catchtap="deleteGoods" data-line-id="{{line.lineId}}">
+          刪除
+        </view>
+      </swipeout>
     </view>
-    <block wx:for="{{store.promotionGoodsList}}" wx:for-item="promotion" wx:for-index="promoindex" wx:key="promoindex">
-      <view
-        class="promotion-wrap"
-        wx:if="{{handlePromotion.hasPromotion(promotion.promotionCode)}}"
-        bindtap="gotoBuyMore"
-        data-promotion="{{promotion}}"
-        data-store-id="{{store.storeId}}"
-      >
-        <view class="promotion-title">
-          <view class="promotion-icon">{{promotion.tag}}</view>
-          <view class="promotion-text">{{promotion.description}}</view>
-        </view>
-        <view class="promotion-action action-btn" hover-class="action-btn--active">
-          <view class="promotion-action-label"> {{promotion.isNeedAddOnShop == 1 ? '去凑单' : '再逛逛'}} </view>
-          <t-icon name="chevron-right" size="32rpx" color="#BBBBBB" />
-        </view>
-      </view>
-      <view
-        class="goods-item"
-        wx:for="{{promotion.goodsPromotionList}}"
-        wx:for-item="goods"
-        wx:for-index="gi"
-        wx:key="extKey"
-      >
-        <swipeout right-width="{{ 72 }}">
-          <view class="goods-item-info">
-            <view class="check-wrap" catchtap="selectGoods" data-goods="{{goods}}">
-              <t-icon
-                size="40rpx"
-                color="{{goods.isSelected ? '#FA4126' : '#BBBBBB'}}"
-                name="{{goods.isSelected ? 'check-circle-filled' : 'circle'}}"
-                class="check"
-              />
-            </view>
-            <view class="goods-sku-info">
-              <goods-card
-                layout="horizontal-wrap"
-                thumb-width="{{thumbWidth}}"
-                thumb-height="{{thumbHeight}}"
-                centered="{{true}}"
-                data="{{goods}}"
-                data-goods="{{goods}}"
-                catchspecs="specsTap"
-                catchclick="goGoodsDetail"
-              >
-                <view slot="thumb-cover" class="stock-mask" wx:if="{{goods.shortageStock || goods.stockQuantity <= 3}}">
-                  仅剩{{goods.stockQuantity}}件
-                </view>
-                <view slot="append-body" class="goods-stepper">
-                  <view class="stepper-tip" wx:if="{{goods.shortageStock}}">库存不足</view>
-                  <t-stepper
-                    classname="stepper-info"
-                    value="{{goods.quantity}}"
-                    min="{{1}}"
-                    max="{{999}}"
-                    data-goods="{{goods}}"
-                    data-gi="{{gi}}"
-                    data-si="{{si}}"
-                    catchchange="changeStepper"
-                    catchblur="input"
-                    catchoverlimit="overlimit"
-                    theme="filled"
-                  />
-                </view>
-              </goods-card>
-            </view>
+  </view>
+
+  <!-- ══ 失效商品 ══
+       售完／下架／不存在：不可勾選、不可結算，只能刪除。
+       依 §3.7.6 第 2 點，下架商品在按結算時會由頁面自動移除。 -->
+  <view class="invalid-goods-wrap" wx:if="{{invalidLines.length > 0}}">
+    <view class="invalid-head">
+      <text class="invalid-title">失效商品</text>
+      <view class="invalid-clear" catchtap="clearInvalidGoods">清除失效商品</view>
+    </view>
+    <view class="goods-item" wx:for="{{invalidLines}}" wx:for-item="line" wx:key="lineId">
+      <swipeout right-width="{{72}}">
+        <view class="goods-item-info">
+          <view class="check-wrap">
+            <view class="unCheck-icon" />
           </view>
-          <view slot="right" class="swiper-right-del" bindtap="deleteGoods" data-goods="{{goods}}"> 删除 </view>
-        </swipeout>
-      </view>
-      <view
-        class="promotion-line-wrap"
-        wx:if="{{handlePromotion.hasPromotion(promotion.promotionCode) && promoindex != (store.promotionGoodsList.length - 2)}}"
-      >
-        <view class="promotion-line" />
-      </view>
-    </block>
-    <block wx:if="{{store.shortageGoodsList.length>0}}">
-      <view
-        class="goods-item"
-        wx:for="{{store.shortageGoodsList}}"
-        wx:for-item="goods"
-        wx:for-index="gi"
-        wx:key="extKey"
-      >
-        <swipeout right-width="{{ 72 }}">
-          <view class="goods-item-info">
-            <view class="check-wrap">
-              <view class="unCheck-icon" />
-            </view>
-            <view class="goods-sku-info">
-              <goods-card
-                layout="horizontal-wrap"
-                thumb-width="{{thumbWidth}}"
-                thumb-height="{{thumbHeight}}"
-                centered="{{true}}"
-                data="{{goods}}"
-                data-goods="{{goods}}"
-                catchspecs="specsTap"
-                catchclick="goGoodsDetail"
-              >
-                <view slot="thumb-cover" class="no-storage-mask" wx:if="{{goods.stockQuantity <=0}}">
-                  <view class="no-storage-content">无货</view>
-                </view>
-              </goods-card>
-            </view>
+          <view class="goods-sku-info">
+            <goods-card
+              layout="horizontal-wrap"
+              thumb-width="{{thumbWidth}}"
+              thumb-height="{{thumbHeight}}"
+              centered="{{true}}"
+              data="{{line}}"
+              data-line-id="{{line.lineId}}"
+              catchclick="goGoodsDetail"
+            >
+              <!-- 失效原因只講一次（圓形遮罩）；卡片自己的「此商品已無法購買」
+                   是通用說明，兩者不重複 -->
+              <view slot="thumb-cover" class="no-storage-mask">
+                <view class="no-storage-content">{{line.issueShortText}}</view>
+              </view>
+            </goods-card>
           </view>
-          <view slot="right" class="swiper-right-del" bindtap="deleteGoods" data-goods="{{goods}}"> 删除 </view>
-        </swipeout>
-      </view>
-      <view
-        class="promotion-line-wrap"
-        wx:if="{{handlePromotion.hasPromotion(promotion.promotionCode) && promoindex != (store.promotionGoodsList.length - 2)}}"
-      >
-        <view class="promotion-line" />
-      </view>
-    </block>
+        </view>
+        <view slot="right" class="swiper-right-del" catchtap="deleteGoods" data-line-id="{{line.lineId}}">
+          刪除
+        </view>
+      </swipeout>
+    </view>
   </view>
 </view>
+
 <specs-popup
   show="{{isShowSpecs}}"
   title="{{currentGoods.title || ''}}"

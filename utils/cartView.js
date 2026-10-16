@@ -41,6 +41,25 @@ const ISSUE_TEXT = Object.freeze({
 });
 
 /**
+ * 問題碼 → **縮圖遮罩上的短文字**。
+ *
+ * 遮罩是一個 128rpx 的圓形（`.no-storage-mask`），塞不下「商品已不存在」這種長句，
+ * 因此另外準備一份短的。完整說明仍由 `issueText` 顯示在標題下方。
+ */
+const ISSUE_SHORT_TEXT = Object.freeze({
+  [CartCode.OUT_OF_STOCK]: '已售完',
+  [CartCode.DELISTED]: '已下架',
+  [CartCode.PRODUCT_NOT_FOUND]: '已失效',
+  [CartCode.PRICE_CHANGED]: '已變價',
+});
+
+/** 金額（分）→ 顯示文字（例：2500 → `25.00`；`goods-card` 的 price 元件吃的是分，這裡給純文字） */
+function formatCents(cents) {
+  if (!Number.isInteger(cents)) return '';
+  return (cents / 100).toFixed(2);
+}
+
+/**
  * 舊結算頁（`pages/order/order-confirm`）的相容橋接用常數。
  *
  * ⚠️ 維修場景**只有一個平台**，沒有電商的多門店概念；
@@ -77,6 +96,8 @@ function specNamesOf(product, item) {
  */
 function toLine(item, product, issue, isSelected) {
   const missing = !product;
+  const code = issue ? issue.code : null;
+  const currentPriceCents = missing || !Number.isInteger(product.priceCents) ? null : product.priceCents;
   return {
     // ── 識別 ──
     lineId: item.lineId,
@@ -99,13 +120,17 @@ function toLine(item, product, issue, isSelected) {
     /** 顯示用價格＝加入時價格（§3.7.6 第 3 點：購物車是價格承諾） */
     priceCents: item.addedPriceCents,
     addedPriceCents: item.addedPriceCents,
-    currentPriceCents: missing || !Number.isInteger(product.priceCents) ? null : product.priceCents,
+    currentPriceCents,
+    /** 現價的文字形式（WXML 沒有數字格式化能力，所以在這裡算好） */
+    currentPriceText: currentPriceCents === null ? '' : formatCents(currentPriceCents),
     maxQuantity: maxQuantityOf(product),
     isSelected,
     isInvalid: false, // 由呼叫端決定（見 buildCartView）
-    issueCode: issue ? issue.code : null,
-    issueText: issue ? ISSUE_TEXT[issue.code] || '' : '',
-    isPriceChanged: !!issue && issue.code === CartCode.PRICE_CHANGED,
+    issueCode: code,
+    issueText: code ? ISSUE_TEXT[code] || '' : '',
+    /** 縮圖遮罩用的短文字（圓形塞不下長句） */
+    issueShortText: code ? ISSUE_SHORT_TEXT[code] || '' : '',
+    isPriceChanged: code === CartCode.PRICE_CHANGED,
   };
 }
 
@@ -219,8 +244,10 @@ function toLegacyGoodsRequest(lines) {
 
 module.exports = {
   ISSUE_TEXT,
+  ISSUE_SHORT_TEXT,
   LEGACY_STORE_ID,
   LEGACY_STORE_NAME,
+  formatCents,
   buildCartView,
   reconcileSelection,
   toLegacyGoodsRequest,

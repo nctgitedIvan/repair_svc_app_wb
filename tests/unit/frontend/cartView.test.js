@@ -189,6 +189,51 @@ test('view model 的呈現欄位（配合既有 goods-card）', async (t) => {
     assert.equal(line.issueText, '已售完');
   });
 
+  await t.test('⚠️ 遮罩要短的（128rpx 圓形塞不下「商品已不存在」）', () => {
+    const mk = (productId, priceCents) => {
+      const c = cartOf({ productId, quantity: 1, priceCents });
+      return view.buildCartView({ cart: c, catalog: CATALOG, selectedLineIds: [] }).invalidLines[0];
+    };
+    assert.equal(mk('prd-3', 450).issueShortText, '已售完');
+    assert.equal(mk('prd-4', 3200).issueShortText, '已下架');
+    assert.equal(mk('prd-999', 100).issueShortText, '已失效', '長句要縮短');
+    assert.equal(mk('prd-999', 100).issueText, '商品已不存在', '完整說明仍保留');
+    for (const line of [mk('prd-3', 450), mk('prd-4', 3200), mk('prd-999', 100)]) {
+      assert.ok(line.issueShortText.length <= 3, '短文字不得超過 3 個字：' + line.issueShortText);
+    }
+  });
+
+  await t.test('價格變動提供「現價」的文字形式（WXML 沒有數字格式化）', () => {
+    const c = cartOf({ productId: 'prd-1', quantity: 1, priceCents: 2000 });
+    const line = view.buildCartView({ cart: c, catalog: CATALOG, selectedLineIds: ['prd-1'] }).lines[0];
+    assert.equal(line.currentPriceCents, 2500);
+    assert.equal(line.currentPriceText, '25.00');
+    assert.equal(line.priceCents, 2000, '主價格仍是加入時的價格');
+  });
+
+  await t.test('⚠️ 商品不存在時現價字串為空（否則畫面會出現 "¥NaN"）', () => {
+    const c = cartOf({ productId: 'prd-999', quantity: 1, priceCents: 100 });
+    const line = view.buildCartView({ cart: c, catalog: CATALOG, selectedLineIds: [] }).invalidLines[0];
+    assert.equal(line.currentPriceCents, null);
+    assert.equal(line.currentPriceText, '');
+  });
+
+  await t.test('價格沒變時 currentPriceText 仍帶現價（顯示與否由 WXML 依 isPriceChanged 決定）', () => {
+    const c = cartOf({ productId: 'prd-1', quantity: 1, priceCents: 2500 });
+    const line = view.buildCartView({ cart: c, catalog: CATALOG, selectedLineIds: ['prd-1'] }).lines[0];
+    assert.equal(line.isPriceChanged, false);
+    assert.equal(line.currentPriceText, '25.00');
+  });
+
+  await t.test('formatCents：分 → 字串', () => {
+    assert.equal(view.formatCents(2500), '25.00');
+    assert.equal(view.formatCents(800), '8.00');
+    assert.equal(view.formatCents(5), '0.05');
+    assert.equal(view.formatCents(0), '0.00');
+    assert.equal(view.formatCents(undefined), '', '非整數給空字串（避免顯示 NaN）');
+    assert.equal(view.formatCents(1.5), '');
+  });
+
   await t.test('電商欄位被明確關掉（避免殘留的划线价／件數跑出來）', () => {
     const c = cartOf({ productId: 'prd-1', quantity: 1, priceCents: 2500 });
     const line = view.buildCartView({ cart: c, catalog: CATALOG, selectedLineIds: ['prd-1'] }).lines[0];
