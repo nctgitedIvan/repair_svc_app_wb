@@ -1,5 +1,13 @@
 {
-  "pages": ["pages/home/home", "pages/category/index", "pages/cart/index", "pages/usercenter/index"],
+  "pages": [
+    "pages/home/home",
+    "pages/services/index",
+    "pages/orders/index",
+    "pages/usercenter/index",
+    "pages/admin/overview/index",
+    "pages/category/index",
+    "pages/cart/index"
+  ],
   "subpackages": [
     {
       "root": "pages/user",
@@ -55,15 +63,15 @@
     "list": [
       {
         "pagePath": "pages/home/home",
-        "text": "首页"
+        "text": "首頁"
       },
       {
-        "pagePath": "pages/category/index",
-        "text": "分类"
+        "pagePath": "pages/services/index",
+        "text": "服務"
       },
       {
-        "pagePath": "pages/cart/index",
-        "text": "购物车"
+        "pagePath": "pages/orders/index",
+        "text": "訂單"
       },
       {
         "pagePath": "pages/usercenter/index",
