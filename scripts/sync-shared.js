@@ -30,8 +30,14 @@ const PKG_DIR = path.join(ROOT, 'packages');
 const FN_DIR = path.join(ROOT, 'cloudfunctions');
 const SCOPE = '@repair';
 
-/** 必須依依賴順序排列（被依賴者在前），同時作為循環依賴的防線 */
-const ORDER = ['shared-kernel', 'domain', 'ports', 'application', 'adapters'];
+/**
+ * 必須依依賴順序排列（被依賴者在前），同時作為循環依賴的防線。
+ *
+ * entrypoint-kit 放 application 之後、adapters 之前：
+ * 它依賴 shared-kernel 與 ports（中介層需要 UserRepository 介面），
+ * 但不被 application 依賴（Use Case 不該知道 HTTP 入口長什麼樣）。
+ */
+const ORDER = ['shared-kernel', 'domain', 'ports', 'application', 'entrypoint-kit', 'adapters'];
 
 /** 不進 bundle 的檔案（縮小雲函數程式碼包） */
 const EXCLUDE = [/\.test\.js$/, /\.spec\.js$/, /^__tests__\//, /\.md$/, /^docs\//];

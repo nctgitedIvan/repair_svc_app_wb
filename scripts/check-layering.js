@@ -27,6 +27,9 @@ const ALLOWED_DEPS = {
   'packages/domain': ['@repair/shared-kernel'],
   'packages/ports': ['@repair/shared-kernel', '@repair/domain'],
   'packages/application': ['@repair/shared-kernel', '@repair/domain', '@repair/ports'],
+  // entrypoint-kit 是雲函數入口的中介層：需要 ports（UserRepository 介面）
+  // 與 shared-kernel（Result）。不得依賴 adapters —— 它只接收已組裝好的 container。
+  'packages/entrypoint-kit': ['@repair/shared-kernel', '@repair/ports'],
   'packages/adapters': null,
 };
 
@@ -121,6 +124,37 @@ function checkDeps(dirRel) {
   }
 }
 
+/**
+ * adapters 不得自己寫角色判斷（docs/01 §4.7.0 / §1.6.5）。
+ *
+ * 脫敏投影必須呼叫 domain 策略（AddressDisclosurePolicy / ContactMaskingPolicy），
+ * 不得在 adapter 內複製規則 —— 否則規則會與 domain 走鐘。
+ *
+ * 只抓「比較」，不抓物件字面量：
+ *   ❌ if (viewer.role === 'technician') { ... }        ← 角色判斷
+ *   ✅ { viewer: { role: 'technician' }, order, now }   ← 合法傳參
+ */
+const ROLE_BRANCH_RE = /\.role\s*[!=]==?/;
+
+function checkAdapterRoleBranching() {
+  for (const file of walk(path.join(ROOT, 'packages/adapters'))) {
+    const r = rel(file);
+    if (isTest(r)) continue;
+    const lines = fs.readFileSync(file, 'utf8').split('\n');
+    lines.forEach((line, i) => {
+      if (isComment(line)) return;
+      if (ROLE_BRANCH_RE.test(line)) {
+        violations.push({
+          file: r,
+          line: i + 1,
+          why: 'adapters 不得判斷角色（應呼叫 domain 的 AddressDisclosurePolicy / ContactMaskingPolicy）',
+          text: line.trim().slice(0, 90),
+        });
+      }
+    });
+  }
+}
+
 /** 只有 bootstrap.js 可以實例化 adapter */
 function checkAdapterInstantiation() {
   for (const dirRel of ['cloudfunctions', 'packages']) {
@@ -148,9 +182,10 @@ scanForbidden('packages/domain', DOMAIN_FORBIDDEN, 'domain');
 scanForbidden('packages/ports', PORTS_FORBIDDEN, 'ports');
 for (const d of Object.keys(ALLOWED_DEPS)) checkDeps(d);
 checkAdapterInstantiation();
+checkAdapterRoleBranching();
 
 if (violations.length === 0) {
-  console.log('✓ 依賴方向檢查通過（domain / ports / 各層依賴 / 組裝點唯一性）');
+  console.log('✓ 依賴方向檢查通過（domain / ports / 各層依賴 / 組裝點唯一性 / adapters 無角色判斷）');
   process.exit(0);
 }
 
