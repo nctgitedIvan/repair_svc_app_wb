@@ -1,0 +1,6 @@
+<view class="page">
+  <view class="placeholder">
+    <view class="placeholder__title">管理概覽</view>
+    <view class="placeholder__desc">手機概覽將於 P7a-2 建置</view>
+  </view>
+</view>
