@@ -22,18 +22,33 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 
 /**
+ * ⚠️ crypto 的例外處理（**白名單制，deny-by-default**）
+ *
+ * domain 原本禁 require 任何外部套件，但 `AuditChain` 需要 SHA-256，
+ * 而 hand-roll 雜湊是更糟的選擇。因此開兩個精準的例外：
+ *
+ *   1. **只有一個檔案**可以用 crypto（`CRYPTO_ALLOWED_FILES`）
+ *      —— 即使日後有人想在 `Money` 用 crypto，也會被擋。
+ *   2. **只有少數成員**可以用（`CRYPTO_MEMBER_ALLOWLIST`）
+ *      —— 採**白名單**而非黑名單：`crypto` 的 API 會隨 Node 版本增加，
+ *         黑名單必然漏掉新函式；白名單則是「沒列到的都不准」。
+ *
+ * 為什麼是白名單而不是黑名單：
+ *   Node 的 `crypto` 有數十個成員。用黑名單列舉「危險的」，
+ *   等於賭自己列得完整 —— 漏一個就是一個非確定性來源進了 domain。
+ *   白名單只列「確定性且必要的」，其餘一律拒絕。
+ */
+const CRYPTO_MEMBER_ALLOWLIST = Object.freeze(['createHash']);
+const CRYPTO_ALLOWED_FILES = Object.freeze(['packages/domain/audit/AuditChain.js']);
+
+/**
  * 每個層允許 require 的套件。null = 不限制（邊界層）。
  *
- * ⚠️ `packages/domain` 例外允許 `crypto`：
- *    `AuditChain` 需要 SHA-256，而 hand-roll 雜湊是更糟的選擇。
- *    `crypto` 是 Node **內建**（非第三方依賴）、且 `createHash` 是**確定性**的。
- *    但 `crypto` 也含非確定性 API（亂數），因此另以 DOMAIN_FORBIDDEN 擋掉那些部分。
- *    ——「放行整個模組但封鎖其中危險的函式」比「整個模組都不准用」更實際，
- *      前提是封鎖清單必須完整且有測試。
+ * 註：`crypto` **不在此處**，它由上面的檔案層級例外單獨處理。
  */
 const ALLOWED_DEPS = {
   'packages/shared-kernel': [],
-  'packages/domain': ['@repair/shared-kernel', 'crypto'],
+  'packages/domain': ['@repair/shared-kernel'],
   'packages/ports': ['@repair/shared-kernel', '@repair/domain'],
   'packages/application': ['@repair/shared-kernel', '@repair/domain', '@repair/ports'],
   // entrypoint-kit 是雲函數入口的中介層：需要 ports（UserRepository 介面）
@@ -55,10 +70,8 @@ const DOMAIN_FORBIDDEN = [
   [/Math\.random\s*\(/, '非確定性隨機 → 須改用 IdGeneratorPort'],
   [/process\.env/, '環境變數只能由 adapter 讀'],
   [/console\.(log|error|warn)\s*\(/, '須改用 LoggerPort'],
-  // ⚠️ crypto 雖然放行（見 ALLOWED_DEPS 的說明），但其**非確定性**部分必須封鎖。
-  //    否則 domain 就能產生無法重現的值，測試與稽核鏈都會失效。
-  [/crypto\.(randomBytes|randomUUID|randomFill|randomFillSync|randomInt|generateKeyPair|generateKeyPairSync)/, 'crypto 的亂數 API 不得在 domain 使用（須改用 IdGeneratorPort）'],
-  [/\brandomUUID\s*\(/, 'randomUUID 不得在 domain 使用（須改用 IdGeneratorPort）'],
+  // 註：crypto 的管制已改由 checkCryptoMembers() 的**白名單**處理
+  //     （deny-by-default，比黑名單可靠），故此處不再重複列舉。
 ];
 
 /** ports 層禁止出現的型別 */
@@ -128,7 +141,21 @@ function checkDeps(dirRel) {
         if (dep.startsWith('.')) continue; // 相對路徑一律允許
 
         const pkgName = packageNameOf(dep);
-        if (allowed.includes(pkgName)) continue; // 明確允許（含 crypto 這類 Node 內建）
+
+        // ⚠️ crypto：只有 CRYPTO_ALLOWED_FILES 能用（見上方說明）
+        if (pkgName === 'crypto' || pkgName === 'node:crypto') {
+          if (!CRYPTO_ALLOWED_FILES.includes(r)) {
+            violations.push({
+              file: r,
+              line: i + 1,
+              why: `crypto 只允許在 ${CRYPTO_ALLOWED_FILES.join(', ')} 使用（目前檔案：${r}）`,
+              text: line.trim().slice(0, 90),
+            });
+          }
+          continue;
+        }
+
+        if (allowed.includes(pkgName)) continue;
 
         // 未在允許清單中 → 一律違規（不論是否為 @repair/*）
         const why = allowed.length === 0
@@ -171,6 +198,73 @@ function checkAdapterRoleBranching() {
   }
 }
 
+/**
+ * crypto 成員白名單檢查（deny-by-default）。
+ *
+ * 涵蓋兩種用法：
+ *   1. `crypto.createHash(...)`         —— 成員存取
+ *   2. `const { createHash } = require('crypto')` —— 解構
+ *
+ * 未在 `CRYPTO_MEMBER_ALLOWLIST` 中的成員一律違規。
+ * 這比黑名單可靠：Node 新增 crypto API 時，白名單會自動擋下。
+ */
+function checkCryptoMembers() {
+  const allowedText = CRYPTO_MEMBER_ALLOWLIST.join(', ');
+
+  for (const fileRel of CRYPTO_ALLOWED_FILES) {
+    const file = path.join(ROOT, fileRel);
+    if (!fs.existsSync(file)) continue;
+
+    const lines = fs.readFileSync(file, 'utf8').split('\n');
+
+    // ⚠️ **必須跨行掃描**：`crypto\n  .createHash(...)` 這種寫法
+    //    在逐行掃描下完全不會被發現 —— 那是一個可繞過白名單的漏洞。
+    //    因此把非註解行接起來掃，並保留「偏移 → 原始行號」的對照。
+    const kept = [];
+    const lineNoOf = [];
+    lines.forEach((line, i) => {
+      if (isComment(line)) return;
+      kept.push(line);
+      lineNoOf.push(i + 1);
+    });
+    const code = kept.join('\n');
+
+    const lineAt = (offset) => {
+      const idx = code.slice(0, offset).split('\n').length - 1;
+      return lineNoOf[Math.min(idx, lineNoOf.length - 1)];
+    };
+
+    // ① crypto.xxx（跨行也抓得到）
+    const memberRe = /\bcrypto\s*\.\s*([A-Za-z_$][\w$]*)/g;
+    let m;
+    while ((m = memberRe.exec(code))) {
+      if (CRYPTO_MEMBER_ALLOWLIST.includes(m[1])) continue;
+      violations.push({
+        file: fileRel,
+        line: lineAt(m.index),
+        why: `crypto.${m[1]} 不在白名單中（允許：${allowedText}）`,
+        text: m[0].replace(/\s+/g, ' ').slice(0, 90),
+      });
+    }
+
+    // ② const { a, b } = require('crypto')（同樣跨行）
+    const destructureRe = /(?:const|let|var)\s*\{([^}]*)\}\s*=\s*require\(\s*['"](?:node:)?crypto['"]\s*\)/g;
+    let d;
+    while ((d = destructureRe.exec(code))) {
+      for (const raw of d[1].split(',')) {
+        const name = raw.split(':').pop().trim();
+        if (!name || CRYPTO_MEMBER_ALLOWLIST.includes(name)) continue;
+        violations.push({
+          file: fileRel,
+          line: lineAt(d.index),
+          why: `解構出的 crypto.${name} 不在白名單中（允許：${allowedText}）`,
+          text: d[0].replace(/\s+/g, ' ').slice(0, 90),
+        });
+      }
+    }
+  }
+}
+
 /** 只有 bootstrap.js 可以實例化 adapter */
 function checkAdapterInstantiation() {
   for (const dirRel of ['cloudfunctions', 'packages']) {
@@ -193,22 +287,38 @@ function checkAdapterInstantiation() {
   }
 }
 
-// ── 執行 ──
-scanForbidden('packages/domain', DOMAIN_FORBIDDEN, 'domain');
-scanForbidden('packages/ports', PORTS_FORBIDDEN, 'ports');
-for (const d of Object.keys(ALLOWED_DEPS)) checkDeps(d);
-checkAdapterInstantiation();
-checkAdapterRoleBranching();
+// ── 執行（包成函式，讓本檔可被測試 require 而不會執行檢查）──
+function run() {
+  scanForbidden('packages/domain', DOMAIN_FORBIDDEN, 'domain');
+  scanForbidden('packages/ports', PORTS_FORBIDDEN, 'ports');
+  for (const d of Object.keys(ALLOWED_DEPS)) checkDeps(d);
+  checkAdapterInstantiation();
+  checkAdapterRoleBranching();
+  checkCryptoMembers();
 
-if (violations.length === 0) {
-  console.log('✓ 依賴方向檢查通過（domain / ports / 各層依賴 / 組裝點唯一性 / adapters 無角色判斷）');
-  process.exit(0);
+  if (violations.length === 0) {
+    console.log('✓ 依賴方向檢查通過（domain / ports / 各層依賴 / 組裝點唯一性 / adapters 無角色判斷 / crypto 白名單）');
+    return 0;
+  }
+
+  console.error(`✗ 發現 ${violations.length} 處違規：\n`);
+  for (const v of violations) {
+    console.error(`  ${v.file}${v.line ? ':' + v.line : ''}  [${v.why}]`);
+    if (v.text) console.error(`      ${v.text}`);
+  }
+  console.error('\n規則說明見 docs/01-目標架構.md §1.6');
+  return 1;
 }
 
-console.error(`✗ 發現 ${violations.length} 處違規：\n`);
-for (const v of violations) {
-  console.error(`  ${v.file}${v.line ? ':' + v.line : ''}  [${v.why}]`);
-  if (v.text) console.error(`      ${v.text}`);
+if (require.main === module) {
+  process.exit(run());
 }
-console.error('\n規則說明見 docs/01-目標架構.md §1.6');
-process.exit(1);
+
+// ── 供測試讀取白名單（不影響 CLI 執行）──
+module.exports = {
+  ALLOWED_DEPS,
+  CRYPTO_MEMBER_ALLOWLIST,
+  CRYPTO_ALLOWED_FILES,
+  DOMAIN_FORBIDDEN,
+  PORTS_FORBIDDEN,
+};
