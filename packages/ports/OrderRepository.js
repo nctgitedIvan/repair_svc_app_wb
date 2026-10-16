@@ -5,7 +5,10 @@
  *
  * 本檔只描述契約。**實作一律放 packages/adapters**。
  *
- * 實作：CloudDBOrderRepository（正式）、InMemoryOrderRepository（測試）
+ * ⚠️ P4b 起，本契約對齊**真實的 `Order` 聚合**（`packages/domain/order/Order.js`），
+ *    不再是 P0 為了驗證管線而寫的佔位形狀。
+ *
+ * 實作：CloudDBOrderRepository（P2c）、InMemoryOrderRepository（測試）
  */
 const OrderRepository = Object.freeze({
   name: 'OrderRepository',
@@ -14,15 +17,19 @@ const OrderRepository = Object.freeze({
     /**
      * @param {string} orderId
      * @param {{ tx?: object }} [options]
-     * @returns {Promise<object|null>} Order 聚合，或 null
+     * @returns {Promise<import('@repair/domain/order/Order').Order|null>}
      */
     findById: '(orderId: string, options?: { tx?: UnitOfWorkTransaction }): Promise<Order|null>',
 
-    /** @returns {Promise<object|null>} */
+    /** @returns {Promise<Order|null>} */
     findByOrderNo: '(orderNo: string, options?): Promise<Order|null>',
 
     /**
-     * 樂觀鎖：version 不符時必須拋出，不得靜默覆寫。
+     * 儲存聚合。
+     *
+     * **樂觀鎖**：以 `order.version` 為條件。版本不符時必須拋
+     * `ConcurrencyConflict`，**不得靜默覆寫** —— 那會讓兩個並行操作互相蓋掉。
+     *
      * @returns {Promise<void>}
      */
     save: '(order: Order, options?: { tx?: UnitOfWorkTransaction }): Promise<void>',

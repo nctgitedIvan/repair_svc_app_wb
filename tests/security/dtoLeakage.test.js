@@ -14,7 +14,7 @@ const assert = require('node:assert/strict');
 
 const { ComputeProfitShareUseCase } = require('../../packages/application/settlement/ComputeProfitShareUseCase');
 const { buildTestContainer } = require('../helpers/container');
-const { OrderStatus } = require('../../packages/domain/order/OrderStatus');
+const { makeCompletedOrder } = require('../helpers/order');
 
 /**
  * 完整手機號的形狀：1 開頭、第二位 3-9、共 11 位，且前後不接其他數字。
@@ -129,33 +129,17 @@ test('掃描器本身的自我驗證（先確認它抓得到，否則後面的�
 });
 
 test('既有 Use Case 的 DTO 掃描（P1 唯一的 Use Case）', async (t) => {
-  function makeOrder() {
-    return {
-      id: 'order-1',
-      orderNo: 'R20261016001',
-      statusValue: OrderStatus.COMPLETED.value,
-      serviceFeeCents: 10000,
-      materialFeeCents: 2500,
-      // 故意放入完整敏感資料，驗證 Use Case 不會把它們帶進 DTO
-      customerPhone: '13812345678',
-      detailAddress: '深圳市寶安區中心路28號麗沙花都3棟5B',
-      createdAt: 1_700_000_000_000,
-      version: 0,
-      snapshot: {
-        profitSharingTerms: {
-          base: 'SERVICE_FEE',
-          technicianRateBp: 8000,
-          platformRateBp: 2000,
-          roundingMode: 'FLOOR_TO_CENT',
-          termsVersion: 'v1',
-        },
-      },
-    };
+  /**
+   * ⚠️ P4b 起 Repository 回傳真實的 `Order` 聚合。
+   * 訂單位址刻意帶完整門牌，用來驗證 Use Case 不會把它帶進 DTO。
+   */
+  function buildOrder() {
+    return makeCompletedOrder({ serviceFeeCents: 10000, materialFeeCents: 2500 });
   }
 
   await t.test('ComputeProfitShareUseCase 是客服視角，DTO 符合 internal 規則', async () => {
     const container = buildTestContainer();
-    container.orderRepository.seed([makeOrder()]);
+    container.orderRepository.seed([buildOrder()]);
     const useCase = new ComputeProfitShareUseCase(container);
 
     const result = await useCase.execute({ actor: { id: 'cs-1', role: 'cs_agent' }, orderId: 'order-1' });
@@ -167,7 +151,7 @@ test('既有 Use Case 的 DTO 掃描（P1 唯一的 Use Case）', async (t) => {
 
   await t.test('⚠️ 即使有權，這個 Use Case 也不回傳它不需要的客戶 PII', async () => {
     const container = buildTestContainer();
-    container.orderRepository.seed([makeOrder()]);
+    container.orderRepository.seed([buildOrder()]);
     const useCase = new ComputeProfitShareUseCase(container);
     const result = await useCase.execute({ actor: { id: 'cs-1', role: 'cs_agent' }, orderId: 'order-1' });
 

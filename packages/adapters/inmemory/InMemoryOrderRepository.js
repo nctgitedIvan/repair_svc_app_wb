@@ -1,65 +1,84 @@
 'use strict';
 
+const { ConcurrencyConflict } = require('@repair/shared-kernel/Errors');
+
 /**
  * InMemoryOrderRepository —— 測試替身（Fake）。
  *
- * 這不是「次要」的程式碼：它是 §1.7 第 6 項驗收標準的實體，
- * 也是讓 domain 與 application 能在**完全不啟動微信雲環境**下被測試的關鍵。
+ * 契約見 `packages/ports/OrderRepository.js`（P4b 起對齊 `Order` 聚合）。
  *
- * ⚠️ P2 會寫「契約測試」：同一套測試同時跑本檔與 CloudDBOrderRepository，
- *    確保兩者行為一致（否則用 fake 測過的邏輯上線後會壞）。
+ * 內部儲存的是 `order.toPersistence()` 的**純資料**，
+ * `findById` 再用 `Order.rehydrate()` 還原 —— 這與真實 adapter 的行為一致
+ * （真實 adapter 也是「存 row、讀 row 還原」），因此用它測過的邏輯在真實 DB 上同樣成立。
  *
- * 實作 OrderRepository 契約（packages/ports/OrderRepository.js）。
+ * P2c 會寫「契約測試」：同一套斷言同時跑本檔與 `CloudDBOrderRepository`。
  */
 class InMemoryOrderRepository {
-  #orders = new Map();
+  #rows = new Map();
 
-  /** 測試輔助：預先放入資料 */
+  /** 測試輔助：預先放入聚合或持久化資料 */
   seed(orders) {
-    for (const o of orders) {
-      this.#orders.set(o.id, JSON.parse(JSON.stringify(o)));
+    for (const order of orders) {
+      const row = typeof order.toPersistence === 'function' ? order.toPersistence() : order;
+      this.#rows.set(row.orderId, JSON.parse(JSON.stringify(row)));
     }
     return this;
   }
 
   async findById(orderId) {
-    const row = this.#orders.get(orderId);
-    return row ? JSON.parse(JSON.stringify(row)) : null;
+    const row = this.#rows.get(orderId);
+    if (!row) return null;
+    return this.#toDomain(row);
   }
 
   async findByOrderNo(orderNo) {
-    for (const row of this.#orders.values()) {
-      if (row.orderNo === orderNo) return JSON.parse(JSON.stringify(row));
+    for (const row of this.#rows.values()) {
+      if (row.orderNo === orderNo) return this.#toDomain(row);
     }
     return null;
   }
 
   async save(order) {
-    // 模擬樂觀鎖：與真實 adapter 行為一致
-    const existing = this.#orders.get(order.id);
+    const existing = this.#rows.get(order.id);
+    const row = order.toPersistence();
+
+    // 樂觀鎖：與真實 adapter 行為一致
     if (existing && existing.version !== order.version) {
-      throw new Error(`樂觀鎖衝突：預期 version ${existing.version}，收到 ${order.version}`);
+      throw new ConcurrencyConflict('orders', order.version, existing.version);
     }
-    const next = JSON.parse(JSON.stringify(order));
-    next.version = (existing ? existing.version : 0) + 1;
-    this.#orders.set(order.id, next);
+
+    this.#rows.set(order.id, JSON.parse(JSON.stringify(row)));
   }
 
   async findExpiredUnpaid(beforeTimestamp, limit) {
-    return [...this.#orders.values()]
-      .filter((o) => o.statusValue === 10 && o.createdAt < beforeTimestamp)
-      .slice(0, limit);
+    return [...this.#rows.values()]
+      .filter((r) => r.statusValue === 10 && r.createdAt < beforeTimestamp)
+      .slice(0, limit)
+      .map((r) => this.#toDomain(r));
   }
 
   async findExpiredUnassigned(beforeTimestamp, limit) {
-    return [...this.#orders.values()]
-      .filter((o) => [20, 30].includes(o.statusValue) && o.createdAt < beforeTimestamp)
-      .slice(0, limit);
+    return [...this.#rows.values()]
+      .filter((r) => [20, 30].includes(r.statusValue) && r.createdAt < beforeTimestamp)
+      .slice(0, limit)
+      .map((r) => this.#toDomain(r));
   }
 
   /** 測試輔助 */
   size() {
-    return this.#orders.size;
+    return this.#rows.size;
+  }
+
+  /** 測試輔助：取得原始 row（斷言持久化形狀用） */
+  rawRow(orderId) {
+    const row = this.#rows.get(orderId);
+    return row ? JSON.parse(JSON.stringify(row)) : null;
+  }
+
+  #toDomain(row) {
+    // 延遲 require 避免循環：adapters 依賴 domain，但不需要在載入期就解析
+    const { Order } = require('@repair/domain/order/Order');
+    return Order.rehydrate(row);
   }
 }
 

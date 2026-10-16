@@ -1,25 +1,21 @@
 'use strict';
 
 const { Result } = require('@repair/shared-kernel/Result');
-const { Money, Rounding } = require('@repair/shared-kernel/Money');
-const {
-  OrderStatus,
-  fromValue: orderStatusFromValue,
-  canExecuteProfitSharing,
-} = require('@repair/domain/order/OrderStatus');
+const { canExecuteProfitSharing } = require('@repair/domain/order/OrderStatus');
 
 /**
  * ComputeProfitShareUseCase —— 計算師傅報酬（唯讀，不觸發任何外部呼叫）。
  *
  * 決策依據（docs/01-目標架構.md §3.6）：
  *  - 分潤基數 = 服務費（不含材料費）
- *  - 比例讀**訂單快照**，不讀當前配置 → 後台改比例不影響歷史訂單
+ *  - 比例讀**訂單快照**（`order.snapshot`），不讀當前配置 → 後台改比例不影響歷史訂單
  *  - 狀態為 DISPUTED 時拒絕（§3.3「爭議中」凍結分帳）
  *
- * ⚠️ 注意：本 Use Case **只計算**，不呼叫分帳 API。
+ * ⚠️ 本 Use Case **只計算**，不呼叫分帳 API。
  *    真正的 ExecuteProfitSharing 於 P6 建立（A1 確認前不實作 adapter）。
  *
- * 本檔為 P0 管線驗證用，示範 §1.6.3 的依賴注入與 §1.7 第 3 項的驗收標準。
+ * TODO(P4c): 分潤基數的判斷（`terms.includesMaterialFee`）目前內聯在此。
+ *            P4c 建立 `ProfitSharingPolicy` 後抽出，讓「基數規則」只有一份。
  */
 class ComputeProfitShareUseCase {
   /**
@@ -43,20 +39,22 @@ class ComputeProfitShareUseCase {
       return Result.notFound(`訂單不存在：${orderId}`);
     }
 
-    // ── domain 規則：狀態是否允許分帳（含 DISPUTED 凍結）──
-    const status = orderStatusFromValue(order.statusValue);
-    if (!canExecuteProfitSharing(status)) {
+    // ── domain 規則：狀態是否允許分帳（含 DISPUTED 與 VOIDED 的凍結）──
+    // P4b 起 order.status 已是 OrderStatus 值物件，不需再從數字還原
+    if (!canExecuteProfitSharing(order.status)) {
       return Result.preconditionFailed(
-        `狀態「${status.label}」不可執行分帳`,
-        { orderId, status: status.key },
+        `狀態「${order.status.label}」不可執行分帳`,
+        { orderId, status: order.statusKey },
       );
     }
 
     // ── domain 計算：基數參數化 + 逐單快照 ──
     const terms = order.snapshot.profitSharingTerms;
-    const base = terms.base === 'SERVICE_FEE_PLUS_MATERIAL'
-      ? Money.fromCents(order.serviceFeeCents + order.materialFeeCents)
-      : Money.fromCents(order.serviceFeeCents);
+    const amounts = order.amounts;
+
+    const base = terms.includesMaterialFee
+      ? amounts.serviceFee.add(amounts.materialFee) // 參數切換即可改決策
+      : amounts.serviceFee; // ← 現行決策：材料費不參與分潤
 
     const technicianShare = base.applyRate(terms.technicianRateBp, terms.roundingMode);
     // 平台份額＝基數減去師傅份額，確保兩者相加**恆等於**基數（不會因取整而漏錢）
@@ -75,13 +73,11 @@ class ComputeProfitShareUseCase {
       baseCents: base.cents,
       technicianShareCents: technicianShare.cents,
       platformShareCents: platformShare.cents,
+      currency: base.currency,
       termsVersion: terms.termsVersion,
       computedAt: this.clock.now(),
     });
   }
 }
-
-// 匯出 Rounding 供測試引用，避免測試硬編碼字串
-ComputeProfitShareUseCase.Rounding = Rounding;
 
 module.exports = { ComputeProfitShareUseCase };
