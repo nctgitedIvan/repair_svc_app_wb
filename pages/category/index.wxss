@@ -1,9 +1,9 @@
-.tabbar-position {
-  position: fixed !important;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-}
+/*
+ * 分類頁。
+ *
+ * 版面骨架（左側 180rpx 側邊欄 + 右側 flex:auto）由 goods-category 元件提供，
+ * 本檔只負責右側網格。
+ */
 
 .wrap {
   height: 100vh;
@@ -13,11 +13,97 @@
   background-color: #f6f6f6 !important;
   height: 100%;
 }
-.goods-category-class .goods-category-normal-item-container-item {
-  margin-top: 20rpx;
-}
 
 page {
   min-height: none;
   padding-bottom: 0;
+}
+
+/* ── 網格（右側面板內） ── */
+
+.cat-grid {
+  padding: 16rpx 16rpx 32rpx;
+}
+
+.cat-grid__empty {
+  padding: 120rpx 0;
+  text-align: center;
+  font-size: 26rpx;
+  color: #999999;
+}
+
+/*
+ * ⚠️ 卡片尺寸覆寫（**這一頁最可能需要依實際畫面微調的地方**）
+ *
+ * 原因：共用的 `components/goods-card` 是為**全寬**列表設計的
+ * （`.goods-card__main` 寫死 342rpx、縮圖 340rpx），
+ * 而本頁右側面板只有 750 - 180(側邊欄) = **570rpx** —— 直接沿用會變成**一列**，
+ * 與 §3.7.9「右側兩列網格」不符。
+ *
+ * 手法：`goods-card` 有 `addGlobalClass: true`（頁面樣式可影響它），
+ * 因此由頁面覆寫尺寸。選擇器用 `goods-list` 的 `wr-class`（外部類，可靠）
+ * 當祖先，再打進卡片的內部類。
+ *
+ * 264rpx × 2 = 528rpx，在 570rpx 內留 42rpx 間距（goods-list 是 space-between）。
+ */
+.cat-grid__list .goods-card__main {
+  width: 264rpx;
+}
+.cat-grid__list .goods-card__thumb {
+  width: 264rpx;
+  height: 264rpx;
+}
+.cat-grid__list .goods-card__body {
+  padding: 12rpx 16rpx 14rpx;
+}
+.cat-grid__list .goods-card__title {
+  font-size: 24rpx;
+  line-height: 32rpx;
+  height: 64rpx;
+}
+.cat-grid__list .goods-card__tag {
+  font-size: 18rpx;
+  line-height: 26rpx;
+  padding: 0 6rpx;
+}
+.cat-grid__list .spec-for-price {
+  font-size: 30rpx;
+}
+.cat-grid__list .spec-for-symbol {
+  font-size: 22rpx;
+}
+
+/*
+ * ⚠️ 隱藏卡片上的「加入購物車」圖示。
+ *
+ * 理由：**T3.6 不提供加入購物車**（那是 T6 的工作，且需要規格選擇 ——
+ * `prd-1`／`prd-5`／`prd-6` 都有兩種規格，從網格直接加購會漏掉規格）。
+ * 留著圖示會變成「按了沒反應」的死按鈕。
+ *
+ * **T6 實作加入購物車後，請把這條規則刪掉。**
+ */
+.cat-grid__list .goods-card__add-cart {
+  display: none;
+}
+
+/* ── 載入失敗 ── */
+
+.cat-error {
+  padding: 180rpx 40rpx 0;
+  text-align: center;
+}
+.cat-error__text {
+  font-size: 28rpx;
+  color: #999999;
+}
+.cat-error__btn {
+  display: inline-block;
+  margin-top: 40rpx;
+  padding: 0 48rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  border-radius: 32rpx;
+  border: 2rpx solid #fa4126;
+  color: #fa4126;
+  font-size: 28rpx;
 }

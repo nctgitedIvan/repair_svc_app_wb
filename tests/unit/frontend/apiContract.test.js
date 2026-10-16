@@ -102,7 +102,7 @@ test('real 的每個方法都是「明確拋錯」的佔位', async (t) => {
 });
 
 test('契約涵蓋 P7a-2a 需要的商品 API', async (t) => {
-  for (const name of ['fetchProducts', 'fetchProductDetail', 'fetchProductCatalogIndex']) {
+  for (const name of ['fetchCategories', 'fetchProducts', 'fetchProductDetail', 'fetchProductCatalogIndex']) {
     await t.test(`含 ${name}`, () => {
       assert.ok(fakeNames.includes(name), `fake 缺少 ${name}`);
       assert.ok(indexNames.includes(name), `index.js 未轉出 ${name}`);

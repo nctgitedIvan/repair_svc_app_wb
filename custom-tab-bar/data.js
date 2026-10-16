@@ -26,13 +26,14 @@
  *
  * 「分類」是中性詞，涵蓋服務與零件；「服務」一詞太窄 —— 零件不是服務（`docs/01` §3.7.9）。
  *
- * **頁面路徑維持 `pages/services/index` 不變**：改路徑要動 `app.json`、`roleRouter`
- * 與所有 `switchTab` 呼叫，成本高於效益。**內容改造（左側一級分類／右側兩列網格）
- * 排在 P7a-2b**，與分類頁本身一起做。
+ * **T3.5 原本只改文字、沒改指向**（當時的判斷是「頁面內容改造排在 P7a-2b」），
+ * 於是出現「tabBar 寫分類、點進去是 P7a-1 的服務骨架」的空殼。
  *
- * 這會產生一個**已知的暫時不一致**：tabBar 寫「分類」、點進去仍是舊的服務列表骨架。
- * 這是刻意的取捨 —— 先讓入口名稱正確（它同時出現在 5 個 tab 的標籤上），
- * 內容隨後補上，而不是等兩者都完成才一起改。
+ * ⚠️ **T3.6（2026-10-16）修正為指向 `pages/category/index`** ——
+ * TDesign 的原始分類頁**一直都在 repo 裡沒被改過**（`goods-category` 元件：
+ * 左側一級側邊欄 ＋ 右側二級 tabs ＋ 下方網格），P7a-1 只是把 tabBar 指到新建的
+ * `pages/services/index` 骨架。所以修正是「把 tabBar 指回既有頁面 ＋ 接上新資料源」，
+ * **不是**重寫一個分類頁。原本的空殼 `pages/services/index` 保留不刪（已標註解）。
  */
 export default [
   {
@@ -43,7 +44,7 @@ export default [
   {
     icon: 'classify',
     text: '分類',
-    url: 'pages/services/index',
+    url: 'pages/category/index',
   },
   {
     icon: 'cart',

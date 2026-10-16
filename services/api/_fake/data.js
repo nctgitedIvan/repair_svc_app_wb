@@ -34,33 +34,197 @@ const CUSTOMERS = Object.freeze({
   },
 });
 
+/**
+ * 分類（**兩層**，`parentId === null` 為一級）。
+ *
+ * ⚠️ T3.6 起改為**二級分類**（原「不做二級分類」的決策已修正，
+ *    見 `docs/01` §3.7.9 的修正註記）。
+ *
+ * | 一級 | 二級 |
+ * |---|---|
+ * | 水 | 水管／水龍頭／熱水器 |
+ * | 電 | 線路／插座／燈具 |
+ * | 空調 | 清洗／維修／安裝 |
+ * | 家具 | 組裝／維修 |
+ *
+ * `order` 是同層的顯示順序；`isActive` 為 false 時整個分類不顯示
+ * （後台可上下架，`docs/01` §3.7.9）。
+ *
+ * ⚠️ 刻意**只放實際用到的欄位**：`docs/01` §3.7.9 的形狀還有 `icon`，
+ *    但目前的佈局（`isSlotRight`）只渲染名稱，`icon` 等到後台分類管理（P8）再定。
+ */
+const CATEGORIES = Object.freeze([
+  // ── 一級 ──
+  { categoryId: 'cat_water', name: '水', parentId: null, order: 1, isActive: true },
+  { categoryId: 'cat_elec', name: '電', parentId: null, order: 2, isActive: true },
+  { categoryId: 'cat_ac', name: '空調', parentId: null, order: 3, isActive: true },
+  { categoryId: 'cat_furn', name: '家具', parentId: null, order: 4, isActive: true },
+
+  // ── 二級：水 ──
+  { categoryId: 'cat_water_pipe', name: '水管', parentId: 'cat_water', order: 1, isActive: true },
+  { categoryId: 'cat_water_faucet', name: '水龍頭', parentId: 'cat_water', order: 2, isActive: true },
+  { categoryId: 'cat_water_heater', name: '熱水器', parentId: 'cat_water', order: 3, isActive: true },
+
+  // ── 二級：電 ──
+  { categoryId: 'cat_elec_wire', name: '線路', parentId: 'cat_elec', order: 1, isActive: true },
+  { categoryId: 'cat_elec_socket', name: '插座', parentId: 'cat_elec', order: 2, isActive: true },
+  { categoryId: 'cat_elec_light', name: '燈具', parentId: 'cat_elec', order: 3, isActive: true },
+
+  // ── 二級：空調 ──
+  { categoryId: 'cat_ac_clean', name: '清洗', parentId: 'cat_ac', order: 1, isActive: true },
+  { categoryId: 'cat_ac_repair', name: '維修', parentId: 'cat_ac', order: 2, isActive: true },
+  { categoryId: 'cat_ac_install', name: '安裝', parentId: 'cat_ac', order: 3, isActive: true },
+
+  // ── 二級：家具 ──
+  { categoryId: 'cat_furn_assembly', name: '組裝', parentId: 'cat_furn', order: 1, isActive: true },
+  { categoryId: 'cat_furn_repair', name: '維修', parentId: 'cat_furn', order: 2, isActive: true },
+
+  // ── 刻意停用一個分類，讓「下架分類不顯示」可被目視驗收 ──
+  { categoryId: 'cat_old', name: '舊家電（已停用）', parentId: null, order: 9, isActive: false },
+]);
+
+/**
+ * 服務（人工）。
+ *
+ * ⚠️ 兩個分類欄位的分工（T3.6 起）：
+ *   - `category`   ：**一級**分類的**名稱**（字串，供 `fetchServices({ category })` 篩選）
+ *   - `categoryId` ：**二級**分類的 id（分類頁的關聯，與 `products` 一致）
+ *
+ * 每個二級分類至少掛一個服務或零件，否則該 tab 會是空的
+ * （空的分類是合法狀態，但不利於驗收 —— 只留一個「已停用」的分類當反例）。
+ */
 const SERVICES = Object.freeze([
   {
     serviceId: 'svc-1',
     name: '冷氣維修',
     category: '空調',
+    categoryId: 'cat_ac_repair',
+    order: 1,
     priceCents: 10000,
     durationMinutes: 60,
     description: '到府檢修冷氣，含基本檢測與清潔',
     isActive: true,
+    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/muy-3a.png',
   },
   {
     serviceId: 'svc-2',
     name: '冷氣清洗',
     category: '空調',
+    categoryId: 'cat_ac_clean',
+    order: 1,
     priceCents: 6000,
     durationMinutes: 45,
     description: '深度清洗室內機與濾網',
     isActive: true,
+    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-17a.png',
   },
   {
     serviceId: 'svc-3',
     name: '水管疏通',
-    category: '水電',
+    category: '水', // T3.6：原本是「水電」，改為一級分類「水」以維持欄位語意一致
+    categoryId: 'cat_water_pipe',
+    order: 1,
     priceCents: 8000,
     durationMinutes: 40,
     description: '廚房與浴室排水管疏通',
     isActive: true,
+    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-3a.png',
+  },
+  {
+    serviceId: 'svc-4',
+    name: '水龍頭安裝',
+    category: '水',
+    categoryId: 'cat_water_faucet',
+    order: 1,
+    priceCents: 5000,
+    durationMinutes: 30,
+    description: '含舊品拆除與新品安裝、試水',
+    isActive: true,
+    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-09a.png',
+  },
+  {
+    serviceId: 'svc-5',
+    name: '熱水器清洗',
+    category: '水',
+    categoryId: 'cat_water_heater',
+    order: 1,
+    priceCents: 7000,
+    durationMinutes: 45,
+    description: '清除水垢與沉積物，含安全檢查',
+    isActive: true,
+    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-08b.png',
+  },
+  {
+    serviceId: 'svc-6',
+    name: '線路檢修',
+    category: '電',
+    categoryId: 'cat_elec_wire',
+    order: 1,
+    priceCents: 9000,
+    durationMinutes: 60,
+    description: '查線、測漏電、更換老化線路',
+    isActive: true,
+    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-17a.png',
+  },
+  {
+    serviceId: 'svc-7',
+    name: '插座更換',
+    category: '電',
+    categoryId: 'cat_elec_socket',
+    order: 1,
+    priceCents: 3000,
+    durationMinutes: 30,
+    description: '更換面板與插座本體，含通電測試',
+    isActive: true,
+    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-3a.png',
+  },
+  {
+    serviceId: 'svc-8',
+    name: '燈具安裝',
+    category: '電',
+    categoryId: 'cat_elec_light',
+    order: 1,
+    priceCents: 4000,
+    durationMinutes: 40,
+    description: '吸頂燈／吊燈安裝，含舊燈拆除',
+    isActive: true,
+    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/muy-3a.png',
+  },
+  {
+    serviceId: 'svc-9',
+    name: '冷氣安裝',
+    category: '空調',
+    categoryId: 'cat_ac_install',
+    order: 1,
+    priceCents: 12000,
+    durationMinutes: 90,
+    description: '分離式冷氣標準安裝（不含加長管線）',
+    isActive: true,
+    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-09a.png',
+  },
+  {
+    serviceId: 'svc-10',
+    name: '家具組裝',
+    category: '家具',
+    categoryId: 'cat_furn_assembly',
+    order: 1,
+    priceCents: 6000,
+    durationMinutes: 60,
+    description: '櫃體／桌椅到府組裝',
+    isActive: true,
+    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-08b.png',
+  },
+  {
+    serviceId: 'svc-11',
+    name: '家具維修',
+    category: '家具',
+    categoryId: 'cat_furn_repair',
+    order: 1,
+    priceCents: 8000,
+    durationMinutes: 60,
+    description: '鬆動、刮傷、五金更換',
+    isActive: true,
+    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/muy-3a.png',
   },
 ]);
 
@@ -78,13 +242,25 @@ const SERVICES = Object.freeze([
  * `thumb` 是給前端呈現用的圖片欄位（購物車列、商品列表、商品詳情共用）。
  * ⚠️ **後端 `products` 的圖片欄位尚未在 `docs/01` §7.1 定名** ——
  *    這裡用 `thumb` 是配合既有呈現元件（`goods-card`）的期待值，
- *    **P2 建立集合時要一併定案**（見 `docs/01` §7.2 第 7 點之後的未決項說明）。
+ *    **P2 建立集合時要一併定案**（見 `docs/01` §7.2 的未決項說明）。
+ *
+ * `category`／`categoryId`／`order`：與 `SERVICES` 同一套規則（T3.6 起）——
+ * `category` 是一級分類的**名稱**、`categoryId` 指向**二級**分類、`order` 是同分類內的顯示序。
+ *
+ * ⚠️ **T4 的四種邊界情況必須維持可觸發**（人工驗收 C4/C5 的前提）：
+ *    · 庫存很少 → `prd-2`（stock 3）
+ *    · 已售完   → `prd-3`（stock 0）
+ *    · 已下架   → `prd-4`（isActive false）
+ *    · 價格變動 → 手工改任一筆的 `priceCents` 即可
+ *    T3.6 只**新增** `categoryId`／`order`／`prd-5~7`，**沒有動這四筆的 stock 與 isActive**。
  */
 const PRODUCTS = Object.freeze([
   {
     productId: 'prd-1',
     name: '冷媒 R410',
-    category: '冷媒',
+    category: '空調',
+    categoryId: 'cat_ac_repair',
+    order: 1,
     priceCents: 2500,
     stock: 20,
     isActive: true,
@@ -94,7 +270,9 @@ const PRODUCTS = Object.freeze([
   {
     productId: 'prd-2',
     name: '排水管接頭',
-    category: '管件',
+    category: '水',
+    categoryId: 'cat_water_pipe',
+    order: 1,
     priceCents: 800,
     stock: 3, // ← 刻意很少，驗收「庫存不足」用
     isActive: true,
@@ -104,7 +282,9 @@ const PRODUCTS = Object.freeze([
   {
     productId: 'prd-3',
     name: '濾網（通用型）',
-    category: '耗材',
+    category: '空調',
+    categoryId: 'cat_ac_clean',
+    order: 1,
     priceCents: 450,
     stock: 0, // ← 刻意為 0，驗收「已售完」用
     isActive: true,
@@ -114,11 +294,49 @@ const PRODUCTS = Object.freeze([
   {
     productId: 'prd-4',
     name: '舊款溫控器',
-    category: '零件',
+    category: '電',
+    categoryId: 'cat_elec_socket',
+    order: 1,
     priceCents: 3200,
     stock: 5,
-    isActive: false, // ← 刻意下架，驗收「已下架」用
+    isActive: false, // ← 刻意下架，驗收「已下架」用（分類頁也不會顯示它）
     thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-17a.png',
+    specs: [],
+  },
+  {
+    productId: 'prd-5',
+    name: '水龍頭墊片',
+    category: '水',
+    categoryId: 'cat_water_faucet',
+    order: 1,
+    priceCents: 200,
+    stock: 50,
+    isActive: true,
+    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-3a.png',
+    specs: [{ specId: 'm12', name: 'M12' }, { specId: 'm15', name: 'M15' }],
+  },
+  {
+    productId: 'prd-6',
+    name: '燈泡（LED 12W）',
+    category: '電',
+    categoryId: 'cat_elec_light',
+    order: 1,
+    priceCents: 1500,
+    stock: 12,
+    isActive: true,
+    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-17a.png',
+    specs: [{ specId: 'warm', name: '暖光' }, { specId: 'cool', name: '白光' }],
+  },
+  {
+    productId: 'prd-7',
+    name: '家具五金配件包',
+    category: '家具',
+    categoryId: 'cat_furn_assembly',
+    order: 1,
+    priceCents: 600,
+    stock: 30,
+    isActive: true,
+    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-08b.png',
     specs: [],
   },
 ]);
@@ -199,6 +417,7 @@ const ADMIN_OVERVIEW = Object.freeze({
 
 module.exports = {
   CUSTOMERS,
+  CATEGORIES,
   SERVICES,
   PRODUCTS,
   ORDERS,

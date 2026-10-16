@@ -20,6 +20,7 @@ function notImplemented(name) {
 }
 
 export const getMyRole = notImplemented('getMyRole');
+export const fetchCategories = notImplemented('fetchCategories');
 export const fetchServices = notImplemented('fetchServices');
 export const fetchServiceDetail = notImplemented('fetchServiceDetail');
 export const fetchProducts = notImplemented('fetchProducts');

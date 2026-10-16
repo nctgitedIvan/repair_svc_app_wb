@@ -3,7 +3,19 @@
     <c-sidebar-item wx:for="{{ category }}" wx:key="index" title="{{ item.name }}" disabled="{{ item.disabled }}" />
   </c-sidebar>
   <view class="goods-category__right">
-    <c-tabbar wx:if="{{isSlotRight}}" activeKey="{{subActiveKey}}" bindchange="onChildChange" showMore>
+    <!--
+      ⚠️ T3.6 修正：原本**沒有傳 `tabList`**，而 c-tabbar 的內容是
+         `wx:if="{{ tabList.length > 0 }}"` —— 也就是說在 `isSlotRight` 模式下
+         二級 tabs 永遠是空的（這個模式在 T3.6 之前從未被使用，所以沒人發現）。
+         二級清單 = 目前選取的一級分類的 children。
+    -->
+    <c-tabbar
+      wx:if="{{isSlotRight}}"
+      activeKey="{{subActiveKey}}"
+      tabList="{{ category[activeKey].children }}"
+      bindchange="onChildChange"
+      showMore
+    >
       <slot />
     </c-tabbar>
     <view wx:if="{{!isSlotRight}}" class="goods-category-normal">

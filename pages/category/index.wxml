@@ -1,8 +1,36 @@
+<!--
+  分類頁。
+
+  版面沿用 TDesign 原始的 goods-category 元件（左一級／右二級 tabs／下方網格）：
+  - isSlotRight = true → 右側改用 c-tabbar 顯示二級分類
+  - slot 內容 = 本頁自己的商品網格（goods-list，兩列）
+
+  ⚠️ 資料形狀全部來自 utils/catalogView.js，本檔不做任何判斷。
+-->
 <view class="wrap">
   <goods-category
-    level="{{3}}"
+    wx:if="{{ready && !loadError}}"
+    level="{{2}}"
+    isSlotRight="{{true}}"
     custom-class="goods-category-class"
-    category="{{list}}"
-    bind:changeCategory="onChange"
-  />
+    category="{{levels}}"
+    bind:change="onCategoryChange"
+  >
+    <view class="cat-grid">
+      <!--
+        共用卡片元件（goods-list + goods-card），服務與零件用同一個元件渲染。
+        卡片尺寸由本頁 index.wxss 覆寫（右側面板比全寬列表窄，見該檔說明）。
+      -->
+      <goods-list wr-class="cat-grid__list" goodsList="{{items}}" bind:click="onItemTap" />
+      <view class="cat-grid__empty" wx:if="{{items.length === 0}}">{{currentName}} 目前沒有可預約的項目</view>
+    </view>
+  </goods-category>
+
+  <!-- 載入失敗（不假裝「沒有分類」） -->
+  <view class="cat-error" wx:if="{{ready && loadError}}">
+    <view class="cat-error__text">分類載入失敗</view>
+    <view class="cat-error__btn" catchtap="onRetry">重新載入</view>
+  </view>
 </view>
+
+<t-toast id="t-toast" />

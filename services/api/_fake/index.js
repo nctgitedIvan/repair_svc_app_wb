@@ -12,7 +12,7 @@
  */
 
 import {
-  CUSTOMERS, SERVICES, PRODUCTS, ORDERS, TECHNICIAN_EARNINGS,
+  CUSTOMERS, CATEGORIES, SERVICES, PRODUCTS, ORDERS, TECHNICIAN_EARNINGS,
   WORK_ORDERS, TECHNICIANS, ADMIN_OVERVIEW,
 } from './data';
 
@@ -34,6 +34,18 @@ export function __setRoleForDemo(role) {
 export async function getMyRole() {
   await delay(60);
   return { role: currentRole, status: 'active' };
+}
+
+/**
+ * 分類（**兩層**，扁平回傳、帶 `parentId`）。
+ *
+ * ⚠️ 刻意回傳**全部**（含已停用的分類），讓 UI 必須自己過濾 ——
+ *    與 `fetchProducts()` 同一個理由：邊界情況要可見（人工驗收）。
+ *    過濾規則在 `utils/catalogView.buildCategoryTree()`，且**有測試**。
+ */
+export async function fetchCategories() {
+  await delay(60);
+  return { list: CATEGORIES, total: CATEGORIES.length };
 }
 
 export async function fetchServices({ category } = {}) {

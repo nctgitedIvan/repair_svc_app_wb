@@ -309,6 +309,34 @@ T7  結算頁（M6）                                         → tag → commit
 3. 一併刪除 `tests/unit/frontend/cartView.test.js` 的「toLegacyGoodsRequest」那一組測試
 4. 結算頁改讀 `repair.checkout.v1`
 
+### 12.6.1 T3.6（分類頁，計畫外追加）
+
+| 項目 | 內容 |
+|---|---|
+| commit | `d3b928f`（計畫）+ T3.6 實作 commit |
+| tag | `pre-p7a2a-t36` |
+| 計畫文件 | `docs/P7a-2a-T3.6-計畫.md` |
+
+**起因**：T3.5 只把 tabBar 文字改成「分類」、**沒有改指向**，於是「tabBar 寫分類、
+點進去是 P7a-1 建的服務骨架（空殼）」。
+
+**診斷結果（與原本的前提不符）**：`pages/category/` **從未被修改過** ——
+TDesign 的原始分類頁（`goods-category`：左一級側邊欄＋右二級 tabs＋網格）
+一直都在 repo 裡，P7a-1 只是把 tabBar 指向了新建的 `pages/services/index`。
+因此修正是「**把 tabBar 指回既有頁面 ＋ 接上新資料源**」，不是重寫分類頁。
+
+**主要改動**：
+- `app.json`／`custom-tab-bar/data.js`：tabBar 第 2 項改指 `pages/category/index`
+- `pages/category/**`：接新 API 層（`fetchCategories`）＋ 混合網格（服務在上、零件在下）
+- `goods-category/index.wxml`：補 `tabList`（原本沒傳，`isSlotRight` 模式下二級 tabs 會是空的）
+- `c-tabbar/index.js`：修正 `activeKey` observer 的 falsy 判斷（值為 `0` 時不更新高亮）
+- 新增 `utils/catalogView.js`（純函式：分類樹／混合排序／卡片欄位）＋ 28 項測試
+- fake 資料：新增 `CATEGORIES`（兩層）＋ `services`／`products` 的 `categoryId`／`order`
+- `pages/services/index.js` 標 `DEPRECATED`（保留不刪）
+- `docs/01` §3.7.9／§7.1／§7.2：改為二級分類、`category_id` 定案（原文保留 + 修正註記）
+
+**測試數：966 → 994。**
+
 ### 12.6 尚未執行的驗收
 
 | 項目 | 狀態 |

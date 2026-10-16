@@ -17,6 +17,7 @@ const impl = config.apiMode === 'cloud' ? real : fake;
 
 // 逐個轉出，而非 `export * from` —— 這樣契約一目了然，也方便靜態檢查。
 export const getMyRole = (...args) => impl.getMyRole(...args);
+export const fetchCategories = (...args) => impl.fetchCategories(...args);
 export const fetchServices = (...args) => impl.fetchServices(...args);
 export const fetchServiceDetail = (...args) => impl.fetchServiceDetail(...args);
 export const fetchProducts = (...args) => impl.fetchProducts(...args);
