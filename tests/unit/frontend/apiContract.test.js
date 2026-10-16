@@ -111,7 +111,7 @@ test('契約涵蓋 P7a-2a 需要的商品 API', async (t) => {
 });
 
 test('⚠️ fake 資料必須讓邊界情況可見（人工驗收 C4/C5 的前提）', async (t) => {
-  const { PRODUCTS } = require('../../../services/api/_fake/data');
+  const { PRODUCTS, SERVICES } = require('../../../services/api/_fake/data');
 
   await t.test('至少有一個庫存為 0 的零件（驗收「已售完」）', () => {
     assert.ok(PRODUCTS.some((p) => p.stock === 0 && p.isActive), '缺少庫存 0 的零件');
@@ -140,6 +140,26 @@ test('⚠️ fake 資料必須讓邊界情況可見（人工驗收 C4/C5 的前�
   await t.test('每個零件都有非空的 thumb（前端呈現需要）', () => {
     for (const p of PRODUCTS) {
       assert.ok(typeof p.thumb === 'string' && p.thumb.length > 0, `${p.productId} 缺少 thumb`);
+    }
+  });
+
+  // T6a-3：詳情頁的「詳情介紹」與服務的「技能標籤」都要有資料可顯示。
+  await t.test('每個零件都有 description（詳情頁的詳情介紹用）', () => {
+    for (const p of PRODUCTS) {
+      assert.ok(typeof p.description === 'string' && p.description.length > 0, `${p.productId} 缺少 description`);
+    }
+  });
+
+  await t.test('每個服務都有 description 與 skillTags（§3.7.1）', () => {
+    for (const s of SERVICES) {
+      assert.ok(typeof s.description === 'string' && s.description.length > 0, `${s.serviceId} 缺少 description`);
+      assert.ok(Array.isArray(s.skillTags) && s.skillTags.length > 0, `${s.serviceId} 缺少 skillTags`);
+    }
+  });
+
+  await t.test('每個服務都有時長（詳情頁要顯示）', () => {
+    for (const s of SERVICES) {
+      assert.ok(Number.isInteger(s.durationMinutes) && s.durationMinutes > 0, `${s.serviceId} 缺少 durationMinutes`);
     }
   });
 });

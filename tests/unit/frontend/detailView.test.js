@@ -187,23 +187,26 @@ test('selectedSpecIdOf：從彈窗的 selectedSku 取出選中的規格', async 
  * 用**真實 fake 資料**驗一次 —— 前面的測試用的是自己造的小資料。
  */
 test('與真實 fake 資料對齊', async (t) => {
-  await t.test('每個商品都能組出詳情（有圖、有價）', () => {
+  await t.test('每個商品都能組出詳情（有圖、有描述、有價）', () => {
     for (const p of PRODUCTS) {
       const v = build(p, 'product');
       assert.ok(v.title, `${p.productId} 沒有名稱`);
+      // T6a-3 補上：沒有 description 的話「詳情介紹」區塊會是空的
+      assert.ok(v.description, `${p.productId} 沒有 description`);
       assert.ok(Number.isInteger(v.priceCents), `${p.productId} 沒有價格`);
       assert.deepEqual(v.images, [p.thumb], `${p.productId} 的圖不對`);
     }
   });
 
-  // ⚠️ `description`（商品）與 `skillTags`（服務）的斷言在 **T6a-3** 補上 ——
-  //    fake 資料目前還沒有這兩個欄位，T6a-3 補資料時一併加斷言。
-  await t.test('每個服務都能組出詳情，且都不能加購', () => {
+  await t.test('每個服務都能組出詳情（有時長、有技能標籤），且都不能加購', () => {
     for (const s of SERVICES) {
       const v = build(s, 'service');
       assert.ok(v.title, `${s.serviceId} 缺名稱`);
+      assert.ok(v.description, `${s.serviceId} 缺 description`);
       assert.equal(v.canAddToCart, false);
       assert.ok(v.durationMinutes > 0, `${s.serviceId} 缺時長`);
+      // T6a-3 補上：§3.7.1 說服務有技能標籤
+      assert.ok(v.skillTags.length > 0, `${s.serviceId} 缺技能標籤`);
     }
   });
 
