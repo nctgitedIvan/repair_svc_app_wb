@@ -64,9 +64,54 @@ const SERVICES = Object.freeze([
   },
 ]);
 
+/**
+ * 零件（商品）。
+ *
+ * ⚠️ 依 §3.7.1，零件與服務在領域層分離：
+ *    零件有 `stock` 與 `specs`，服務沒有。
+ *
+ * 形狀對齊後端（`docs/01` §7.1 的 `products`），讓 P7b 換實作時無痛。
+ *
+ * `stock` 刻意設得小（含 0 與不足的量），讓 §3.7.6 的邊界情況
+ * **可被目視驗收**（人工驗收 P7a2a-C4）。
+ */
 const PRODUCTS = Object.freeze([
-  { productId: 'prd-1', name: '冷媒 R410', priceCents: 2500, category: '材料', isActive: true },
-  { productId: 'prd-2', name: '排水管接頭', priceCents: 800, category: '材料', isActive: true },
+  {
+    productId: 'prd-1',
+    name: '冷媒 R410',
+    category: '冷媒',
+    priceCents: 2500,
+    stock: 20,
+    isActive: true,
+    specs: [{ specId: 'std', name: '標準罐' }, { specId: 'big', name: '大罐' }],
+  },
+  {
+    productId: 'prd-2',
+    name: '排水管接頭',
+    category: '管件',
+    priceCents: 800,
+    stock: 3, // ← 刻意很少，驗收「庫存不足」用
+    isActive: true,
+    specs: [],
+  },
+  {
+    productId: 'prd-3',
+    name: '濾網（通用型）',
+    category: '耗材',
+    priceCents: 450,
+    stock: 0, // ← 刻意為 0，驗收「已售完」用
+    isActive: true,
+    specs: [],
+  },
+  {
+    productId: 'prd-4',
+    name: '舊款溫控器',
+    category: '零件',
+    priceCents: 3200,
+    stock: 5,
+    isActive: false, // ← 刻意下架，驗收「已下架」用
+    specs: [],
+  },
 ]);
 
 /**

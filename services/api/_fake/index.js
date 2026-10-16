@@ -42,6 +42,35 @@ export async function fetchServices({ category } = {}) {
   return { list, total: list.length };
 }
 
+/**
+ * 零件列表。
+ *
+ * ⚠️ 刻意**回傳全部零件（含下架與缺貨）**，讓 UI 必須自己處理顯示 ——
+ *    真實後端會過濾，但 P7a 讓邊界情況可見（人工驗收 C4/C5）。
+ */
+export async function fetchProducts({ category } = {}) {
+  await delay();
+  const list = PRODUCTS.filter((p) => !category || p.category === category);
+  return { list, total: list.length };
+}
+
+export async function fetchProductDetail(productId) {
+  await delay();
+  const product = PRODUCTS.find((p) => p.productId === productId);
+  if (!product) throw new Error('零件不存在：' + productId);
+  return product;
+}
+
+/** 供購物車 validate() 使用的商品現況索引（productId → 庫存/價格/上架） */
+export async function fetchProductCatalogIndex() {
+  await delay(40);
+  const index = {};
+  for (const p of PRODUCTS) {
+    index[p.productId] = { isActive: p.isActive, stock: p.stock, priceCents: p.priceCents };
+  }
+  return index;
+}
+
 export async function fetchServiceDetail(serviceId) {
   await delay();
   const service = SERVICES.find((s) => s.serviceId === serviceId);
