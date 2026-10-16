@@ -11,6 +11,40 @@
  * 於 P4 建立，見 docs/02-實施計畫.md §5。
  */
 
+// ── 值物件基礎 ──
+const { ValueObject } = require('./shared/ValueObject');
+const { canonicalJSON } = require('./shared/canonicalJSON');
+const assertions = require('./shared/assertions');
+
+// ── 領域值物件 ──
+const { MaskedPhone } = require('./shared/MaskedPhone');
+const { Address } = require('./shared/Address');
+const { AddressView, DisclosureLevel } = require('./shared/AddressView');
+const { OrderNo } = require('./shared/OrderNo');
+const { CommissionRate, BP_DENOMINATOR } = require('./shared/CommissionRate');
+const { AmountChangeReason, ReasonCode } = require('./audit/AmountChangeReason');
+const { ProfitSharingTerms, SharingBase } = require('./settlement/ProfitSharingTerms');
+
+// ── 狀態機 ──
 const OrderStatus = require('./order/OrderStatus');
 
-module.exports = { OrderStatus };
+module.exports = {
+  // 基礎
+  ValueObject,
+  canonicalJSON,
+  ...assertions,
+  // 值物件
+  MaskedPhone,
+  Address,
+  AddressView,
+  DisclosureLevel,
+  OrderNo,
+  CommissionRate,
+  BP_DENOMINATOR,
+  AmountChangeReason,
+  ReasonCode,
+  ProfitSharingTerms,
+  SharingBase,
+  // 狀態機
+  OrderStatus,
+};

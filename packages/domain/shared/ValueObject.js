@@ -33,6 +33,16 @@ const { assertPlainObject } = require('./assertions');
  *
  *    這是**刻意的**：它強迫所有狀態放進 `#props` 或私有欄位，
  *    避免出現「一半在 props、一半在公開屬性」的值物件 —— 那種物件的 `equals()` 必然出錯。
+ *
+ * ⚠️ **`toJSON()` 只能依賴 `this.props`，不得讀取子類別的私有欄位。**
+ *
+ *    原因：本類別在 `super()` 期間就呼叫 `this.toJSON()` 來預算雜湊，
+ *    而子類別的私有欄位（`#x`）要到 `super()` **回傳後**才初始化。
+ *    若 `toJSON()` 讀取 `#x`，會拋
+ *    `TypeError: Cannot read private member #x from an object whose class did not declare it`。
+ *
+ *    這是實測踩到的坑（P4a-T4 的 `MaskedPhone`，原本把遮罩值同時存在 `#masked` 與 props）。
+ *    **正解：狀態只放 `props`，不要另外複製到私有欄位** —— 兩份來源必然走鐘。
  */
 class ValueObject {
   #props;
