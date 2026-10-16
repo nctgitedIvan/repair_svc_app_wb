@@ -248,7 +248,7 @@ Component({
         Toast({
           context: this,
           selector: '#t-toast',
-          message: '该规格已售罄',
+          message: '該規格已售罄',
           icon: '',
           duration: 1000,
         });
@@ -310,6 +310,12 @@ Component({
       this.triggerEvent('addCart');
     },
 
+    /**
+     * ⚠️ T6a-4：**「立即購買」已移除**（商品詳情不得有立即下單，P7a2a-C2）。
+     *
+     * 這個方法保留是為了**不破壞呼叫端的綁定**（`pages/goods/details` 仍綁著
+     * `bind:buyNow`）—— T6a-5 改寫詳情頁時會一併移除該綁定與這個方法。
+     */
     buyNow() {
       const { isAllSelectedSku } = this.data;
       const { isStock } = this.properties;

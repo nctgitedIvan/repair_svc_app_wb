@@ -250,32 +250,28 @@
   padding: 0 20rpx;
 }
 
+/*
+ * ⚠️ T6a-4：這個動作列原本是「加入購物車 50% ＋ 立即購買 50%」的雙按鈕。
+ * 移除「立即購買」之後只剩一顆，因此寬度改 100%、圓角改四角全圓
+ * （原本的 addCart 是「左半顆」的左圓角）。
+ * `.sku-operate-buyNow` 的兩條規則已一併刪除（按鈕不存在了）。
+ */
 .popup-sku-actions .sku-operate {
   height: 80rpx;
-  width: 50%;
+  width: 100%;
   color: #fff;
   border-radius: 48rpx;
 }
 
 .popup-sku-actions .sku-operate .sku-operate-addCart {
-  background-color: #ffece9;
-  color: #fa4126;
-  border-radius: 48rpx 0 0 48rpx;
+  background-color: #fa4126;
+  color: #ffffff;
+  border-radius: 48rpx;
 }
 
 .popup-sku-actions .sku-operate .sku-operate-addCart.disabled {
   background: rgb(221, 221, 221);
   color: #fff;
-}
-
-.popup-sku-actions .sku-operate .sku-operate-buyNow {
-  background-color: #fa4126;
-  border-radius: 0 48rpx 48rpx 0;
-}
-
-.popup-sku-actions .sku-operate .sku-operate-buyNow.disabled {
-  color: #fff;
-  background: rgb(198, 198, 198);
 }
 
 .popup-sku-actions .sku-operate .selected-sku-btn {

@@ -12,7 +12,7 @@
         </view>
         <!-- 已选规格 -->
         <view class="popup-sku__selected-spec">
-          <view>选择：</view>
+          <view>選擇：</view>
           <view wx:for="{{specList}}" wx:key="specId">
             <view
               class="popup-sku__selected-item"
@@ -53,28 +53,41 @@
       <view class="popup-sku-stepper-stock">
         <view class="popup-sku-stepper-container">
           <view class="popup-sku__stepper-title">
-            购买数量
+            購買數量
             <view class="limit-text" wx:if="{{limitBuyInfo}}"> ({{limitBuyInfo}}) </view>
           </view>
-          <t-stepper value="{{buyNum}}" min="{{1}}" max="{{2}}" theme="filled" bind:change="handleBuyNumChange" />
+          <!--
+            ⚠️ T6a-4 修正：原本 max 被**硬寫成 2**（TDesign 範例的殘留），
+               導致任何商品最多只能買 2 件。改為由頁面傳入的 limitMaxCount
+               （詳情頁會以庫存為上限，見 utils/detailView 的 maxBuyQuantity）。
+          -->
+          <t-stepper
+            value="{{buyNum}}"
+            min="{{limitMinCount}}"
+            max="{{limitMaxCount}}"
+            theme="filled"
+            bind:change="handleBuyNumChange"
+          />
         </view>
       </view>
     </view>
     <view wx:if="{{outOperateStatus}}" class="single-confirm-btn {{!isStock ? 'disabled' : ''}}" bindtap="specsConfirm">
-      确定
+      確定
     </view>
     <view
       class="popup-sku-actions flex flex-between {{!isStock ? 'popup-sku-disabled' : ''}}"
       wx:if="{{!outOperateStatus}}"
     >
+      <!--
+        ⚠️ T6a-4：**移除「立即购买」按鈕**。
+        依 §3.7.2，「立即下單」是**服務**專屬（服務不進購物車，直接預約）；
+        商品詳情頁**不得有立即下單**（人工驗收 P7a2a-C2）。
+        服務的「立即預約」屬 P7a-2b，屆時由該階段的按鈕承接，
+        不會從這個彈窗復活。
+      -->
       <view class="sku-operate">
         <view class="selected-sku-btn sku-operate-addCart {{!isStock ? 'disabled' : ''}}" bindtap="addCart">
-          加入购物车
-        </view>
-      </view>
-      <view class="sku-operate">
-        <view class="selected-sku-btn sku-operate-buyNow  {{!isStock ? 'disabled' : ''}}" bindtap="buyNow">
-          立即购买
+          加入購物車
         </view>
       </view>
     </view>

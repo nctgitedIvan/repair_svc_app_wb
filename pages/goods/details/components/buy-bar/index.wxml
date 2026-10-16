@@ -1,5 +1,5 @@
 <view class="flex soldout flex-center wr-sold-out" wx:if="{{soldout ||  !isStock}}">
-	{{soldout ? '商品已下架' : '商品已售馨'}}
+	{{soldout ? '商品已下架' : '商品已售完'}}
 </view>
 <view class="footer-cont flex flex-between wr-class">
 	<view class="flex flex-between bottom-operate-left" wx:if="{{jumpArray.length > 0}}">
@@ -21,13 +21,15 @@
 			</view>
 		</view>
 	</view>
+	<!--
+		⚠️ T6a-4：移除「立即购买」（商品詳情不得有立即下單，P7a2a-C2）。
+		同時把「加入购物车」改為繁體。
+		⚠️ T6a-5 會在這個區塊加上「服務不顯示按鈕」的分支（服務屬 P7a-2b）。
+	-->
 	<block wx:if="{{buttonType === 1}}">
 		<view class="flex buy-buttons">
-			<view class="bar-separately {{soldout || !isStock ? 'bar-addCart-disabled' : ''}}" bindtap="toAddCart">
-				加入购物车
-			</view>
-			<view class="bar-buy {{soldout || !isStock ? 'bar-buyNow-disabled' : ''}}" bindtap="toBuyNow">
-				立即购买
+			<view class="bar-buy {{soldout || !isStock ? 'bar-buyNow-disabled' : ''}}" bindtap="toAddCart">
+				加入購物車
 			</view>
 		</view>
 	</block>

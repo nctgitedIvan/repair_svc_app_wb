@@ -54,13 +54,17 @@
   color: #fff;
 }
 
-.addCart-disabled,
-.bar-addCart-disabled {
-  background: rgba(221, 221, 221, 1) !important;
-  color: #fff !important;
-  font-size: 28rpx;
-}
-
+/*
+ * 停用狀態（售完／下架）。
+ *
+ * ⚠️ `.addCart-disabled`／`.bar-addCart-disabled` 已於 T6a-4 移除 ——
+ *    它們對應的「加入購物車」按鈕已被刪掉（只留「立即購買」那顆，改名為
+ *    「加入購物車」），因此那兩條規則沒有節點再用。
+ *
+ * ⚠️ 這裡的**類別命名沿用了舊的 buyNow 系列**（`.bar-buyNow-disabled`），
+ *    語意上現在是「結帳主按鈕的停用態」。T6a-5 重構這個區塊（加入服務分支與
+ *    action key 契約）時會一併正名。
+ */
 .buyNow-disabled,
 .bar-buyNow-disabled {
   background: rgba(198, 198, 198, 1) !important;
@@ -68,7 +72,11 @@
   font-size: 28rpx;
 }
 
-.bar-separately,
+/*
+ * ⚠️ T6a-4：原本是「加入購物車（左半）＋ 立即購買（右半）」的雙按鈕，
+ * 移除「立即購買」後只剩一顆 → 圓角改四角全圓。
+ * `.bar-separately`（左半顆的樣式）已無對應節點，一併移除。
+ */
 .bar-buy {
   width: 254rpx;
   height: 80rpx;
@@ -76,17 +84,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-.bar-separately {
-  background: #ffece9;
-  color: #fa4126;
-  border-radius: 40rpx 0 0 40rpx;
-}
-
-.bar-buy {
   background-color: #fa4126;
-  border-radius: 0rpx 40rpx 40rpx 0rpx;
+  border-radius: 40rpx;
 }
 
 .flex {
