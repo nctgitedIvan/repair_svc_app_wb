@@ -7,7 +7,7 @@ import TabMenu from './data';
  * 以 `wx.reLaunch` 導向各自的工作台。原因見 `data.js` 的說明
  * （`tabBar.list` 上限 5 項 + tabBar 頁面必須在主包）。
  *
- * ⚠️ 本檔不做任何角色判斷 —— 它只負責渲染這 4 項與切換。
+ * ⚠️ 本檔不做任何角色判斷 —— 它只負責渲染這 5 項與切換。
  *    這是刻意的：**tabBar 是導覽元件，不是權限邊界**。
  */
 Component({

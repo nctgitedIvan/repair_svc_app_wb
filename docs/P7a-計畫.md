@@ -73,7 +73,14 @@ pages/*  →  services/api/  →  ┌─ _fake/  （P7a：記憶體假資料）
 | M9 | `pages/order/order-detail/index.js` | 同上；新增「申請退款」「聯繫客服」入口 | 中 |
 | M10 | `pages/order/components/order-button-bar/index.js` | 按鈕依**角色 × 狀態**顯示（純顯示邏輯） | 中 |
 | M11 | `pages/order/components/customer-service/index.js` | ⚠️ **移除 `wx.makePhoneCall` 直撥能力**（`docs/00` §5.4 的既有風險） | **中**（有回歸風險） |
-| M12 | `pages/cart/index.js`、`pages/coupon/**` | **僅移除入口**，代碼保留並標 `@deprecated` | 低 |
+| M12 | ~~`pages/cart/index.js`~~、`pages/coupon/**` | **僅移除入口**，代碼保留並標 `@deprecated` | 低 |
+
+> ⚠️ **M12 已於 T3.5（2026-10-16）修正**：**購物車不在下線清單內**。
+> `docs/01` §3.7.7 撤銷了 A7 中「購物車下線」的部分 ——
+> 購物車改為**恢復並改造**（§3.7.5 的 tabBar 第 3 項），
+> 且**只放零件**（§3.7.2：服務永遠走「立即下單」，不進購物車）。
+> **M12 實際只剩 `pages/coupon/**`**（優惠券／拼團／發票／物流維持下線）。
+> 購物車的改造是 **P7a-2a 的 T4**，不是 P7a-1 的 T7「移除入口」。
 
 > **M11 是資安相關的既有風險**：該元件的 `wx.makePhoneCall` 可以直接吃任意號碼。
 > 師傅端若複用到它，就等於把客戶號碼餵進去。P7a 一併處理。
@@ -172,7 +179,7 @@ pages/*  →  services/api/  →  ┌─ _fake/  （P7a：記憶體假資料）
 | P7a-C1 | 四角色登入後導向正確頁面 | 用不同 openid 測試（可直接改 fake `getMyRole` 回傳值） |
 | P7a-C2 | tabBar 依角色變化 | 目視 |
 | P7a-C3 | **師傅端任務詳情看不到完整地址與手機號** | 目視（fake 資料刻意含完整值） |
-| P7a-C4 | 購物車／優惠券／發票**無入口可達** | 逐一檢查 tabBar、我的、訂單頁 |
+| P7a-C4 | ~~購物車／~~優惠券／發票**無入口可達** | 逐一檢查 tabBar、我的、訂單頁。⚠️ **購物車不在本項**（T3.5 修正：已恢復為 tabBar 第 3 項） |
 | P7a-C5 | 既有訂單頁（未改造部分）仍可運作 | 目視 |
 
 ### 5.4 負向測試
@@ -268,21 +275,27 @@ T10 下線入口（M12）                                     → commit
 現況：`pages/category/index` 與 `pages/cart/index` 在主包且是 tabBar 項目；
 但 `order-list` 在 `order` 分包。
 
-新的 tabBar（首頁／服務／訂單／我的）因此**不能**直接把 `pages/order/order-list` 當作項目。
+新的 tabBar 因此**不能**直接把 `pages/order/order-list` 當作項目。
 
-**處理方式**：
+**處理方式（✅ 最終結果，2026-10-16 T3.5 同步）**：
 
-| tabBar 項目 | 頁面 | 來源 |
-|---|---|---|
-| 首頁 | `pages/home/home` | 既有（主包） |
-| 服務 | **`pages/service/index`** | **新建於主包**（不是分包） |
-| 訂單 | **`pages/orders/index`** | **新建於主包**（不是分包） |
-| 我的 | `pages/usercenter/index` | 既有（主包） |
+| # | tabBar 項目 | 頁面 | 來源 |
+|:---:|---|---|---|
+| 1 | 首頁 | `pages/home/home` | 既有（主包） |
+| 2 | **分類**（T3.5 前為「服務」） | **`pages/services/index`** | **新建於主包**（不是分包） |
+| 3 | **購物車** | `pages/cart/index` | 既有（主包）＋改造（P7a-2a T4） |
+| 4 | 訂單 | **`pages/orders/index`** | **新建於主包**（不是分包） |
+| 5 | 我的 | `pages/usercenter/index` | 既有（主包） |
 
-既有的 `pages/category/index` 與 `pages/cart/index` 保留在 repo（A7：入口下線、代碼保留），只是**離開 tabBar**。
+> **`pages/category/index`** 仍留在 repo，但**不在 tabBar**（它的舊版電商分類頁功能由第 2 項取代）。
+
+> ⚠️ **`pages/cart/index` 的處置已於 T3.5 修正**：購物車**留在 tabBar 並改造**，
+> 不是「離開 tabBar、入口下線」—— A7 的購物車下線已被 `docs/01` §3.7.7 撤銷。
 
 > **這也是為什麼 P7a-1 需要新建兩個主包頁面骨架** —— 否則 `app.json` 改不動。
 
 ---
 
-**⏸ 詳細的 P7a-1 逐檔計畫見 `docs/P7a-1-計畫.md`。等待你確認，以及 P2-0 探針結果。**
+> **狀態（2026-10-16）**：P7a-1 已完成（T1–T9）。P2-0 探針已由「路線 C」取代
+> （查官方文檔確認事務與 `inc` 皆支援，見 `docs/P2-0-文檔核實報告.md`）。
+> 詳細的 P7a-1 逐檔計畫見 `docs/P7a-1-計畫.md`；P7a-2a 見 `docs/P7a-2a-計畫.md`。
