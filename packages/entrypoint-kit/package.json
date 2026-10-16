@@ -1,0 +1,7 @@
+{
+  "name": "@repair/entrypoint-kit",
+  "version": "0.0.0",
+  "private": true,
+  "description": "雲函數入口的中介層：參數校驗、身分驗證、回應轉譯。只接收已組裝的 container，不 new 任何 adapter。",
+  "main": "index.js"
+}
