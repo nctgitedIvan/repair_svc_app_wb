@@ -215,13 +215,74 @@ function toCheckoutPayload(cart, { addressId, appointmentAt } = {}) {
 
 // ── 持久化（有副作用，與純邏輯分開）──
 
+/**
+ * 判斷一筆明細是否**存得起來**（壞掉的就丟掉，見 `normalizeCart`）。
+ */
+function isStorableItem(item) {
+  return (
+    !!item &&
+    typeof item.lineId === 'string' &&
+    item.lineId.length > 0 &&
+    typeof item.productId === 'string' &&
+    item.productId.length > 0 &&
+    Number.isInteger(item.quantity) &&
+    item.quantity >= 1 &&
+    Number.isInteger(item.addedPriceCents) &&
+    item.addedPriceCents >= 0
+  );
+}
+
+/**
+ * 把 Storage 讀到的內容**正規化**成購物車。**純函式，可單獨測試。**
+ *
+ * 為什麼要抽出來：`loadCart()` 會碰 `wx`（Node 測試跑不了），
+ * 但「資料壞掉時怎麼辦」才是真正容易出錯的地方。抽出來後這段就有覆蓋。
+ *
+ * 處理原則：**單筆壞掉不該毀掉整車。**
+ *
+ * | 情況 | 處理 |
+ * |---|---|
+ * | 整包無法解析（`JSON.parse` 失敗） | 空車 |
+ * | 不是 `{ items: [...] }` 的形狀 | 空車 |
+ * | 個別明細缺欄位／型別不對／數量 < 1 | **只丟掉那一筆** |
+ * | 數量超過 `MAX_LINE_QUANTITY` | 夾到上限（不丟掉 —— 那是使用者的東西） |
+ * | 重複的 `lineId` | 只留第一筆（否則 `updateQuantity` 改第一筆、`removeLine` 刪全部，行為不一致） |
+ *
+ * @param {string|object} raw `wx.getStorageSync` 的原始回傳值
+ */
+function normalizeCart(raw) {
+  let parsed = raw;
+  if (typeof raw === 'string') {
+    try {
+      parsed = JSON.parse(raw);
+    } catch (err) {
+      return createCart();
+    }
+  }
+  if (!parsed || !Array.isArray(parsed.items)) return createCart();
+
+  const seen = new Set();
+  const items = [];
+  for (const item of parsed.items) {
+    if (!isStorableItem(item) || seen.has(item.lineId)) continue;
+    seen.add(item.lineId);
+    items.push({
+      lineId: item.lineId,
+      productId: item.productId,
+      specId: item.specId || null,
+      quantity: Math.min(item.quantity, MAX_LINE_QUANTITY),
+      addedPriceCents: item.addedPriceCents,
+      currency: item.currency || 'CNY',
+      addedAt: Number.isInteger(item.addedAt) ? item.addedAt : null,
+    });
+  }
+
+  return { items, updatedAt: Number.isInteger(parsed.updatedAt) ? parsed.updatedAt : null };
+}
+
 function loadCart() {
   try {
-    const raw = wx.getStorageSync(STORAGE_KEY);
-    if (!raw) return createCart();
-    const parsed = typeof raw === 'string' ? JSON.parse(raw) : raw;
-    if (!parsed || !Array.isArray(parsed.items)) return createCart();
-    return { items: parsed.items, updatedAt: parsed.updatedAt || null };
+    return normalizeCart(wx.getStorageSync(STORAGE_KEY));
   } catch (err) {
     // 讀取失敗不該讓整個購物車頁崩潰
     console.warn('[cart] 讀取本機購物車失敗，改用空車', err);
@@ -252,6 +313,7 @@ module.exports = {
   isEmpty,
   validate,
   toCheckoutPayload,
+  normalizeCart,
   loadCart,
   saveCart,
 };

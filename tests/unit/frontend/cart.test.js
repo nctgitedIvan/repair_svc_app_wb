@@ -261,3 +261,90 @@ test('⚠️ schema 必須與後端一致（Q-D：讓 P7b 遷移無痛）', asyn
     assert.equal(c.items[0].currency, 'CNY');
   });
 });
+
+/**
+ * Storage 是唯一會接觸「外部狀態」的邊界 —— 內容可能損毀、可能是舊版寫的。
+ * `loadCart()` 碰 `wx` 無法在 Node 測試，因此把解析與修補抽成 `normalizeCart()`。
+ *
+ * 原則：**單筆壞掉不該毀掉整車**。
+ */
+test('normalizeCart：Storage 內容的容錯（單筆壞掉不毀整車）', async (t) => {
+  const stored = (over = {}) => ({
+    lineId: 'prd-1',
+    productId: 'prd-1',
+    specId: null,
+    quantity: 2,
+    addedPriceCents: 2500,
+    currency: 'CNY',
+    addedAt: NOW,
+    ...over,
+  });
+  const wrap = (items, updatedAt = NOW) => JSON.stringify({ items, updatedAt });
+
+  await t.test('正常內容原樣通過', () => {
+    const c = cart.normalizeCart(wrap([stored()]));
+    assert.equal(c.items.length, 1);
+    assert.equal(c.items[0].quantity, 2);
+    assert.equal(c.updatedAt, NOW);
+  });
+
+  await t.test('物件與字串都能接受（getStorageSync 兩種都可能回）', () => {
+    assert.equal(cart.normalizeCart({ items: [stored()] }).items.length, 1);
+    assert.equal(cart.normalizeCart(wrap([stored()])).items.length, 1);
+  });
+
+  await t.test('無法解析的字串 → 空車（不拋錯）', () => {
+    assert.deepEqual(cart.normalizeCart('{壞掉的字串'), cart.createCart());
+    assert.deepEqual(cart.normalizeCart('null'), cart.createCart());
+  });
+
+  await t.test('形狀不對（null／缺 items／items 不是陣列）→ 空車', () => {
+    assert.deepEqual(cart.normalizeCart(null), cart.createCart());
+    assert.deepEqual(cart.normalizeCart(undefined), cart.createCart());
+    assert.deepEqual(cart.normalizeCart({}), cart.createCart());
+    assert.deepEqual(cart.normalizeCart({ items: 'not-an-array' }), cart.createCart());
+  });
+
+  await t.test('⚠️ 單筆壞掉只丟那一筆，其餘保留', () => {
+    const c = cart.normalizeCart(
+      wrap([
+        stored({ lineId: 'ok' }),
+        stored({ lineId: 'bad-no-product', productId: undefined }),
+        stored({ lineId: 'bad-qty', quantity: 0 }),
+        stored({ lineId: 'bad-float', quantity: 1.5 }),
+        stored({ lineId: 'bad-price', addedPriceCents: -1 }),
+        stored({ lineId: 'ok-2', productId: 'prd-2' }),
+      ]),
+    );
+    assert.deepEqual(
+      c.items.map((i) => i.lineId),
+      ['ok', 'ok-2'],
+    );
+  });
+
+  await t.test('數量超過上限 → 夾到上限（不丟掉使用者的東西）', () => {
+    const c = cart.normalizeCart(wrap([stored({ quantity: MAX_LINE_QUANTITY + 500 })]));
+    assert.equal(c.items[0].quantity, MAX_LINE_QUANTITY);
+  });
+
+  await t.test('⚠️ 重複的 lineId 只留第一筆（否則改一筆會動到兩筆）', () => {
+    const c = cart.normalizeCart(wrap([stored({ quantity: 1 }), stored({ quantity: 9 })]));
+    assert.equal(c.items.length, 1);
+    assert.equal(c.items[0].quantity, 1);
+  });
+
+  await t.test('缺 currency / addedAt 時補上安全預設', () => {
+    const c = cart.normalizeCart(wrap([stored({ currency: undefined, addedAt: undefined })]));
+    assert.equal(c.items[0].currency, 'CNY');
+    assert.equal(c.items[0].addedAt, null);
+  });
+
+  await t.test('specId 缺漏補 null（不是 undefined，維持欄位形狀一致）', () => {
+    const c = cart.normalizeCart(wrap([stored({ specId: undefined })]));
+    assert.equal(c.items[0].specId, null);
+  });
+
+  await t.test('updatedAt 不是整數 → null', () => {
+    assert.equal(cart.normalizeCart(wrap([stored()], 'oops')).updatedAt, null);
+  });
+});
