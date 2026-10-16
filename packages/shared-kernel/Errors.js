@@ -60,7 +60,9 @@ class IllegalStateTransition extends DomainError {
     super(`非法狀態轉移：${keyOf(from)} → ${keyOf(to)}`, {
       ...options,
       code: IllegalStateTransition.code,
-      details: { from: keyOf(from), to: keyOf(to) },
+      // ⚠️ 必須**合併**呼叫方提供的 details，不能覆蓋 ——
+      // 否則「這個狀態允許哪些目標」這種關鍵除錯資訊會被靜默丟掉。
+      details: { from: keyOf(from), to: keyOf(to), ...(options.details || {}) },
     });
     this.from = keyOf(from);
     this.to = keyOf(to);

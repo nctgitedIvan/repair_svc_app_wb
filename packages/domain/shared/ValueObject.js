@@ -86,10 +86,25 @@ class ValueObject {
   }
 }
 
-/** 只複製純物件／陣列／原始型別 */
+/**
+ * 深拷貝純物件／陣列／原始型別。
+ *
+ * ⚠️ **非純物件（`Money`、其他 `ValueObject` 子類）一律原樣沿用，不複製。**
+ *
+ * 為什麼：這些物件的狀態在**私有欄位**中，`Object.keys()` 回傳空陣列。
+ * 若照「純物件」複製，會把它們變成 `{}` —— 靜默地弄丟金額與分潤條款。
+ * 它們本身不可變（值物件語意），沿用參照沒有別名風險。
+ */
 function clonePlain(value) {
   if (value === null || typeof value !== 'object') return value;
   if (Array.isArray(value)) return value.map(clonePlain);
+
+  const proto = Object.getPrototypeOf(value);
+  if (proto !== Object.prototype && proto !== null) {
+    // Money、ValueObject 子類、其他類別實例 → 原樣沿用
+    return value;
+  }
+
   const out = {};
   for (const key of Object.keys(value)) {
     out[key] = clonePlain(value[key]);

@@ -25,6 +25,14 @@ const { CommissionRate, BP_DENOMINATOR } = require('./shared/CommissionRate');
 const { AmountChangeReason, ReasonCode } = require('./audit/AmountChangeReason');
 const { ProfitSharingTerms, SharingBase } = require('./settlement/ProfitSharingTerms');
 
+// ── 訂單聚合 ──
+const { Order } = require('./order/Order');
+const { OrderItem, ItemType, FeeType } = require('./order/OrderItem');
+const { OrderStateMachine } = require('./order/OrderStateMachine');
+const { OrderStatusLog } = require('./order/OrderStatusLog');
+const { OrderSnapshot } = require('./order/OrderSnapshot');
+const { priceItems, sumItemsWhere } = require('./order/PricingService');
+
 // ── 狀態機 ──
 const OrderStatus = require('./order/OrderStatus');
 
@@ -45,6 +53,16 @@ module.exports = {
   ReasonCode,
   ProfitSharingTerms,
   SharingBase,
+  // 訂單聚合
+  Order,
+  OrderItem,
+  ItemType,
+  FeeType,
+  OrderStateMachine,
+  OrderStatusLog,
+  OrderSnapshot,
+  priceItems,
+  sumItemsWhere,
   // 狀態機
   OrderStatus,
 };
