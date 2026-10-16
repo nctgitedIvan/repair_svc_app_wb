@@ -14,11 +14,12 @@
     "sync": "node scripts/sync-shared.js",
     "sync:check": "node scripts/sync-shared.js --check",
     "check:layering": "node scripts/check-layering.js",
-    "verify": "npm run check:layering && npm run sync:check && npm test",
+    "verify": "npm run check:layering && npm run check:frontend && npm run sync:check && npm test",
     "predeploy": "npm run sync && npm run sync:check && npm run check:layering && npm test",
     "check": "node config/eslintCheck.js",
     "prepare": "husky install",
-    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s"
+    "changelog": "conventional-changelog -p angular -i CHANGELOG.md -s",
+    "check:frontend": "node scripts/check-frontend.js"
   },
   "author": "",
   "license": "ISC",
