@@ -245,6 +245,74 @@ T7  結算頁（M6）                                         → tag → commit
 
 ---
 
-**⏸ 等你回覆 §11，以及 P2-0 探針結果。**
+**⏸ 等你回覆 §11，以及 P2-0 探針結果。**（已於 2026-10-16 回覆，見 §12）
 
 **再次提醒：P7a-2a／P7a-2b 完成後，若探針未跑，後端無法開工。前端完成 ≠ 專案可上線。**
+
+---
+
+## 12. 執行結果（2026-10-16 更新）
+
+> 本節是**追加的執行記錄**，上面的計畫原文保留不動（含當初的假設與偏離的痕跡）。
+
+### 12.1 進度
+
+| 任務 | 狀態 | commit |
+|---|---|---|
+| T1 `utils/cart.js` + `cartCodes.js` | ✅ 完成 | `0e4453d` |
+| T2 fake API 擴充零件資料 | ✅ 完成（**含偏離**，見 §12.3） | `f467175` |
+| T3 tabBar 加入購物車（5 項） | ✅ 完成 | `693be21` |
+| **T3.5** tabBar「服務」→「分類」 | ✅ 完成（**計畫外追加**，見 §12.4） | `08167a0` |
+| **T4** 購物車頁改造 | ✅ **完成** | `22ba148`（T4-1）+ `66a4c9d`（T4-2）+ `9b0be5e`（T4-3/4/5） |
+| T5 商品列表 | ⬜ 下一步 | — |
+| T6 商品詳情 | ⬜ | — |
+| T7 結算頁 | ⬜ | — |
+
+**測試數：918 → 966**（T4 新增 48 項）。
+
+### 12.2 T4 的細部計畫
+
+動工前另出了一份逐檔計畫：**`docs/P7a-2a-T4-計畫.md`**（含三個動手前發現、
+元件去留決策、結算流程的落點、驗收與風險）。本節只記**與那份計畫的差異**。
+
+### 12.3 與原計畫的偏離（T4 執行時發現）
+
+| # | 原計畫 | 實際 | 原因 |
+|---|---|---|---|
+| 1 | §3 M3 只改 `pages/cart/index.js/.wxml` | 另動 `cart-group`（3 檔）、`cart-bar`（2 檔）、`goods-card`／`specs-popup`（各 1 檔 wxml） | cart-group 的 store 分組必須拿掉；cart-bar 的優惠券欄位已無資料來源 |
+| 2 | §5.1 新增購物車 API（`fetchCart`／`addToCart`…） | **不做**，沿用 T2 的偏離 | T2 已記錄理由（避免 ESM／CJS 混用）且符合 §3.7.8 Q-D |
+| 3 | §4 N4 `tests/unit/frontend/cartApi.test.js` | **作廢**，改為 `cartView.test.js` | 沒有購物車 API 可測（偏離 2 的連帶結果） |
+| 4 | §9 執行順序：T4 拆成 3 個 commit | **合併為 1 個**（`9b0be5e`） | 元件／頁面／文案是**同一個原子單位**：任何拆法都會產生「按了沒反應」的中間 commit（見該 commit 的訊息） |
+| 5 | §5 的 `cart-group/index.wxss` 清理 | 照做（移除 `.cart-store`／`.promotion-*`／`.shortage-*`／`.action-btn`） | — |
+| 6 | — | **追加**：`utils/cart.js` 抽出 `normalizeCart()` + 測試 | Storage 是唯一的外部邊界卻無測試（計畫 §5.3 O1 已列為建議，已採納） |
+
+### 12.4 計畫外追加：T3.5（tabBar「服務」→「分類」）
+
+`docs/01` §3.7.9 在 T3 之後定案「第 2 項改名為分類」，但當時**只寫進架構文件、
+未列入任務清單**，因此補一個 T3.5 落地（`08167a0`）：`app.json` 與
+`custom-tab-bar/data.js`（含圖示改 `wr-classify`）。順帶修正四項先前留下的文件不一致
+（`docs/01` §7.1 補 `categories`／`carts` 集合、§10.1／§10.2、§11.1 A3／A7、
+`docs/P7a-計畫.md` M12／P7a-C4／§10）。
+
+⚠️ **已知的暫時不一致**：tabBar 寫「分類」，但點進去仍是舊的服務頁骨架
+（頁面 navBar 標題也還是「服務」）。內容改造排在 **P7a-2b**，與分類頁一起做。
+
+### 12.5 ⚠️ 留給 T7 的必辦事項
+
+`pages/cart/index.js` 目前額外寫了一份**舊格式**的結算資料（`order.goodsRequestList`），
+否則現行結算頁會 `JSON.parse(undefined)` 拋錯 → 白屏。
+
+**T7 改寫結算頁後必須：**
+1. 移除 `pages/cart/index.js` 的 `LEGACY_CHECKOUT_KEY` 與 `writeCheckout()` 裡的舊格式寫入
+   （已標 `TODO(T7): 移除`）
+2. 移除 `utils/cartView.js` 的 `toLegacyGoodsRequest()` 與 `LEGACY_STORE_ID`／`LEGACY_STORE_NAME`
+3. 一併刪除 `tests/unit/frontend/cartView.test.js` 的「toLegacyGoodsRequest」那一組測試
+4. 結算頁改讀 `repair.checkout.v1`
+
+### 12.6 尚未執行的驗收
+
+| 項目 | 狀態 |
+|---|---|
+| 自動化 A1–A8（`npm run verify`、新測試、未動 packages…） | ✅ 全過（966 測試） |
+| 負向測試 N1–N4 | ✅ 見 `docs/P7a-2a-T4-計畫.md` §11.2 的說明 |
+| **人工驗收 C1–C13** | ⏸ **待使用者在開發者工具執行**（計畫 §11.3 有可貼的 Storage 種子資料） |

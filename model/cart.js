@@ -1,3 +1,14 @@
+/**
+ * ⚠️ **@deprecated（2026-10-16，P7a-2a T4）** —— 唯一的呼叫者
+ * `services/cart/cart.js` 也已被取代，因此本檔目前無人使用。
+ *
+ * 這裡產生的是電商版的假購物車（多門店、促銷活動、優惠券、缺貨分組）。
+ * 維修版的購物車只有一個平台、沒有這些概念，改由
+ * `utils/cart.js` + `utils/cartView.js` 負責（見 `docs/P7a-2a-T4-計畫.md` §6）。
+ *
+ * **不刪除**（紅線 7：不刪除現有功能）。
+ */
+
 import { mockIp, mockReqId } from '../utils/mock';
 
 export function genCartGroupData() {
