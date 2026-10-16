@@ -38,7 +38,7 @@
 **執行順序**：`P0 → P1 → P4 → P2 → P3 → P5 → P6 → P7 → P8 → P9 → P10`
 **可並行**：P7a（前端，不依賴後端）、P8（P5 後）
 
-**測試數：1002 全過**（P0 結束 51 → P1 229 → P4c 783 → P7a-1 863 → P7a-2a T3 918 → T4 966 → T3.6 994 → **T3.6.1 1002**）
+**測試數：1065 全過**（P0 結束 51 → P1 229 → P4c 783 → P7a-1 863 → P7a-2a T3 918 → T4 966 → T3.6 994 → T3.6.1 1002 → **T6a 1065**）
 
 ---
 
@@ -119,9 +119,9 @@
 | 項目 | 值 |
 |---|---|
 | 分支 | `refactor/hexagonal` |
-| 最後程式 commit | **`424ac6b`**（T3.6.1；其後為本次 docs commit） |
+| 最後程式 commit | **`8cc2a88`**（T6a-5；其後為本次 docs commit） |
 | 基線 | `main` = `a747010`（TDesign 模版原始狀態） |
-| Tag | `p0-done`、`p1-done`、`pre-p7a2a-tabbar`、`pre-p7a2a-t35`、`pre-p7a2a-t4`、**`pre-p7a2a-t36`**、**`pre-p7a2a-t361`** |
+| Tag | `p0-done`、`p1-done`、`pre-p7a2a-tabbar`、`pre-p7a2a-t35`、`pre-p7a2a-t4`、`pre-p7a2a-t36`、`pre-p7a2a-t361`、**`pre-p7a2a-t6a`** |
 | 備份分支 | `backup-origin-main`、`backup-origin-refactor` |
 | 遠端 | `git@github.com:nctgitedIvan/repair_svc_app_wb.git` |
 | 領先／落後 | **領先 63 個 commit**（尚未 push） |
@@ -130,7 +130,8 @@
 > 以指令輸出為準 —— 見 §10 第 1 點。
 
 **回滾**（由近到遠）：
-- `git reset --hard pre-p7a2a-t361` —— 放棄 T3.6.1（4 個 bug 的修正）
+- `git reset --hard pre-p7a2a-t6a` —— 放棄 T6a（詳情頁接新 API + 加購 + 收藏）
+- `git reset --hard pre-p7a2a-t361` —— 再放棄 T3.6.1（4 個 bug 的修正）
 - `git reset --hard pre-p7a2a-t36` —— 再放棄 T3.6（分類頁還原）
 - `git reset --hard pre-p7a2a-t35` —— 再放棄 tabBar 改名
 - `git reset --hard pre-p7a2a-t4` —— 再放棄整個 T4（購物車改造）
@@ -164,7 +165,7 @@
 | # | 任務 | 風險 |
 |---|---|---|
 | T5 | 商品列表（`pages/goods/list`） | 中 |
-| **T6a** | 商品詳情（`pages/goods/details`：**接上新 API**＋「加入購物車」寫入 `utils/cart.js`＋**收藏**） | **高** |
+| **T6a** | 詳情頁（`pages/goods/details`：**接上新 API**＋「加入購物車」＋**收藏**＋**服務與商品共用同一頁**） | ✅ **完成**（`8cc2a88`） |
 | **T6b** | 客服詢問流程 ＋ 「我的收藏／我的詢問」入口 | 中 |
 | T7 | 結算頁（`pages/order/order-confirm`，移除優惠券／發票；**必須移除 T4 的相容橋接**，見 §6.2） | **高** |
 
@@ -172,13 +173,17 @@
 > 新需求（收藏、客服詢問）、`inquiries`／`favorites` 資料模型與三條限制，
 > 見 **`docs/P7a-2a-計畫.md` §13**。
 
-> **T6a 會修好一個已回報的 bug**：詳情頁對 `prd-*` 查不到資料
-> （`model/good.js` 的 `allGoods[id % allGoods.length]` → `NaN`），
-> 目前顯示 ¥0.00、無圖、無規格。T3.6.1 已讓它**不再拋錯**並顯示明確訊息，
-> 真正的修復在 T6a（見 `docs/P7a-2a-T3.6.1-診斷報告.md` §1.1）。
+> ✅ **T6a 已修好那個 bug**：詳情頁原本對 `prd-*` 查不到資料
+> （`model/good.js` 的 `allGoods[id % allGoods.length]` → `NaN`）而顯示
+> ¥0.00、無圖、無規格。現在資料來自新 API，並新增「服務與商品共用同一頁」。
 
-> **T6a 的參數契約**：購物車／分類頁的跳轉目前同時帶 `productId` 與 `spuId`
-> （過渡期），**T6a 應把詳情頁的參數正式定為 `productId`**。
+> **參數契約（T6a 已定案）**：`productId` 為正式、`serviceId` 為服務、
+> `spuId` 留作過渡相容（T4／T3.6 目前同時帶它，值相同 —— 可留待那兩處清理時移除）。
+
+> ⚠️ **T6a 之後「舊 id 入口」會顯示「找不到這件商品」**（比原本的 ¥0.00 好）：
+> `pages/home/home`（→ P7a-2b）、`pages/goods/list`（→ T5）、
+> `pages/goods/result`（未排程）、`pages/order/order-detail` 與 `after-service-detail`
+> （→ P2 之後接新訂單）。完整對照表見 `docs/P7a-2a-T6a-計畫.md` §11.1。
 
 > ⚠️ **T6b 的限制要在動手前先講清楚**：P7a 階段沒有資料庫與雲函數，
 > T6b 只能做「客戶端 UI ＋ 本機 Storage 寫入」；
@@ -197,7 +202,8 @@ T4 為了不讓現行結算頁白屏，額外寫了一份舊格式的結算資�
 
 ### 之後
 
-`P7a-2b`（服務詳情＋加購零件＋分類頁＋首頁調整 **＋ tabBar 標題／頁面內容改成「分類」**）
+`P7a-2b`（**服務預約時段選擇＋服務立即下單＋加購零件**＋分類頁內容＋首頁兩個區塊）
+—— ⚠️ **服務／商品的詳情頁顯示層已於 T6a 完成**，P7a-2b 只剩互動層與那兩頁的內容。
 → `P2`（資料庫與 Repository）→ `P3` → `P5` → `P6` …
 
 ### 每階段的固定流程
@@ -245,6 +251,7 @@ T4 為了不讓現行結算頁白屏，額外寫了一份舊格式的結算資�
 | **`docs/P7a-2a-T4-計畫.md`** | **T4（購物車頁）的細部計畫**：三個動手前發現、元件去留、結算流程落點、人工驗收 C1–C13（含 Storage 種子資料） |
 | **`docs/P7a-2a-T3.6-計畫.md`** | **T3.6（分類頁）的計畫**：診斷（原始分類頁沒被改過，是 tabBar 指錯）、方案 A、二級分類資料模型、fake 資料、人工驗收 C1–C7 |
 | **`docs/P7a-2a-T3.6.1-診斷報告.md`** | **4 個 bug 的診斷**（價錢為零／圖片不一致的真正位置在商品詳情頁，附證據）＋ 七問決議 |
+| **`docs/P7a-2a-T6a-計畫.md`** | **T6a（詳情頁）的逐檔計畫 ＋ 執行結果**：規模（9 個入口、規格彈窗的合成與兩個既有問題）、服務／商品的差異、commit 切分、驗收 C1–C12 |
 | `docs/P1-計畫.md` / `P1-驗收報告.md` | P1 計畫與 23 項驗收 |
 | **`docs/SESSION-HANDOFF.md`** | **本文件** |
 
