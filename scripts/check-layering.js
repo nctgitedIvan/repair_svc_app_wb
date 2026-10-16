@@ -21,10 +21,19 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 
-/** 每個層允許 require 的套件。null = 不限制（邊界層）。 */
+/**
+ * 每個層允許 require 的套件。null = 不限制（邊界層）。
+ *
+ * ⚠️ `packages/domain` 例外允許 `crypto`：
+ *    `AuditChain` 需要 SHA-256，而 hand-roll 雜湊是更糟的選擇。
+ *    `crypto` 是 Node **內建**（非第三方依賴）、且 `createHash` 是**確定性**的。
+ *    但 `crypto` 也含非確定性 API（亂數），因此另以 DOMAIN_FORBIDDEN 擋掉那些部分。
+ *    ——「放行整個模組但封鎖其中危險的函式」比「整個模組都不准用」更實際，
+ *      前提是封鎖清單必須完整且有測試。
+ */
 const ALLOWED_DEPS = {
   'packages/shared-kernel': [],
-  'packages/domain': ['@repair/shared-kernel'],
+  'packages/domain': ['@repair/shared-kernel', 'crypto'],
   'packages/ports': ['@repair/shared-kernel', '@repair/domain'],
   'packages/application': ['@repair/shared-kernel', '@repair/domain', '@repair/ports'],
   // entrypoint-kit 是雲函數入口的中介層：需要 ports（UserRepository 介面）
@@ -46,6 +55,10 @@ const DOMAIN_FORBIDDEN = [
   [/Math\.random\s*\(/, '非確定性隨機 → 須改用 IdGeneratorPort'],
   [/process\.env/, '環境變數只能由 adapter 讀'],
   [/console\.(log|error|warn)\s*\(/, '須改用 LoggerPort'],
+  // ⚠️ crypto 雖然放行（見 ALLOWED_DEPS 的說明），但其**非確定性**部分必須封鎖。
+  //    否則 domain 就能產生無法重現的值，測試與稽核鏈都會失效。
+  [/crypto\.(randomBytes|randomUUID|randomFill|randomFillSync|randomInt|generateKeyPair|generateKeyPairSync)/, 'crypto 的亂數 API 不得在 domain 使用（須改用 IdGeneratorPort）'],
+  [/\brandomUUID\s*\(/, 'randomUUID 不得在 domain 使用（須改用 IdGeneratorPort）'],
 ];
 
 /** ports 層禁止出現的型別 */
@@ -113,12 +126,15 @@ function checkDeps(dirRel) {
       while ((m = re.exec(line))) {
         const dep = m[1];
         if (dep.startsWith('.')) continue; // 相對路徑一律允許
+
         const pkgName = packageNameOf(dep);
-        if (!pkgName.startsWith('@repair/')) {
-          violations.push({ file: r, line: i + 1, why: `依賴方向：${dirRel} 不得 require 外部套件 "${dep}"`, text: line.trim().slice(0, 90) });
-        } else if (!allowed.includes(pkgName)) {
-          violations.push({ file: r, line: i + 1, why: `依賴方向：${dirRel} 不得依賴 "${pkgName}"`, text: line.trim().slice(0, 90) });
-        }
+        if (allowed.includes(pkgName)) continue; // 明確允許（含 crypto 這類 Node 內建）
+
+        // 未在允許清單中 → 一律違規（不論是否為 @repair/*）
+        const why = allowed.length === 0
+          ? `依賴方向：${dirRel} 必須零依賴，不得 require "${dep}"`
+          : `依賴方向：${dirRel} 不得依賴 "${pkgName}"（允許：${allowed.join(', ') || '無'}）`;
+        violations.push({ file: r, line: i + 1, why, text: line.trim().slice(0, 90) });
       }
     });
   }

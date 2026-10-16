@@ -2,6 +2,7 @@
 
 const { Result } = require('@repair/shared-kernel/Result');
 const { canExecuteProfitSharing } = require('@repair/domain/order/OrderStatus');
+const { calculate } = require('@repair/domain/settlement/ProfitSharingPolicy');
 
 /**
  * ComputeProfitShareUseCase —— 計算師傅報酬（唯讀，不觸發任何外部呼叫）。
@@ -9,13 +10,13 @@ const { canExecuteProfitSharing } = require('@repair/domain/order/OrderStatus');
  * 決策依據（docs/01-目標架構.md §3.6）：
  *  - 分潤基數 = 服務費（不含材料費）
  *  - 比例讀**訂單快照**（`order.snapshot`），不讀當前配置 → 後台改比例不影響歷史訂單
- *  - 狀態為 DISPUTED 時拒絕（§3.3「爭議中」凍結分帳）
+ *  - 狀態為 DISPUTED／VOIDED 時拒絕（§3.3）
  *
  * ⚠️ 本 Use Case **只計算**，不呼叫分帳 API。
  *    真正的 ExecuteProfitSharing 於 P6 建立（A1 確認前不實作 adapter）。
  *
- * TODO(P4c): 分潤基數的判斷（`terms.includesMaterialFee`）目前內聯在此。
- *            P4c 建立 `ProfitSharingPolicy` 後抽出，讓「基數規則」只有一份。
+ * P4c：分潤計算已抽出至 `ProfitSharingPolicy` —— 基數規則**只有一份**。
+ *      Use Case 只負責「編排」（檢查狀態前提、組 DTO）。
  */
 class ComputeProfitShareUseCase {
   /**
@@ -48,33 +49,24 @@ class ComputeProfitShareUseCase {
       );
     }
 
-    // ── domain 計算：基數參數化 + 逐單快照 ──
-    const terms = order.snapshot.profitSharingTerms;
-    const amounts = order.amounts;
-
-    const base = terms.includesMaterialFee
-      ? amounts.serviceFee.add(amounts.materialFee) // 參數切換即可改決策
-      : amounts.serviceFee; // ← 現行決策：材料費不參與分潤
-
-    const technicianShare = base.applyRate(terms.technicianRateBp, terms.roundingMode);
-    // 平台份額＝基數減去師傅份額，確保兩者相加**恆等於**基數（不會因取整而漏錢）
-    const platformShare = base.subtract(technicianShare);
+    // ── domain 計算：交給 ProfitSharingPolicy（基數規則只有一份）──
+    const share = calculate({ order, terms: order.snapshot.profitSharingTerms });
 
     this.logger.info('profit share computed', {
       orderId,
       operator: actor.id,
-      base: base.cents,
-      technicianShare: technicianShare.cents,
+      base: share.base.cents,
+      technicianShare: share.technicianShare.cents,
     });
 
     // ✅ 回傳 DTO，不回傳實體（§1.6.3 硬規則 F2）
     return Result.ok({
       orderId,
-      baseCents: base.cents,
-      technicianShareCents: technicianShare.cents,
-      platformShareCents: platformShare.cents,
-      currency: base.currency,
-      termsVersion: terms.termsVersion,
+      baseCents: share.base.cents,
+      technicianShareCents: share.technicianShare.cents,
+      platformShareCents: share.platformShare.cents,
+      currency: share.currency,
+      termsVersion: share.termsVersion,
       computedAt: this.clock.now(),
     });
   }

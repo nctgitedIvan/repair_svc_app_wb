@@ -33,6 +33,22 @@ const { OrderStatusLog } = require('./order/OrderStatusLog');
 const { OrderSnapshot } = require('./order/OrderSnapshot');
 const { priceItems, sumItemsWhere } = require('./order/PricingService');
 
+// ── 策略 ──
+const { discloseFor, disclosureStartAt } = require('./order/policies/AddressDisclosurePolicy');
+const { maskFor, maskAlways } = require('./order/policies/ContactMaskingPolicy');
+const { resolveChannel, ContactChannel, ChannelDecision } = require('./order/policies/ContactChannelPolicy');
+const { calculate: calculateProfitShare } = require('./settlement/ProfitSharingPolicy');
+const { RefundScope, RefundScopeType } = require('./refund/RefundScope');
+const { planRefund, previewAmounts } = require('./refund/RefundPolicy');
+const AuditChain = require('./audit/AuditChain');
+const { ReconciliationThresholds } = require('./reconciliation/ReconciliationThresholds');
+const {
+  compare: reconcileCompare,
+  shouldFreezeSettlement,
+  DiffType,
+  ReconciliationTier,
+} = require('./reconciliation/ReconciliationService');
+
 // ── 存取控制 ──
 const { Permission, ALL_KEYS: ALL_PERMISSION_KEYS, byKey: permissionByKey } = require('./access/Permission');
 const { Decision, Reason } = require('./access/Decision');
@@ -76,6 +92,25 @@ module.exports = {
   OrderSnapshot,
   priceItems,
   sumItemsWhere,
+  // 策略
+  discloseFor,
+  disclosureStartAt,
+  maskFor,
+  maskAlways,
+  resolveChannel,
+  ContactChannel,
+  ChannelDecision,
+  calculateProfitShare,
+  RefundScope,
+  RefundScopeType,
+  planRefund,
+  previewAmounts,
+  AuditChain,
+  ReconciliationThresholds,
+  reconcileCompare,
+  shouldFreezeSettlement,
+  DiffType,
+  ReconciliationTier,
   // 存取控制
   Permission,
   ALL_PERMISSION_KEYS,
