@@ -8,6 +8,10 @@ const {
   IllegalStateTransition,
   NotFoundError,
   ConcurrencyConflict,
+  SoDViolationError,
+  PeriodClosedError,
+  ReconciliationMismatchError,
+  ApprovalRequiredError,
   isRetryable,
 } = require('./Errors');
 
@@ -21,5 +25,9 @@ module.exports = {
   IllegalStateTransition,
   NotFoundError,
   ConcurrencyConflict,
+  SoDViolationError,
+  PeriodClosedError,
+  ReconciliationMismatchError,
+  ApprovalRequiredError,
   isRetryable,
 };

@@ -98,6 +98,84 @@ class ConcurrencyConflict extends DomainError {
   }
 }
 
+/**
+ * 職責分離（SoD）違反。
+ *
+ * 例：同一人既發起退款又批准（`docs/P2-計畫.md` §C-2）。
+ *
+ * ⚠️ 注意：**SoD 只在 `refunds.approve_large` 上強制。**
+ * `approve_small`（≤ 200 元）的單人審批是**設計**，不是違規 ——
+ * 若在這裡也拋錯，客服中心只有一人時退款會完全卡住。
+ */
+class SoDViolationError extends DomainError {
+  static code = 'SOD_VIOLATION';
+
+  constructor({ action, actorId, conflictingActorId }, options = {}) {
+    super(`職責分離違反：${action} 的發起者與批准者不得為同一人`, {
+      ...options,
+      code: SoDViolationError.code,
+      details: { action, actorId, conflictingActorId },
+    });
+  }
+}
+
+/**
+ * 財務期間已關帳。
+ *
+ * 例：對已關帳期間的訂單修改金額（`docs/P2-計畫.md` §B-4）。
+ * 沖銷（reversal）不受此限 —— 它是唯一允許的例外。
+ */
+class PeriodClosedError extends DomainError {
+  static code = 'PERIOD_CLOSED';
+
+  constructor({ periodClosedThrough, attemptedAt, resource }, options = {}) {
+    super(`財務期間已關帳（至 ${periodClosedThrough}），不得修改其金額`, {
+      ...options,
+      code: PeriodClosedError.code,
+      details: { periodClosedThrough, attemptedAt, resource },
+    });
+  }
+}
+
+/**
+ * 對帳差異超過閾值。
+ *
+ * 例：單筆差異 > 1 元 / 單日累計 > 100 元 / > 1000 元（後者會凍結當日結算）。
+ */
+class ReconciliationMismatchError extends DomainError {
+  static code = 'RECONCILIATION_MISMATCH';
+
+  constructor({ scope, expectedCents, actualCents, thresholdCents, tier }, options = {}) {
+    super(
+      `對帳差異超過閾值：預期 ${expectedCents} 分，實際 ${actualCents} 分` +
+        `（差 ${Math.abs(expectedCents - actualCents)} 分，閾值 ${thresholdCents} 分，第 ${tier} 層）`,
+      {
+        ...options,
+        code: ReconciliationMismatchError.code,
+        details: { scope, expectedCents, actualCents, thresholdCents, tier },
+      },
+    );
+  }
+}
+
+/**
+ * 需要覆核才能執行。
+ *
+ * 例：改價超 20%、改分潤比例，需第二人覆核（`docs/P2-計畫.md` §C-3）。
+ * 單一管理員時期走「單人例外 + 24h 冷卻期」路徑，不拋此錯。
+ */
+class ApprovalRequiredError extends DomainError {
+  static code = 'APPROVAL_REQUIRED';
+
+  constructor({ action, reason, requiredApprovers }, options = {}) {
+    super(`操作需要覆核：${action}（${reason}）`, {
+      ...options,
+      code: ApprovalRequiredError.code,
+      details: { action, reason, requiredApprovers },
+    });
+  }
+}
+
 /** 判斷是否為可重試的錯誤（供 Saga / 定時任務的補償邏輯使用） */
 function isRetryable(error) {
   return Boolean(error && (error.retryable === true || error.code === ConcurrencyConflict.code));
@@ -117,5 +195,9 @@ module.exports = {
   IllegalStateTransition,
   NotFoundError,
   ConcurrencyConflict,
+  SoDViolationError,
+  PeriodClosedError,
+  ReconciliationMismatchError,
+  ApprovalRequiredError,
   isRetryable,
 };
