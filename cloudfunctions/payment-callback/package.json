@@ -1,0 +1,11 @@
+{
+  "name": "payment-callback",
+  "version": "1.0.0",
+  "private": true,
+  "description": "支付回調入口。不同信任模型，永不與用戶請求合併。P1 骨架，僅健康檢查。",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  },
+  "repairSharedHash": "9a5049d3ee73477348c3c75369f03bca91994896bda52c2782febe0f23685cd2"
+}
