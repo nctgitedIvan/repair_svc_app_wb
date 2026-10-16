@@ -134,4 +134,12 @@ test('⚠️ fake 資料必須讓邊界情況可見（人工驗收 C4/C5 的前�
   await t.test('至少一個零件有規格（驗收 SKU 切換）', () => {
     assert.ok(PRODUCTS.some((p) => Array.isArray(p.specs) && p.specs.length > 1));
   });
+
+  // 購物車列、商品列表、商品詳情都要顯示圖片（T4 起用）。
+  // 少一筆 thumb 就會在畫面上出現破圖，而那種錯在測試裡看不到 —— 所以在此擋下。
+  await t.test('每個零件都有非空的 thumb（前端呈現需要）', () => {
+    for (const p of PRODUCTS) {
+      assert.ok(typeof p.thumb === 'string' && p.thumb.length > 0, `${p.productId} 缺少 thumb`);
+    }
+  });
 });

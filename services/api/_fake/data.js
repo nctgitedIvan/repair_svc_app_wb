@@ -74,6 +74,11 @@ const SERVICES = Object.freeze([
  *
  * `stock` 刻意設得小（含 0 與不足的量），讓 §3.7.6 的邊界情況
  * **可被目視驗收**（人工驗收 P7a2a-C4）。
+ *
+ * `thumb` 是給前端呈現用的圖片欄位（購物車列、商品列表、商品詳情共用）。
+ * ⚠️ **後端 `products` 的圖片欄位尚未在 `docs/01` §7.1 定名** ——
+ *    這裡用 `thumb` 是配合既有呈現元件（`goods-card`）的期待值，
+ *    **P2 建立集合時要一併定案**（見 `docs/01` §7.2 第 7 點之後的未決項說明）。
  */
 const PRODUCTS = Object.freeze([
   {
@@ -83,6 +88,7 @@ const PRODUCTS = Object.freeze([
     priceCents: 2500,
     stock: 20,
     isActive: true,
+    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-09a.png',
     specs: [{ specId: 'std', name: '標準罐' }, { specId: 'big', name: '大罐' }],
   },
   {
@@ -92,6 +98,7 @@ const PRODUCTS = Object.freeze([
     priceCents: 800,
     stock: 3, // ← 刻意很少，驗收「庫存不足」用
     isActive: true,
+    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-3a.png',
     specs: [],
   },
   {
@@ -101,6 +108,7 @@ const PRODUCTS = Object.freeze([
     priceCents: 450,
     stock: 0, // ← 刻意為 0，驗收「已售完」用
     isActive: true,
+    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/muy-3a.png',
     specs: [],
   },
   {
@@ -110,6 +118,7 @@ const PRODUCTS = Object.freeze([
     priceCents: 3200,
     stock: 5,
     isActive: false, // ← 刻意下架，驗收「已下架」用
+    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-17a.png',
     specs: [],
   },
 ]);
