@@ -11,13 +11,19 @@ const { ClockPort } = require('./ClockPort');
 const { IdGeneratorPort } = require('./IdGeneratorPort');
 const { LoggerPort } = require('./LoggerPort');
 const { OrderRepository } = require('./OrderRepository');
+const { UserRepository } = require('./UserRepository');
 const { UnitOfWork, UnitOfWorkTransaction } = require('./UnitOfWork');
+const { SettlementGateway, SettlementMode, SettlementStatus } = require('./SettlementGateway');
 
 module.exports = {
   ClockPort,
   IdGeneratorPort,
   LoggerPort,
   OrderRepository,
+  UserRepository,
   UnitOfWork,
   UnitOfWorkTransaction,
+  SettlementGateway,
+  SettlementMode,
+  SettlementStatus,
 };

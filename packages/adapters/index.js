@@ -19,10 +19,14 @@ const { SystemClockAdapter } = require('./time/SystemClockAdapter');
 const { FixedClockAdapter } = require('./time/FixedClockAdapter');
 const { InMemoryLoggerAdapter } = require('./logging/InMemoryLoggerAdapter');
 const { InMemoryOrderRepository } = require('./inmemory/InMemoryOrderRepository');
+const { InMemorySettlementAdapter } = require('./inmemory/InMemorySettlementAdapter');
+const { InMemoryUserRepository } = require('./inmemory/InMemoryUserRepository');
 
 module.exports = {
   SystemClockAdapter,
   FixedClockAdapter,
   InMemoryLoggerAdapter,
   InMemoryOrderRepository,
+  InMemorySettlementAdapter,
+  InMemoryUserRepository,
 };
