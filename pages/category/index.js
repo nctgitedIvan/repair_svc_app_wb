@@ -2,6 +2,8 @@ import Toast from 'tdesign-miniprogram/toast/index';
 import { fetchCategories, fetchServices, fetchProducts } from '../../services/api/index';
 
 const catalogView = require('../../utils/catalogView.js');
+const cartRules = require('../../utils/cart.js');
+const { CartCode } = require('../../utils/cartCodes.js');
 
 /**
  * 分類頁（tabBar 第 2 項，標題「分類」）。
@@ -126,6 +128,59 @@ Page({
     wx.navigateTo({
       url: `/pages/goods/details/index?productId=${card.id}&spuId=${card.id}`,
     });
+  },
+
+  /**
+   * 卡片上的「加入購物車」。
+   *
+   * 分流規則在 `utils/catalogView.addActionFor()`（純函式，有測試）——
+   * 本頁只負責照結果執行：
+   *
+   * | 情況 | 行為 |
+   * |---|---|
+   * | 零件、無規格 | 直接寫入本機購物車 |
+   * | 零件、有規格 | Toast 提示（⚠️ **T6a 完成後改為導向商品詳情選規格**） |
+   * | 服務 | Toast 提示（§3.7.2：服務永遠不進購物車） |
+   *
+   * ⚠️ **「有規格 → 導向詳情頁」要等 T6a**：詳情頁目前對 `prd-*` 查不到資料
+   *    （見 `docs/P7a-2a-T3.6.1-診斷報告.md` §1.1），導過去只會看到 ¥0.00 的空白頁。
+   */
+  onAddCart(e) {
+    const card = e.detail && e.detail.goods;
+    const action = catalogView.addActionFor(card);
+    if (!action) return;
+
+    if (action === catalogView.AddAction.SERVICE) {
+      Toast({ context: this, selector: '#t-toast', message: '服務請直接下單，無需加入購物車', icon: '' });
+      return;
+    }
+    if (action === catalogView.AddAction.CHOOSE_SPEC) {
+      Toast({ context: this, selector: '#t-toast', message: '此商品有多種規格，請至商品詳情選擇', icon: '' });
+      return;
+    }
+
+    // ADD：無規格的零件 —— 加一筆進購物車
+    const cart = cartRules.loadCart();
+    const result = cartRules.addItem(
+      cart,
+      {
+        itemType: 'product',
+        productId: card.id,
+        specId: null,
+        quantity: 1,
+        priceCents: card.price, // 卡片 model 的 price 就是「分」
+      },
+      Date.now(),
+    );
+
+    if (!result.ok) {
+      // 上限或數量不合法（`utils/cart.js` 的規則）
+      const message = result.code === CartCode.LIMIT_EXCEEDED ? '購物車已滿（上限 50 項）' : '加入購物車失敗';
+      Toast({ context: this, selector: '#t-toast', message, icon: '' });
+      return;
+    }
+    cartRules.saveCart(result.cart);
+    Toast({ context: this, selector: '#t-toast', message: '已加入購物車', icon: '' });
   },
 
   /** 載入失敗後的重試 */

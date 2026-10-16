@@ -28,6 +28,45 @@ const ItemType = Object.freeze({
   PRODUCT: 'product',
 });
 
+/**
+ * 「加購」這個動作對一筆項目該做什麼（T3.6.1）。
+ *
+ * 三種結果，規則各有依據：
+ *
+ * | 結果 | 條件 | 依據 |
+ * |---|---|---|
+ * | `ADD` | 零件、**沒有規格** | 可以直接寫入購物車，不需要再問什麼 |
+ * | `CHOOSE_SPEC` | 零件、**有規格** | 直接加會漏掉規格（`prd-1` 有標準罐／大罐）→ 必須先選 |
+ * | `SERVICE` | 服務 | §3.7.2：**服務永遠不進購物車**（`cart.addItem` 也會拒絕） |
+ *
+ * ⚠️ 這是**規則**，所以放在純函式裡並有測試 —— 畫面只負責照結果執行。
+ *    `SERVICE` 這一條與 `utils/cart.js` 的 `SERVICE_NOT_CARTABLE` 是**雙重防護**：
+ *    就算有人改壞了這裡，`addItem` 仍會拒絕。
+ */
+const AddAction = Object.freeze({
+  ADD: 'add',
+  CHOOSE_SPEC: 'choose-spec',
+  SERVICE: 'service-not-cartable',
+});
+
+/**
+ * 依項目決定加購行為。
+ *
+ * @param {{ itemType?: string, specCount?: number }} item 卡片 model 或原始項目
+ * @returns {string|null} `AddAction` 的其中一個；`item` 為空時回 `null`
+ */
+function addActionFor(item) {
+  if (!item) return null;
+  if (item.itemType === ItemType.SERVICE) return AddAction.SERVICE;
+  // 原始項目用 specs 陣列，卡片 model 用預先算好的 specCount
+  const specCount = Number.isInteger(item.specCount)
+    ? item.specCount
+    : Array.isArray(item.specs)
+      ? item.specs.length
+      : 0;
+  return specCount > 0 ? AddAction.CHOOSE_SPEC : AddAction.ADD;
+}
+
 /** 零件／服務在卡片上的標籤文字（混合清單裡讓使用者一眼分得出） */
 const TYPE_LABEL = Object.freeze({
   [ItemType.SERVICE]: '服務',
@@ -124,14 +163,23 @@ function toCardModel(item) {
     price: item.priceCents,
     /** 混合清單裡的分類標籤 */
     tags: [TYPE_LABEL[item.itemType]],
+    /**
+     * 規格數量。
+     *
+     * ⚠️ 共用卡片元件**不渲染**這個欄位，它的用途是讓頁面判斷加購行為
+     *    （`addActionFor()`）—— 卡片上加購圖示是無條件渲染的，頁面只能靠這個分流。
+     */
+    specCount: Array.isArray(item.specs) ? item.specs.length : 0,
   };
 }
 
 module.exports = {
   ItemType,
   TYPE_LABEL,
+  AddAction,
   isVisible,
   buildCategoryTree,
   mergeByCategory,
   toCardModel,
+  addActionFor,
 };

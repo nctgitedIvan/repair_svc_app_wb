@@ -149,5 +149,17 @@
     show="{{isShowPromotionPop}}"
     bind:promotionChange="promotionChange"
   />
+
+  <!--
+    ⚠️ T3.6.1：查不到商品時的明確畫面。
+    原本這種情況會拋 TypeError，讓整頁停在初始空白狀態（¥0.00、無圖、無規格）
+    且沒有任何訊息。真正的修復是 T6a（詳情頁接上新 API）。
+    用 fixed 覆蓋層，不動原有的版面結構。
+  -->
+  <view class="detail-load-failed" wx:if="{{loadFailed}}">
+    <view class="detail-load-failed__text">找不到這件商品</view>
+    <view class="detail-load-failed__tip">商品可能已下架，或連結已失效</view>
+    <view class="detail-load-failed__btn" catchtap="onLoadFailedBack">返回</view>
+  </view>
 </view>
 <t-toast id="t-toast" />

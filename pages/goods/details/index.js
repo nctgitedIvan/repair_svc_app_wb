@@ -60,6 +60,8 @@ Page({
         showCartNum: true,
       },
     ],
+    /** 商品查不到（見 `getDetail()` 的說明）—— 顯示明確訊息而不是停在空白初始狀態 */
+    loadFailed: false,
     isStock: true,
     cartNum: 0,
     soldout: false,
@@ -86,6 +88,14 @@ Page({
     duration: 500,
     interval: 5000,
     soldNum: 0, // 已售数量
+  },
+
+  /** 「商品查不到」畫面按「返回」（T3.6.1） */
+  onLoadFailedBack() {
+    wx.navigateBack({
+      // 直接開這個頁（沒有上一頁）時退回分類頁，避免按了沒反應
+      fail: () => wx.switchTab({ url: '/pages/category/index' }),
+    });
   },
 
   handlePopupHide() {
@@ -304,6 +314,26 @@ Page({
   getDetail(spuId) {
     Promise.all([fetchGood(spuId), fetchActivityList()]).then((res) => {
       const [details, activityList] = res;
+
+      /**
+       * ⚠️ **T3.6.1 修正：這裡原本直接 `skuList.forEach`，沒有防護。**
+       *
+       * `fetchGood` 的 mock 用 `allGoods[id % allGoods.length]` 取值
+       * （`model/good.js`），遇到**非數字 id**（例如分類頁帶過來的 `prd-1`）
+       * 會得到 `NaN` 索引 → `undefined` → 回傳的物件**沒有 `skuList`**
+       * → `skuList.forEach` 拋 TypeError → 後面的 `setData` 全部沒跑
+       * → 畫面停在初始值（`minSalePrice: 0` → 顯示 **¥0.00**、無圖、無規格）
+       * 而**沒有任何錯誤訊息**。
+       *
+       * 現在改成明確告知。真正的修復是 **T6a**（詳情頁接上新 API），
+       * 這裡只保證「查不到資料時不再讓整頁靜默失敗」。
+       */
+      if (!details || !Array.isArray(details.skuList)) {
+        console.warn('[details] 查不到商品資料，spuId =', spuId);
+        this.setData({ loadFailed: true });
+        return;
+      }
+
       const skuArray = [];
       const { skuList, primaryImage, isPutOnSale, minSalePrice, maxSalePrice, maxLinePrice, soldNum } = details;
       skuList.forEach((item) => {

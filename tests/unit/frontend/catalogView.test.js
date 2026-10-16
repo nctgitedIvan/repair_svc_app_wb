@@ -157,6 +157,54 @@ test('toCardModel：餵給既有 goods-card 的欄位', async (t) => {
   await t.test('null 不爆（回 null）', () => {
     assert.equal(view.toCardModel(null), null);
   });
+
+  await t.test('帶出 specCount（頁面判斷加購行為用；卡片本身不渲染它）', () => {
+    const withSpecs = view.toCardModel({ ...prd({ specs: [{ specId: 'a' }, { specId: 'b' }] }), itemType: 'product' });
+    const noSpecs = view.toCardModel({ ...prd({ specs: [] }), itemType: 'product' });
+    assert.equal(withSpecs.specCount, 2);
+    assert.equal(noSpecs.specCount, 0);
+  });
+});
+
+/**
+ * T3.6.1：加購行為的分流規則。
+ *
+ * ⚠️ 這組測試保護的是「**服務不會被加進購物車**」與「**有規格不會被直接加入**」
+ *    兩條業務規則 —— 它們在畫面上看不出來（圖示長得一樣），只有行為有差。
+ */
+test('addActionFor：加購行為的分流（T3.6.1）', async (t) => {
+  await t.test('⚠️ 服務 → SERVICE（§3.7.2：服務永遠不進購物車）', () => {
+    assert.equal(view.addActionFor({ itemType: 'service', specCount: 0 }), view.AddAction.SERVICE);
+    assert.equal(view.addActionFor({ itemType: 'service', specs: [] }), view.AddAction.SERVICE);
+  });
+
+  await t.test('零件、無規格 → ADD', () => {
+    assert.equal(view.addActionFor({ itemType: 'product', specCount: 0 }), view.AddAction.ADD);
+    assert.equal(view.addActionFor({ itemType: 'product', specs: [] }), view.AddAction.ADD);
+  });
+
+  await t.test('⚠️ 零件、有規格 → CHOOSE_SPEC（直接加會漏掉規格）', () => {
+    assert.equal(view.addActionFor({ itemType: 'product', specCount: 2 }), view.AddAction.CHOOSE_SPEC);
+    assert.equal(view.addActionFor({ itemType: 'product', specs: [{ specId: 'a' }] }), view.AddAction.CHOOSE_SPEC);
+  });
+
+  await t.test('specCount 與 specs 都缺時視為無規格（不誤判為有規格）', () => {
+    assert.equal(view.addActionFor({ itemType: 'product' }), view.AddAction.ADD);
+  });
+
+  await t.test('null/undefined → null（呼叫端自己防護）', () => {
+    assert.equal(view.addActionFor(null), null);
+    assert.equal(view.addActionFor(undefined), null);
+  });
+
+  await t.test('拿真實 fake 資料驗一次：服務／有規格零件／無規格零件', () => {
+    const cards = view
+      .mergeByCategory({ services: SERVICES, products: PRODUCTS, categoryId: 'cat_ac_repair' })
+      .map(view.toCardModel);
+    const actions = cards.map((c) => view.addActionFor(c));
+    assert.ok(actions.includes(view.AddAction.SERVICE), '冷氣維修是服務');
+    assert.ok(actions.includes(view.AddAction.CHOOSE_SPEC), '冷媒 R410 有兩種規格');
+  });
 });
 
 /**

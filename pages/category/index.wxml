@@ -21,7 +21,12 @@
         共用卡片元件（goods-list + goods-card），服務與零件用同一個元件渲染。
         卡片尺寸由本頁 index.wxss 覆寫（右側面板比全寬列表窄，見該檔說明）。
       -->
-      <goods-list wr-class="cat-grid__list" goodsList="{{items}}" bind:click="onItemTap" />
+      <goods-list
+        wr-class="cat-grid__list"
+        goodsList="{{items}}"
+        bind:click="onItemTap"
+        bind:addcart="onAddCart"
+      />
       <view class="cat-grid__empty" wx:if="{{items.length === 0}}">{{currentName}} 目前沒有可預約的項目</view>
     </view>
   </goods-category>
