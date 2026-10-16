@@ -15,6 +15,7 @@ const assert = require('node:assert/strict');
 const {
   OrderStatus,
   TRANSITIONS,
+  VOIDABLE_FROM,
   fromValue,
   fromKey,
   canTransition,
@@ -42,6 +43,15 @@ test('回歸防護：狀態數值必須唯一（baseline 的缺陷）', async (t
   await t.test('取消與逾時必須可區分', () => {
     assert.notEqual(OrderStatus.CANCELED_UNPAID.value, OrderStatus.EXPIRED_UNPAID.value);
     assert.notEqual(OrderStatus.CANCELED_PAID_REFUNDED.value, OrderStatus.EXPIRED_UNASSIGNED_REFUNDED.value);
+  });
+
+  await t.test('VOIDED 與 CANCELED_* 語意不同（平台作廢 vs 客戶／客服取消）', () => {
+    const canceledValues = [
+      OrderStatus.CANCELED_UNPAID.value,
+      OrderStatus.CANCELED_PAID_REFUNDED.value,
+    ];
+    assert.equal(canceledValues.includes(OrderStatus.VOIDED.value), false);
+    assert.equal(OrderStatus.VOIDED.value, 92);
   });
 });
 
@@ -107,6 +117,47 @@ test('狀態機轉移', async (t) => {
     for (const status of Object.values(OrderStatus)) {
       assert.ok(TRANSITIONS[status.key] !== undefined, `狀態 ${status.key} 未定義轉移`);
     }
+  });
+});
+
+test('VOIDED：平台作廢', async (t) => {
+  await t.test('值為 92 且為終態', () => {
+    assert.equal(OrderStatus.VOIDED.value, 92);
+    assert.equal(isTerminal(OrderStatus.VOIDED), true);
+    assert.deepEqual(TRANSITIONS.VOIDED, [], '作廢後不可再流轉');
+  });
+
+  await t.test('可從**任何非終態**進入', () => {
+    for (const status of Object.values(OrderStatus)) {
+      if (isTerminal(status) || status.key === 'VOIDED') continue;
+      assert.ok(
+        canTransition(status, OrderStatus.VOIDED),
+        `${status.key} 應可作廢（非終態皆可）`,
+      );
+    }
+  });
+
+  await t.test('終態不得再進入 VOIDED（不可重複作廢）', () => {
+    for (const status of Object.values(OrderStatus)) {
+      if (!isTerminal(status)) continue;
+      assert.ok(!canTransition(status, OrderStatus.VOIDED), `${status.key} 是終態，不應可作廢`);
+    }
+  });
+
+  await t.test('VOIDABLE_FROM 由 TRANSITIONS 推導，兩者不得走鐘', () => {
+    const nonTerminal = Object.values(OrderStatus)
+      .filter((s) => !isTerminal(s) && s.key !== 'VOIDED')
+      .map((s) => s.key)
+      .sort();
+    assert.deepEqual([...VOIDABLE_FROM].sort(), nonTerminal);
+  });
+
+  await t.test('⚠️ 作廢的業務限制不在狀態機（狀態機管合法性，業務規則管適當性）', () => {
+    // 「已付款作廢必須先退款」「已完成不能作廢」是業務規則，
+    // 由 P5 的 VoidOrderUseCase 與 P4c 的 ApprovalPolicy 強制。
+    // 因此狀態機**允許** COMPLETED → VOIDED —— 這是刻意的，不是遺漏。
+    assert.ok(canTransition(OrderStatus.COMPLETED, OrderStatus.VOIDED));
+    assert.ok(canTransition(OrderStatus.PAID_PENDING_ASSIGN, OrderStatus.VOIDED));
   });
 });
 

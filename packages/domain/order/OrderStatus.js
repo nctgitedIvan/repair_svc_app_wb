@@ -27,24 +27,51 @@ const OrderStatus = Object.freeze({
   EXPIRED_UNPAID: { value: 83, key: 'EXPIRED_UNPAID', label: '已逾時－未付款', terminal: true },
   EXPIRED_UNASSIGNED_REFUNDED: { value: 84, key: 'EXPIRED_UNASSIGNED_REFUNDED', label: '已逾時－未派單／未接單（已退款）', terminal: true },
   CLOSED_REFUNDED: { value: 91, key: 'CLOSED_REFUNDED', label: '已結案－退款完成', terminal: true },
+  /**
+   * 平台主動作廢（軟刪除的唯一實作方式）。
+   *
+   * 與 `CANCELED_*`（客戶／客服取消）語意不同：這是**平台主動**的作廢，
+   * 適用於重複下單、測試訂單、詐欺訂單、平台失誤。
+   *
+   * ⚠️ 狀態機只回答「這個轉移在結構上可不可能」。
+   *    「已付款作廢必須先退款」「已完成不能作廢」是**業務規則**，
+   *    由 P5 的 `VoidOrderUseCase` 與 P4c 的 `ApprovalPolicy` 強制。
+   *    這是有意的分工：狀態機管合法性，業務規則管適當性。
+   */
+  VOIDED: { value: 92, key: 'VOIDED', label: '已作廢（平台主動）', terminal: true },
 });
 
-/** 合法轉移表：from → Set<to>。狀態機的唯一真實來源。 */
+/**
+ * 合法轉移表：from → Array<to>。狀態機的唯一真實來源。
+ *
+ * `VOIDED` 可從**任何非終態**進入（見下方 `VOIDABLE_FROM`）。
+ */
 const TRANSITIONS = Object.freeze({
-  PENDING_PAYMENT: ['PAID_PENDING_ASSIGN', 'CANCELED_UNPAID', 'EXPIRED_UNPAID'],
-  PAID_PENDING_ASSIGN: ['ASSIGNED_PENDING_ACCEPT', 'CANCELED_PAID_REFUNDED', 'EXPIRED_UNASSIGNED_REFUNDED'],
-  ASSIGNED_PENDING_ACCEPT: ['ACCEPTED_PENDING_VISIT', 'PAID_PENDING_ASSIGN', 'EXPIRED_UNASSIGNED_REFUNDED'],
-  ACCEPTED_PENDING_VISIT: ['IN_SERVICE', 'PAID_PENDING_ASSIGN'],
-  IN_SERVICE: ['PENDING_ACCEPTANCE', 'DISPUTED'],
-  PENDING_ACCEPTANCE: ['COMPLETED', 'IN_SERVICE', 'DISPUTED'],
-  DISPUTED: ['COMPLETED', 'CLOSED_REFUNDED', 'IN_SERVICE'],
-  COMPLETED: ['DISPUTED', 'CLOSED_REFUNDED'],
+  PENDING_PAYMENT: ['PAID_PENDING_ASSIGN', 'CANCELED_UNPAID', 'EXPIRED_UNPAID', 'VOIDED'],
+  PAID_PENDING_ASSIGN: ['ASSIGNED_PENDING_ACCEPT', 'CANCELED_PAID_REFUNDED', 'EXPIRED_UNASSIGNED_REFUNDED', 'VOIDED'],
+  ASSIGNED_PENDING_ACCEPT: ['ACCEPTED_PENDING_VISIT', 'PAID_PENDING_ASSIGN', 'EXPIRED_UNASSIGNED_REFUNDED', 'VOIDED'],
+  ACCEPTED_PENDING_VISIT: ['IN_SERVICE', 'PAID_PENDING_ASSIGN', 'VOIDED'],
+  IN_SERVICE: ['PENDING_ACCEPTANCE', 'DISPUTED', 'VOIDED'],
+  PENDING_ACCEPTANCE: ['COMPLETED', 'IN_SERVICE', 'DISPUTED', 'VOIDED'],
+  DISPUTED: ['COMPLETED', 'CLOSED_REFUNDED', 'IN_SERVICE', 'VOIDED'],
+  COMPLETED: ['DISPUTED', 'CLOSED_REFUNDED', 'VOIDED'],
   CANCELED_UNPAID: [],
   CANCELED_PAID_REFUNDED: [],
   EXPIRED_UNPAID: [],
   EXPIRED_UNASSIGNED_REFUNDED: [],
   CLOSED_REFUNDED: [],
+  VOIDED: [],
 });
+
+/**
+ * 可作廢的來源狀態（= 所有非終態）。
+ * 由 `TRANSITIONS` 推導，不另外維護一份會走鐘的清單。
+ */
+const VOIDABLE_FROM = Object.freeze(
+  Object.entries(TRANSITIONS)
+    .filter(([, targets]) => targets.includes('VOIDED'))
+    .map(([from]) => from),
+);
 
 /** 值 → key 的反查表（供 adapter 從資料庫的數字還原） */
 const BY_VALUE = Object.freeze(
@@ -91,6 +118,7 @@ function canExecuteProfitSharing(status) {
 module.exports = {
   OrderStatus,
   TRANSITIONS,
+  VOIDABLE_FROM,
   fromValue,
   fromKey,
   canTransition,
