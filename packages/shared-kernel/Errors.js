@@ -178,6 +178,34 @@ class ApprovalRequiredError extends DomainError {
   }
 }
 
+/**
+ * 權限設定錯誤。
+ *
+ * 例：某個權限沒有宣告 `constraints` 欄位，或宣告了不存在的 constraint 名稱。
+ *
+ * ⚠️ **這必須是「拋錯」而非「預設放行」。**
+ *    權限表是白名單 —— 若缺少宣告就當成「無限制」，新增權限時的疏漏
+ *    會**靜默地變成資安漏洞**，而且在測試裡看不到。
+ *    寧可讓整個請求失敗，也不要讓一個未設防的權限上線。
+ *
+ * 對應 docs/01-目標架構.md §4.7.4。
+ */
+class MisconfiguredPermissionError extends DomainError {
+  static code = 'MISCONFIGURED_PERMISSION';
+
+  constructor({ permissionKey, problem, unknownConstraint }, options = {}) {
+    super(
+      `權限設定錯誤：${permissionKey} —— ${problem}` +
+        (unknownConstraint ? `（未知的 constraint：${unknownConstraint}）` : ''),
+      {
+        ...options,
+        code: MisconfiguredPermissionError.code,
+        details: { permissionKey, problem, unknownConstraint: unknownConstraint || null },
+      },
+    );
+  }
+}
+
 /** 判斷是否為可重試的錯誤（供 Saga / 定時任務的補償邏輯使用） */
 function isRetryable(error) {
   return Boolean(error && (error.retryable === true || error.code === ConcurrencyConflict.code));
@@ -201,5 +229,6 @@ module.exports = {
   PeriodClosedError,
   ReconciliationMismatchError,
   ApprovalRequiredError,
+  MisconfiguredPermissionError,
   isRetryable,
 };

@@ -33,6 +33,19 @@ const { OrderStatusLog } = require('./order/OrderStatusLog');
 const { OrderSnapshot } = require('./order/OrderSnapshot');
 const { priceItems, sumItemsWhere } = require('./order/PricingService');
 
+// ── 存取控制 ──
+const { Permission, ALL_KEYS: ALL_PERMISSION_KEYS, byKey: permissionByKey } = require('./access/Permission');
+const { Decision, Reason } = require('./access/Decision');
+const { PermissionGroup, permissionsOfGroups } = require('./access/PermissionGroupMatrix');
+const {
+  ROLE_PERMISSIONS,
+  TECHNICIAN_FORBIDDEN,
+  roleHas,
+  effectivePermissions,
+} = require('./access/RolePermissionMatrix');
+const { can, canBool, allowedPermissions } = require('./access/AccessPolicy');
+const { ApprovalPolicy, APPROVAL_RULES, isPriceChangeOverThreshold } = require('./access/ApprovalPolicy');
+
 // ── 狀態機 ──
 const OrderStatus = require('./order/OrderStatus');
 
@@ -63,6 +76,24 @@ module.exports = {
   OrderSnapshot,
   priceItems,
   sumItemsWhere,
+  // 存取控制
+  Permission,
+  ALL_PERMISSION_KEYS,
+  permissionByKey,
+  Decision,
+  Reason,
+  PermissionGroup,
+  permissionsOfGroups,
+  ROLE_PERMISSIONS,
+  TECHNICIAN_FORBIDDEN,
+  roleHas,
+  effectivePermissions,
+  can,
+  canBool,
+  allowedPermissions,
+  ApprovalPolicy,
+  APPROVAL_RULES,
+  isPriceChangeOverThreshold,
   // 狀態機
   OrderStatus,
 };

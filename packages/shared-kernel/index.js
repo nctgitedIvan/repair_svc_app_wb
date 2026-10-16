@@ -12,6 +12,7 @@ const {
   PeriodClosedError,
   ReconciliationMismatchError,
   ApprovalRequiredError,
+  MisconfiguredPermissionError,
   isRetryable,
 } = require('./Errors');
 
@@ -29,5 +30,6 @@ module.exports = {
   PeriodClosedError,
   ReconciliationMismatchError,
   ApprovalRequiredError,
+  MisconfiguredPermissionError,
   isRetryable,
 };
