@@ -61,7 +61,15 @@ export async function fetchProductDetail(productId) {
   return product;
 }
 
-/** 供購物車 validate() 使用的商品現況索引（productId → 庫存/價格/上架） */
+/**
+ * 供購物車 `validate()` 使用的商品現況索引（productId → 庫存/價格/上架）。
+ *
+ * ⚠️ **P7b 後端契約，目前無人呼叫。**
+ *    T4 的購物車改用 `fetchProducts()` 自己建索引 —— 因為畫面也需要名稱與圖片，
+ *    分成兩次查詢沒有意義（見 `docs/P7a-2a-T4-計畫.md` §13 Q-3）。
+ *    保留它是因為它描述的是**後端應提供的校驗端點**：P7b 接上真後端後，
+ *    購物車的「結算前校驗」應該打這支（只回校驗需要的欄位，不搬名稱與圖片）。
+ */
 export async function fetchProductCatalogIndex() {
   await delay(40);
   const index = {};
