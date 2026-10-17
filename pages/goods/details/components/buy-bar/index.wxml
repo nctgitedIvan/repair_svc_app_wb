@@ -1,12 +1,16 @@
 <view class="flex soldout flex-center wr-sold-out" wx:if="{{soldout ||  !isStock}}">
-	{{soldout ? '商品已下架' : '商品已售完'}}
+	{{soldout ? (itemType === 'service' ? '服務已下架' : '商品已下架') : '商品已售完'}}
 </view>
 <view class="footer-cont flex flex-between wr-class">
 	<!--
 		左側入口（客服／收藏）。⚠️ T6a-5 起傳的是 **action key** 而不是 url ——
 		「客服」與「收藏」都不是 tabBar 頁面，不能用 switchTab。
+		⚠️ T6a.3-5：服務只有「客服」一個入口（收藏目前僅支援商品）。
 	-->
-	<view class="flex flex-between bottom-operate-left" wx:if="{{jumpArray.length > 0}}">
+	<view
+	  class="flex flex-between bottom-operate-left {{jumpArray.length === 1 ? 'bottom-operate-left--single' : ''}}"
+	  wx:if="{{jumpArray.length > 0}}"
+	>
 		<view
 		  wx:for="{{jumpArray}}"
 		  wx:key="key"
@@ -31,6 +35,8 @@
 		`docs/P7a-2a-計畫.md` 的驗收標準 P7a2a-C2 已同步改寫為：
 		「商品詳情有加入購物車與立即購買。立即購買 = 跳過購物車直接結算。」
 		→ 點擊目前給佔位 Toast（真正結算是 **T7** 的範圍）。
+
+		⚠️ T6a.3-5：服務顯示單一「立即預約」（不進購物車，§3.7.2）。
 	-->
 	<block wx:if="{{buttonType === 1}}">
 		<view class="flex buy-buttons">
@@ -39,6 +45,16 @@
 			</view>
 			<view class="bar-buy {{soldout || !isStock ? 'bar-buyNow-disabled' : ''}}" bindtap="toBuyNow">
 				立即購買
+			</view>
+		</view>
+	</block>
+	<block wx:elif="{{itemType === 'service'}}">
+		<view class="flex buy-buttons">
+			<view
+			  class="bar-buy bar-buy--service {{soldout || !isStock ? 'bar-buyNow-disabled' : ''}}"
+			  bindtap="toBuyNow"
+			>
+				立即預約
 			</view>
 		</view>
 	</block>

@@ -214,15 +214,26 @@ Page({
   },
 
   /**
-   * 「立即購買」＝ **跳過購物車、直接進結算**（使用者 2026-10-17 的決策）。
+   * 「立即購買／立即預約」＝ **跳過購物車、直接進結算**（使用者 2026-10-17 的決策）。
    *
    * ⚠️ 真正的結算流程是 **T7** 的範圍（現在的 `/pages/order/order-confirm`
    *    還是舊電商頁），所以這裡先給佔位提示，不導向壞掉的頁面。
+   *
+   * T6a.3-5：服務走同一顆按鈕，文案改為「立即預約」（服務不進購物車，§3.7.2）。
    */
   onBuyNow() {
     const { detail } = this.data;
-    if (!detail.id || !detail.canAddToCart) return;
-    Toast({ context: this, selector: '#t-toast', message: '立即購買功能建置中（T7 完成）', icon: '' });
+    if (!detail.id) return;
+    if (detail.itemType === ItemType.PRODUCT && !detail.canAddToCart) return;
+    if (detail.itemType === ItemType.SERVICE && detail.isDelisted) return;
+
+    const isService = detail.itemType === ItemType.SERVICE;
+    Toast({
+      context: this,
+      selector: '#t-toast',
+      message: isService ? '立即預約功能建置中（T7 完成）' : '立即購買功能建置中（T7 完成）',
+      icon: '',
+    });
   },
 
   // ── 加入購物車 ──

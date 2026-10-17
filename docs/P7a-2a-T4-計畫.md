@@ -479,9 +479,9 @@ git reset --hard pre-p7a2a-t4      # 放棄整個 T4
 在開發者工具的 Console 貼上（純字串，無 shell 轉義問題）：
 
 ```js
-wx.setStorageSync('repair.cart.v1', JSON.stringify({
+wx.setStorageSync('repair.cart.v2', JSON.stringify({
   items: [
-    { lineId: 'prd-1:std', productId: 'prd-1', specId: 'std', quantity: 2,
+    { lineId: 'prd-1:sku-std', productId: 'prd-1', specId: 'sku-std', quantity: 2,
       addedPriceCents: 2500, currency: 'CNY', addedAt: 1 },
     { lineId: 'prd-2', productId: 'prd-2', specId: null, quantity: 1,
       addedPriceCents: 800, currency: 'CNY', addedAt: 1 },
@@ -493,6 +493,10 @@ wx.setStorageSync('repair.cart.v1', JSON.stringify({
   updatedAt: 1
 }));
 ```
+
+> ⚠️ **T6a.3 更新**：Storage key 已升為 `repair.cart.v2`；`prd-1` 的明細改用 **skuId**
+> （`sku-std`，標準罐），lineId 因此是 `prd-1:sku-std`。
+> 舊的 `repair.cart.v1`／`prd-1:std` 資料在新版**不會被讀取**（刻意拋棄）。
 
 然後重新進入購物車 tab。
 

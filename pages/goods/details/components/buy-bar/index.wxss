@@ -23,6 +23,11 @@
   width: 50%;
 }
 
+/* T6a.3-5：服務只有「客服」一個入口 → 靠左固定 110rpx（不要置中在左半區） */
+.bottom-operate-left--single .icon-warp {
+  width: 110rpx;
+}
+
 .tag-cart-num {
   display: inline-block;
   position: absolute;
@@ -107,6 +112,11 @@
   background-color: #fa4126;
   border-radius: 40rpx;
   margin-left: 12rpx;
+}
+
+/* T6a.3-5：服務的唯一按鈕，不需要左間距 */
+.bar-buy--service {
+  margin-left: 0;
 }
 
 .flex {

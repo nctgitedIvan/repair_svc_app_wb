@@ -16,7 +16,12 @@ const assert = require('node:assert/strict');
 const fav = require('../../../utils/favorite');
 
 const NOW = 1_700_000_000_000;
-const ITEM = { productId: 'prd-1', name: '冷媒 R410', thumb: 'https://x/1.png', priceCents: 2500 };
+const ITEM = {
+  productId: 'prd-1',
+  name: '冷媒 R410',
+  images: ['https://x/1.png'],
+  priceCents: 2500,
+};
 
 const storeWith = (...items) => ({ items, updatedAt: NOW });
 const entryOf = (over = {}) => ({
@@ -38,6 +43,11 @@ test('toSnapshot：只留顯示需要的三個欄位', async (t) => {
 
   await t.test('缺圖給空字串、價格不是整數給 0（不留下 undefined）', () => {
     assert.deepEqual(fav.toSnapshot({ name: 'x' }), { name: 'x', image: '', priceCents: 0 });
+  });
+
+  await t.test('⚠️ T6a.3-2 起主圖讀 images[0]（thumb 只當舊資料 fallback）', () => {
+    assert.equal(fav.toSnapshot({ name: 'x', images: ['a.png', 'b.png'] }).image, 'a.png');
+    assert.equal(fav.toSnapshot({ name: 'x', images: [], thumb: 'old.png' }).image, 'old.png');
   });
 
   await t.test('null → null', () => {
@@ -197,7 +207,7 @@ test('normalizeStore：Storage 內容的容錯（單筆壞掉不毀整份）', a
 test('withCurrentPrices：收藏清單 ＋ 商品現況（「我的收藏」頁用）', async (t) => {
   const store = fav.addFavorite(fav.createStore(), {
     productId: 'prd-1',
-    item: { name: '冷媒 R410', thumb: 'x.png', priceCents: 8000 },
+    item: { name: '冷媒 R410', images: ['x.png'], priceCents: 8000 },
     now: NOW,
   }).store;
 

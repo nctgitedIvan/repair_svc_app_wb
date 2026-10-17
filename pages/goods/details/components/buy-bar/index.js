@@ -39,6 +39,16 @@ Component({
       type: Number,
       value: 0,
     },
+    /**
+     * T6a.3-5：`'product' | 'service'`。
+     *
+     * 服務不進購物車（§3.7.2），右下角改為單一「立即預約」；
+     * 目前只給 Toast 佔位，真正的結算流程在 T7。
+     */
+    itemType: {
+      type: String,
+      value: 'product',
+    },
     minDiscountPrice: {
       type: String,
       value: '',

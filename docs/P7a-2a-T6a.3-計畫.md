@@ -2,7 +2,7 @@
 
 > 產出日期：2026-10-17
 > 分支：`refactor/hexagonal`（HEAD = `34f1b44`，T6a.2 已 push）
-> **狀態：已批准。開始執行。**
+> **狀態：✅ 已完成（2026-10-17）。A1／A2／B／C／D 全部交付。**
 > 依據：`docs/01` §7.4（資料模型）、§7.4.5（camelCase ↔ snake_case）、T6a.2 診斷報告
 > 前置決策：使用者 2026-10-17 批准的六問（見 §5）
 
@@ -119,3 +119,18 @@
 | R4 | 多維度規格（fake 目前單維度） | `findSkuBySelection` 依維度順序比對，測試覆蓋 N 維 |
 | R5 | `dz-*` 只有 9 張佔位圖 | 輪替使用；真實圖片由 P8 上傳雲存儲 |
 | R6 | A1 與 B 之間，詳情頁的「加入購物車」仍用舊語意（規格值而非 skuId） | `selectedSpecIdOf` 暫時泛化為「取第一個維度的已選值」，B 之後由 `findSkuBySelection` 取代並移除 |
+
+---
+
+## 7. 執行結果（2026-10-17）
+
+| 階段 | commit | 結果 |
+|---|---|---|
+| **A1** | `ac62314` | fake 新形狀（`specs` 維度／`skus`／`images`／`nameEn`／`detailHtml`）＋ `detailView` 直接映射 |
+| **A2** | `3097b00` | 移除資料模型中的 `thumb`；`catalogView`／`cartView` 改讀 `images[0]` |
+| **B** | `0c5a087` | 選中 SKU 收斂數量上限；加購改存 `skuId`；購物車 `repair.cart.v2`；rich-text；移除 `selectedSpecIdOf` |
+| **C** | `e689a9e` | buy-bar 雙按鈕全圓角＋間距；rich-text 容器與間距微調 |
+| **D** | 本次收尾 | 文件收斂（§3.8／§7.4.7／handoff／T4 種子）；服務底部改「客服＋立即預約」；修正 `favorite.toSnapshot` 的 `thumb` 遺漏 |
+
+**自動驗證**：每個 commit 後 `npm run verify` 皆為 exit 0；最終測試 **1084**（新增 favorite 的 `images[0]` 測試）。
+人工驗收 C1–C7 由使用者執行。

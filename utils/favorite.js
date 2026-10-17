@@ -77,9 +77,11 @@ const FavoriteCode = Object.freeze({
 /** 把商品轉成快照（只留顯示需要的三個欄位） */
 function toSnapshot(item) {
   if (!item) return null;
+  const images = Array.isArray(item.images) ? item.images.filter(Boolean) : [];
   return {
     name: item.name || '',
-    image: item.thumb || '',
+    // T6a.3-2 起主圖是 images[0]；`thumb` 僅作為舊資料的 fallback
+    image: images[0] || item.thumb || '',
     priceCents: Number.isInteger(item.priceCents) ? item.priceCents : 0,
   };
 }
