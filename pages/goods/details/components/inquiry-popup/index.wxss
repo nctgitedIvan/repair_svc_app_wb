@@ -1,0 +1,53 @@
+/* 詢問商品彈窗（T6b） */
+
+.inquiry-popup {
+  padding: 40rpx 40rpx calc(40rpx + env(safe-area-inset-bottom));
+  background-color: #fff;
+  border-radius: 24rpx 24rpx 0 0;
+}
+
+.inquiry-popup__title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333333;
+  text-align: center;
+}
+
+.inquiry-popup__desc {
+  margin-top: 24rpx;
+  font-size: 26rpx;
+  line-height: 40rpx;
+  color: #666666;
+  word-break: break-word;
+}
+
+.inquiry-popup__textarea {
+  margin-top: 24rpx;
+  --td-textarea-background-color: #f5f5f5;
+  --td-textarea-border-radius: 12rpx;
+}
+
+.inquiry-popup__actions {
+  display: flex;
+  margin-top: 32rpx;
+}
+
+.inquiry-popup__btn {
+  flex: 1;
+  height: 80rpx;
+  line-height: 80rpx;
+  text-align: center;
+  border-radius: 40rpx;
+  font-size: 28rpx;
+}
+
+.inquiry-popup__btn--cancel {
+  margin-right: 20rpx;
+  background-color: #f5f5f5;
+  color: #666666;
+}
+
+.inquiry-popup__btn--submit {
+  background-color: #fa4126;
+  color: #ffffff;
+}

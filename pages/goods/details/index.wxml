@@ -120,6 +120,15 @@
     </view>
   </goods-specs-popup>
 
+  <!-- T6b：詢問商品（客戶端 UI＋本機 Storage；客服回覆需 P5） -->
+  <inquiry-popup
+    id="inquiry-popup"
+    show="{{isInquiryPopupShow}}"
+    product-name="{{detail.title}}"
+    bind:close="onInquiryClose"
+    bind:submit="onInquirySubmit"
+  />
+
   <!--
     ⚠️ T3.6.1：查不到項目時的明確畫面。
     （原本這種情況會拋 TypeError，讓整頁停在初始空白狀態且沒有任何訊息。）

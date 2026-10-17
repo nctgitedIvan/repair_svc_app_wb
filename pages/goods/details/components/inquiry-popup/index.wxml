@@ -1,0 +1,21 @@
+<t-popup visible="{{show}}" placement="bottom" bind:visible-change="handleClose">
+  <view class="inquiry-popup">
+    <view class="inquiry-popup__title">詢問商品</view>
+    <view class="inquiry-popup__desc">是否詢問該商品：{{productName}}？</view>
+
+    <t-textarea
+      class="inquiry-popup__textarea"
+      value="{{message}}"
+      placeholder="想問什麼？（選填）"
+      maxlength="{{maxlength}}"
+      indicator
+      autosize
+      bind:change="handleInput"
+    />
+
+    <view class="inquiry-popup__actions">
+      <view class="inquiry-popup__btn inquiry-popup__btn--cancel" bindtap="handleClose">取消</view>
+      <view class="inquiry-popup__btn inquiry-popup__btn--submit" bindtap="handleSubmit">發送</view>
+    </view>
+  </view>
+</t-popup>
