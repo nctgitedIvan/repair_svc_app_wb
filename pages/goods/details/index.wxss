@@ -86,8 +86,10 @@ image {
  * 屆時會有實際的畫面可以對照。
  */
 
-/* 型別標籤（服務／零件） */
+/* 型別標籤（服務／零件）—— T6a.3-4：靠右且不參與壓縮（價格永遠靠左） */
 .goods-detail-page .goods-info .goods-number .goods-type {
+  flex-shrink: 0;
+  margin-left: 16rpx;
   font-size: 24rpx;
   color: #999999;
   line-height: 40rpx;
@@ -117,16 +119,24 @@ image {
   margin: 0 12rpx 8rpx 0;
 }
 
-/* 詳情介紹的文字（舊版是長圖） */
-.goods-detail-page .desc-content .desc-content__text {
+/*
+ * T6a.3-4（M8）：rich-text 容器。
+ *
+ * ⚠️ rich-text 的內部節點不吃外部 class，字級／顏色／行高靠容器繼承；
+ *    後台 HTML 的 <img> 寬度由 P5／P8 清洗，這裡再補一層防線。
+ */
+.goods-detail-page .desc-content .desc-content__rich {
+  display: block;
   padding: 0 40rpx 40rpx;
   font-size: 28rpx;
   color: #333333;
   line-height: 44rpx;
-  white-space: pre-wrap;
-  /* T6a.2：中文會自然換行，但長英數（型號／URL）會撐出去；也是未來 detail_html 的前置 */
   word-break: break-word;
   overflow-wrap: anywhere;
+}
+.goods-detail-page .desc-content .desc-content__rich image {
+  max-width: 100%;
+  height: auto;
 }
 
 /* ⚠️ 以下（`.sold-num` 起）為已無對應節點的舊區塊樣式，見上方說明 */
@@ -202,7 +212,8 @@ image {
   width: 104rpx;
   /* T6a.2：分享按鈕不參與壓縮，讓名稱去換行（名稱可縮、按鈕不可縮） */
   flex-shrink: 0;
-  margin-left: 20rpx;
+  /* T6a.3-4：名稱與分享的間距微調（20 → 16rpx，讓右緣更貼齊） */
+  margin-left: 16rpx;
 }
 
 .goods-detail-page .goods-info .goods-title .goods-tag .shareBtn {
@@ -273,6 +284,17 @@ image {
   align-items: center;
 }
 
+/* T6a.3-4：左側文字可縮、右側箭頭固定；兩者留 16rpx 間距 */
+.spu-select .content > view {
+  flex: 1;
+  min-width: 0;
+  margin-right: 16rpx;
+  word-break: break-word;
+}
+.spu-select .content t-icon {
+  flex-shrink: 0;
+}
+
 .spu-select .content .tintColor {
   color: #aaa;
 }
@@ -293,11 +315,12 @@ image {
 .goods-detail-page .desc-content__title {
   font-size: 28rpx;
   line-height: 36rpx;
-  text-align: center;
+  /* T6a.3-4：標題靠左（與 rich-text 內容同一個 40rpx 左緣） */
+  text-align: left;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start;
   align-items: center;
-  padding: 30rpx 20rpx;
+  padding: 30rpx 40rpx 20rpx;
 }
 
 .goods-detail-page .desc-content__title .img {
@@ -307,7 +330,8 @@ image {
 
 .goods-detail-page .desc-content__title--text {
   font-size: 26rpx;
-  margin: 0 32rpx;
+  /* T6a.3-4：靠左後不再需要左右 margin（左緣交給標題的 padding） */
+  margin: 0;
   font-weight: 600;
 }
 

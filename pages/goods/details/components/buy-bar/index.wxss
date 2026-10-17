@@ -76,17 +76,19 @@
  * 該驗收標準已於本批改寫）。
  *
  * 左＝加入購物車（次要，淺底紅字）；右＝立即購買（主要，紅底白字）。
- * 兩顆各 254rpx，加上左側兩個入口（110rpx × 2）＝ 約 708rpx，在 750rpx 內。
+ *
+ * ⚠️ T6a.3-4（M9）：兩顆按鈕**各自全圓角**並留 12rpx 間距（不再拼成一顆膠囊）。
+ * 2×236（按鈕）＋ 12（間距）＝ 484rpx；左側兩個入口 2×110＝220rpx
+ * → 704rpx ≤ 718rpx（footer 扣掉左右 padding 共 32rpx），不會橫向溢出。
+ * `flex-shrink: 0`：按鈕不參與壓縮（文字不會被挤），改由左側圖示區收縮。
  */
+.buy-buttons {
+  flex-shrink: 0;
+}
+
 .bar-separately,
 .bar-buy {
-  /*
-   * ⚠️ T6a.2（診斷報告 §1.3）：254rpx → **240rpx**。
-   * 2×110（左側圖示）＋ 2×240（按鈕）＝ 700rpx ≤ 718rpx（footer 扣掉 padding）
-   * → 原本的 728rpx 會超出 10rpx。
-   * `flex-shrink: 0`：按鈕不參與壓縮（文字不會被挤），改由左側圖示區收縮。
-   */
-  width: 240rpx;
+  width: 236rpx;
   flex-shrink: 0;
   height: 80rpx;
   color: #fff;
@@ -98,12 +100,13 @@
 .bar-separately {
   background: #ffece9;
   color: #fa4126;
-  border-radius: 40rpx 0 0 40rpx;
+  border-radius: 40rpx;
 }
 
 .bar-buy {
   background-color: #fa4126;
-  border-radius: 0 40rpx 40rpx 0;
+  border-radius: 40rpx;
+  margin-left: 12rpx;
 }
 
 .flex {
