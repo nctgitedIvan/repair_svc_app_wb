@@ -95,6 +95,8 @@ class CreateOrderUseCase {
     const order = Order.create({
       orderId,
       orderNo: new OrderNo(orderNo),
+      // 多租戶預留：目前 actor 都屬於平台；未來由目錄項目的 merchantId 決定
+      merchantId: actor.merchantId || 'platform',
       customerId,
       items: orderItems,
       address: new Address(address),

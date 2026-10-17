@@ -28,6 +28,7 @@ class InMemoryTechnicianRepository {
     assertId(technician.userId);
 
     this.#technicians.set(technician.technicianId, {
+      merchantId: technician.merchantId || 'platform',
       technicianId: technician.technicianId,
       userId: technician.userId,
       name: technician.name || '',

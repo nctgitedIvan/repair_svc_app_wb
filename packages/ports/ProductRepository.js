@@ -6,6 +6,7 @@
  * ProductRecord（camelCase，對齊 fake 與 docs/01 §7.4）：
  * ```js
  * {
+ *   merchantId, // 多租戶預留；目前皆為 'platform'
  *   productId, name, nameEn, description, detailHtml, images: [],
  *   category, categoryId, order, priceCents, stock,
  *   specs: [{ specId, title, values: [] }],

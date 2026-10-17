@@ -4,6 +4,7 @@
 
 function toRow(service) {
   return {
+    merchant_id: service.merchantId || 'platform',
     name: service.name,
     name_en: service.nameEn || '',
     description: service.description || '',
@@ -22,6 +23,7 @@ function toRow(service) {
 function fromRow(row) {
   if (!row) return null;
   return {
+    merchantId: row.merchant_id || 'platform',
     serviceId: row._id,
     name: row.name || '',
     nameEn: row.name_en || '',

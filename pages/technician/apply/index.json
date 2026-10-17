@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "入駐申請",
+  "usingComponents": {
+    "tech-tabbar": "../components/tech-tabbar/index",
+    "t-input": "tdesign-miniprogram/input/input",
+    "t-button": "tdesign-miniprogram/button/button",
+    "t-toast": "tdesign-miniprogram/toast/toast"
+  }
+}

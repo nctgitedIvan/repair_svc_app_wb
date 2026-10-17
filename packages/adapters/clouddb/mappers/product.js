@@ -40,6 +40,7 @@ function skuFromRow(row) {
 
 function toRow(product) {
   return {
+    merchant_id: product.merchantId || 'platform',
     name: product.name,
     name_en: product.nameEn || '',
     description: product.description || '',
@@ -59,6 +60,7 @@ function toRow(product) {
 function fromRow(row) {
   if (!row) return null;
   return {
+    merchantId: row.merchant_id || 'platform',
     productId: row._id,
     name: row.name || '',
     nameEn: row.name_en || '',

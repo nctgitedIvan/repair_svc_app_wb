@@ -49,6 +49,16 @@
       "pages": [
         "overview/index"
       ]
+    },
+    {
+      "root": "pages/technician",
+      "name": "technician",
+      "pages": [
+        "home/index",
+        "tasks/index",
+        "earnings/index",
+        "apply/index"
+      ]
     }
   ],
   "tabBar": {

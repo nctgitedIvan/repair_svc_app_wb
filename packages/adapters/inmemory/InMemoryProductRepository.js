@@ -25,6 +25,7 @@ class InMemoryProductRepository {
     assertName(product.name);
 
     this.#products.set(product.productId, {
+      merchantId: product.merchantId || 'platform',
       productId: product.productId,
       name: product.name,
       nameEn: product.nameEn || '',

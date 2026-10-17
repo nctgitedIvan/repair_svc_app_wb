@@ -10,6 +10,7 @@ function fromRow(row) {
     openid: row.openid || '',
     roleType: row.role_type || 'customer',
     status: row.status || 'active',
+    merchantId: row.merchant_id || 'platform',
     technicianId: row.technician_id || null,
     regions: Array.isArray(row.regions) ? row.regions.slice() : [],
     dailyRefundBudget: budget

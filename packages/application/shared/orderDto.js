@@ -5,6 +5,7 @@ function toOrderDto(order) {
   return {
     orderId: order.id,
     orderNo: order.orderNo.value,
+    merchantId: order.merchantId || 'platform',
     status: order.statusKey,
     statusLabel: order.status.label,
     customerId: order.customerId,

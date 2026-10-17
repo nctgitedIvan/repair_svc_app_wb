@@ -1,0 +1,49 @@
+<view class="tech-page" wx:if="{{ready}}">
+  <view class="tech-header">
+    <view class="tech-title">入駐申請</view>
+    <view class="tech-subtitle">送出後由客服審核；P5 接上正式申請流程</view>
+  </view>
+
+  <view class="tech-card">
+    <view class="tech-form-row">
+      <view class="tech-form-label">姓名</view>
+      <t-input
+        value="{{name}}"
+        placeholder="請輸入真實姓名"
+        maxlength="40"
+        bind:change="onNameChange"
+      />
+    </view>
+
+    <view class="tech-form-row">
+      <view class="tech-form-label">手機號（+853／+86）</view>
+      <t-input
+        type="number"
+        value="{{phone}}"
+        placeholder="例如 66123456 或 13812345678"
+        maxlength="20"
+        bind:change="onPhoneChange"
+      />
+    </view>
+
+    <view class="tech-form-row">
+      <view class="tech-form-label">技能標籤（至少一項）</view>
+      <view class="tech-chip-row">
+        <view
+          wx:for="{{skills}}"
+          wx:key="*this"
+          class="tech-chip {{selectedSkills.indexOf(item) > -1 ? 'tech-chip--active' : ''}}"
+          data-skill="{{item}}"
+          bindtap="onSkillTap"
+        >
+          {{item}}
+        </view>
+      </view>
+    </view>
+
+    <view class="tech-btn" bindtap="onSubmit">送出申請</view>
+  </view>
+</view>
+
+<tech-tabbar active="apply" />
+<t-toast id="t-toast" />

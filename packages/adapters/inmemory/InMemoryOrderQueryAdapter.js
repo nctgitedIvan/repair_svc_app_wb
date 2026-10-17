@@ -27,6 +27,12 @@ class InMemoryOrderQueryAdapter {
   async findByIdForTechnician(actor, orderId) {
     const order = await this.orderRepository.findById(orderId);
     if (!order || !actor.technicianId || order.technicianId !== actor.technicianId) return null;
+
+    // 多租戶隔離：師傅不得跨 merchantId 讀取
+    const actorMerchant = actor.merchantId || 'platform';
+    const orderMerchant = order.merchantId || 'platform';
+    if (actorMerchant !== orderMerchant) return null;
+
     return this.#project(order, actor);
   }
 

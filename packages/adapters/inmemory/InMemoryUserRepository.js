@@ -21,6 +21,7 @@ class InMemoryUserRepository {
       this.#usersByOpenid.set(user.openid, {
         status: 'active',
         roleType: 'customer',
+        merchantId: 'platform',
         technicianId: null,
         regions: [],
         dailyRefundBudget: null,

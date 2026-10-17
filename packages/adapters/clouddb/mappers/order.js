@@ -11,6 +11,7 @@ function toRow(order) {
   const data = order.toPersistence();
   return {
     order_no: data.orderNo,
+    merchant_id: data.merchantId || 'platform',
     customer_id: data.customerId,
     cs_agent_id: data.csAgentId,
     technician_id: data.technicianId,
@@ -50,6 +51,7 @@ function toRehydrateInput(row, itemRows, logRows) {
   return {
     orderId: row._id,
     orderNo: row.order_no,
+    merchantId: row.merchant_id || 'platform',
     customerId: row.customer_id,
     csAgentId: row.cs_agent_id,
     technicianId: row.technician_id,

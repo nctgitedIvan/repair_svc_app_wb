@@ -1,0 +1,26 @@
+<view class="tech-page" wx:if="{{ready}}">
+  <view class="tech-header">
+    <view class="tech-title">收益</view>
+    <view class="tech-subtitle">只顯示金額與結算狀態，不顯示分潤比例</view>
+  </view>
+
+  <view class="tech-card">
+    <view class="tech-card__title">累計收益</view>
+    <price price="{{totalCents}}" wr-class="tech-earnings__total" />
+    <view class="tech-earnings__frozen">
+      凍結中
+      <price price="{{frozenCents}}" wr-class="tech-earnings__frozen-num" />
+    </view>
+  </view>
+
+  <view class="tech-card">
+    <view class="tech-card__title">結算紀錄</view>
+    <view class="tech-empty" wx:if="{{settlements.length === 0}}">
+      <view>目前沒有結算紀錄</view>
+      <view>P5 接上收益 API 後，這裡會顯示每筆訂單的分帳結果</view>
+    </view>
+  </view>
+</view>
+
+<tech-tabbar active="earnings" />
+<t-toast id="t-toast" />

@@ -25,6 +25,7 @@ const serviceCases = [
       });
 
       assert.deepEqual(await repo.findById('svc-1'), {
+        merchantId: 'platform',
         serviceId: 'svc-1',
         name: '冷氣維修',
         nameEn: 'AC Repair',
@@ -96,6 +97,7 @@ const productCases = [
       });
 
       assert.deepEqual(await repo.findById('prd-1'), {
+        merchantId: 'platform',
         productId: 'prd-1',
         name: '冷媒 R410',
         nameEn: 'Refrigerant R410',

@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "收益",
+  "usingComponents": {
+    "tech-tabbar": "../components/tech-tabbar/index",
+    "price": "/components/price/index",
+    "t-toast": "tdesign-miniprogram/toast/toast"
+  }
+}

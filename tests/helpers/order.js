@@ -102,6 +102,7 @@ function makeOrder(overrides = {}) {
   const order = Order.create({
     orderId,
     orderNo: new OrderNo(orderNo),
+    merchantId: rest.merchantId,
     customerId,
     items: rest.items || makeItems(rest),
     address: rest.address || makeAddress(),

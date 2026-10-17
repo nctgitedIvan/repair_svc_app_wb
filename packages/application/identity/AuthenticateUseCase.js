@@ -46,6 +46,7 @@ class AuthenticateUseCase {
       id: user.id,
       openid,
       role: user.roleType,
+      merchantId: user.merchantId || 'platform',
       customerId,
       technicianId: user.technicianId || null,
       regions: Array.isArray(user.regions) ? user.regions : [],

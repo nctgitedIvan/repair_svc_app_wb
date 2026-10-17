@@ -25,6 +25,7 @@ class InMemoryServiceRepository {
     assertName(service.name);
 
     this.#services.set(service.serviceId, {
+      merchantId: service.merchantId || 'platform',
       serviceId: service.serviceId,
       name: service.name,
       nameEn: service.nameEn || '',

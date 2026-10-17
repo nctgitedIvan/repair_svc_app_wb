@@ -230,3 +230,32 @@ test('便利方法', async (t) => {
     }
   });
 });
+
+test('多租戶：師傅不得跨 merchantId（AccessPolicy 整合）', async (t) => {
+  const order = {
+    orderId: 'o1',
+    customerId: 'c-1',
+    technicianId: 'tech-1',
+    merchantId: 'merchant-a',
+    statusValue: 30,
+  };
+  const resource = { order, targetStatus: 'ACCEPTED_PENDING_VISIT' };
+
+  await t.test('同 merchantId → ALLOW', () => {
+    const actor = { ...TECH, merchantId: 'merchant-a' };
+    assert.equal(can(actor, 'orders.accept', resource).allowed, true);
+  });
+
+  await t.test('不同 merchantId → MERCHANT_MISMATCH（即使是被指派的師傅）', () => {
+    const actor = { ...TECH, merchantId: 'merchant-b' };
+    const decision = can(actor, 'orders.accept', resource);
+    assert.equal(decision.allowed, false);
+    assert.equal(decision.reason, Reason.MERCHANT_MISMATCH);
+  });
+
+  await t.test('客戶／客服／管理員不受 MerchantConstraint 影響', () => {
+    assert.equal(can(CUSTOMER, 'orders.read', { order }).allowed, true);
+    assert.equal(can(CS, 'orders.read_all', { order }).allowed, true);
+    assert.equal(can(ADMIN, 'orders.read', { order }).allowed, true);
+  });
+});

@@ -43,6 +43,7 @@ function toOrderDto(order) {
   return {
     orderId: order.orderNo,
     orderNo: order.orderNo,
+    merchantId: order.merchantId || 'platform',
     status: order.status,
     statusLabel: ORDER_STATUS_LABELS[order.status] || order.status,
     customerId: order.customerId,
@@ -107,7 +108,9 @@ export async function fetchCategories() {
 
 export async function fetchServices({ category } = {}) {
   await delay();
-  const list = SERVICES.filter((s) => s.isActive && (!category || s.category === category));
+  const list = SERVICES.filter((s) => s.isActive && (!category || s.category === category)).map(
+    (service) => ({ merchantId: 'platform', ...service }),
+  );
   return { list, total: list.length };
 }
 
@@ -119,7 +122,10 @@ export async function fetchServices({ category } = {}) {
  */
 export async function fetchProducts({ category } = {}) {
   await delay();
-  const list = PRODUCTS.filter((p) => !category || p.category === category);
+  const list = PRODUCTS.filter((p) => !category || p.category === category).map((product) => ({
+    merchantId: 'platform',
+    ...product,
+  }));
   return { list, total: list.length };
 }
 
@@ -127,7 +133,7 @@ export async function fetchProductDetail(productId) {
   await delay();
   const product = PRODUCTS.find((p) => p.productId === productId);
   if (!product) throw new Error('零件不存在：' + productId);
-  return product;
+  return { merchantId: 'platform', ...product };
 }
 
 /**
@@ -152,7 +158,13 @@ export async function fetchServiceDetail(serviceId) {
   await delay();
   const service = SERVICES.find((s) => s.serviceId === serviceId);
   if (!service) throw new Error(`服務不存在：${serviceId}`);
-  return { service, products: PRODUCTS.filter((p) => p.isActive) };
+  return {
+    service: { merchantId: 'platform', ...service },
+    products: PRODUCTS.filter((p) => p.isActive).map((product) => ({
+      merchantId: 'platform',
+      ...product,
+    })),
+  };
 }
 
 /**
@@ -310,6 +322,7 @@ export async function fetchTechnicianTasks() {
   const mine = ORDERS.filter((o) => o.technicianId === 'tech-1');
   return {
     list: mine.map((o) => ({
+      merchantId: 'platform',
       ...o,
       customer: CUSTOMERS[o.customerId], // ← 完整姓名／手機／門牌
     })),

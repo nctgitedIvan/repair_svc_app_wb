@@ -4,6 +4,7 @@
 
 function toRow(technician) {
   return {
+    merchant_id: technician.merchantId || 'platform',
     user_id: technician.userId,
     name: technician.name || '',
     phone: technician.phone || '',
@@ -17,6 +18,7 @@ function toRow(technician) {
 function fromRow(row) {
   if (!row) return null;
   return {
+    merchantId: row.merchant_id || 'platform',
     technicianId: row._id,
     userId: row.user_id,
     name: row.name || '',

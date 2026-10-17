@@ -1,7 +1,7 @@
 'use strict';
 
 /**
- * 六個 constraint 的邊界測試。
+ * 七個 constraint 的邊界測試。
  *
  * 共同原則：**所有「讀不到判斷所需資料」的情況一律拒絕（fail-closed）**。
  * 放行等於讓約束可以被「不填欄位」繞過。
@@ -11,6 +11,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const { OwnershipConstraint } = require('../../../../packages/domain/access/constraints/OwnershipConstraint');
+const { MerchantConstraint } = require('../../../../packages/domain/access/constraints/MerchantConstraint');
 const { StateConstraint, TARGET_RULES } = require('../../../../packages/domain/access/constraints/StateConstraint');
 const { RegionConstraint } = require('../../../../packages/domain/access/constraints/RegionConstraint');
 const { AmountConstraint } = require('../../../../packages/domain/access/constraints/AmountConstraint');
@@ -46,6 +47,41 @@ test('OwnershipConstraint', async (t) => {
   });
   await t.test('未知角色 → 拒絕', () => {
     assert.equal(OwnershipConstraint.check({ id: 'x', role: 'ghost' }, { order }).reason, Reason.ROLE_NOT_PERMITTED);
+  });
+});
+
+test('MerchantConstraint（多租戶）', async (t) => {
+  const order = { orderId: 'o1', customerId: 'c-1', technicianId: 'tech-1', merchantId: 'merchant-a' };
+
+  await t.test('師傅同 merchantId → 允許', () => {
+    const actor = { id: 'u', role: 'technician', technicianId: 'tech-1', merchantId: 'merchant-a' };
+    assert.equal(MerchantConstraint.check(actor, { order }).allowed, true);
+  });
+
+  await t.test('師傅跨 merchantId → MERCHANT_MISMATCH', () => {
+    const actor = { id: 'u', role: 'technician', technicianId: 'tech-1', merchantId: 'merchant-b' };
+    assert.equal(MerchantConstraint.check(actor, { order }).reason, Reason.MERCHANT_MISMATCH);
+  });
+
+  await t.test('缺少 merchantId 時雙方都預設 platform', () => {
+    const actor = { id: 'u', role: 'technician', technicianId: 'tech-1' };
+    const noMerchantOrder = { ...order, merchantId: undefined };
+    assert.equal(MerchantConstraint.check(actor, { order: noMerchantOrder }).allowed, true);
+  });
+
+  await t.test('非師傅角色不走商戶約束', () => {
+    for (const role of ['customer', 'cs_agent', 'admin']) {
+      assert.equal(MerchantConstraint.check({ id: 'x', role }, { order }).allowed, true);
+    }
+  });
+
+  await t.test('⚠️ 沒有 order → 拒絕（fail-closed）', () => {
+    const actor = { id: 'u', role: 'technician', technicianId: 'tech-1' };
+    assert.equal(MerchantConstraint.check(actor, {}).reason, Reason.RESOURCE_MISSING);
+  });
+
+  await t.test('未知角色 → 拒絕', () => {
+    assert.equal(MerchantConstraint.check({ role: 'ghost' }, { order }).reason, Reason.ROLE_NOT_PERMITTED);
   });
 });
 

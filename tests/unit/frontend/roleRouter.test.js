@@ -20,7 +20,7 @@ const {
 test('⚠️ 路由分發（P7a1-A6）', async (t) => {
   await t.test('四個角色各自導向正確首頁', () => {
     assert.equal(homePathForRole('customer'), '/pages/home/home');
-    assert.equal(homePathForRole('technician'), '/pages/technician/index/index');
+    assert.equal(homePathForRole('technician'), '/pages/technician/home/index');
     assert.equal(homePathForRole('cs_agent'), '/pages/cs/index/index');
     assert.equal(homePathForRole('admin'), '/pages/admin/overview/index');
   });

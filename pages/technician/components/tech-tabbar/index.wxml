@@ -1,0 +1,12 @@
+<view class="tech-tabbar">
+  <view
+    wx:for="{{tabs}}"
+    wx:key="key"
+    class="tech-tabbar__item {{active === item.key ? 'tech-tabbar__item--active' : ''}}"
+    data-key="{{item.key}}"
+    bindtap="onTap"
+  >
+    <t-icon prefix="wr" name="{{item.icon}}" size="44rpx" />
+    <view class="tech-tabbar__text">{{item.text}}</view>
+  </view>
+</view>

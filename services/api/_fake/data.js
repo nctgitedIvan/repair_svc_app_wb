@@ -507,8 +507,22 @@ const WORK_ORDERS = Object.freeze([
 ]);
 
 const TECHNICIANS = Object.freeze([
-  { technicianId: 'tech-1', userId: 'u-tech-1', displayName: '陳師傅', regionCode: '440306', status: 'AVAILABLE' },
-  { technicianId: 'tech-2', userId: 'u-tech-2', displayName: '林師傅', regionCode: '440306', status: 'BUSY' },
+  {
+    merchantId: 'platform',
+    technicianId: 'tech-1',
+    userId: 'u-tech-1',
+    displayName: '陳師傅',
+    regionCode: '440306',
+    status: 'AVAILABLE',
+  },
+  {
+    merchantId: 'platform',
+    technicianId: 'tech-2',
+    userId: 'u-tech-2',
+    displayName: '林師傅',
+    regionCode: '440306',
+    status: 'BUSY',
+  },
 ]);
 
 /** 管理員手機概覽（Q-C） */

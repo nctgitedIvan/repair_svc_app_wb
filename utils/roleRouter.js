@@ -14,7 +14,7 @@
 /** 角色 → 首頁路徑。單一真實來源。 */
 const ROLE_HOME = Object.freeze({
   customer: '/pages/home/home',
-  technician: '/pages/technician/index/index',
+  technician: '/pages/technician/home/index',
   cs_agent: '/pages/cs/index/index',
   admin: '/pages/admin/overview/index',
 });

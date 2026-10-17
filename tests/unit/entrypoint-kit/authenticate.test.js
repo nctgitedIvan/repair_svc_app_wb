@@ -72,6 +72,7 @@ test('authenticate：成功路徑', async (t) => {
   await t.test('缺漏欄位有安全的預設值，不會是 undefined', async () => {
     const r = await authenticate({ OPENID: TEST_USERS.customer.openid }, containerWith());
     assert.equal(r.value.technicianId, null);
+    assert.equal(r.value.merchantId, 'platform');
     assert.deepEqual(r.value.regions, []);
     assert.equal(r.value.dailyRefundBudget, null);
   });
@@ -132,5 +133,15 @@ test('authenticate：解析業務識別碼（P5 路由需要）', async (t) => {
     const r = await authenticate({ OPENID: TEST_USERS.customer.openid }, containerWith());
     assert.equal(r.value.customerId, null);
     assert.equal(r.value.csAgentId, null);
+  });
+
+  await t.test('使用者的 merchantId 會帶入 actor（多租戶）', async () => {
+    const user = { ...TEST_USERS.technician, merchantId: 'merchant-a' };
+    const container = buildTestContainer({
+      userRepository: buildTestContainer().userRepository.seed([user]),
+    });
+
+    const r = await authenticate({ OPENID: user.openid }, container);
+    assert.equal(r.value.merchantId, 'merchant-a');
   });
 });

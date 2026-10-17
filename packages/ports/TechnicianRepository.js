@@ -6,6 +6,7 @@
  * TechnicianRecord（camelCase）：
  * ```js
  * {
+ *   merchantId, // 多租戶預留；師傅只能看同 merchantId 的訂單
  *   technicianId, userId, name, phone,
  *   status: 'pending' | 'approved' | 'rejected' | 'disabled',
  *   skillTags: string[],

@@ -5,6 +5,7 @@ const { Decision, Reason } = require('./Decision');
 const { byKey } = require('./Permission');
 const { effectivePermissions } = require('./RolePermissionMatrix');
 const { OwnershipConstraint } = require('./constraints/OwnershipConstraint');
+const { MerchantConstraint } = require('./constraints/MerchantConstraint');
 const { StateConstraint } = require('./constraints/StateConstraint');
 const { RegionConstraint } = require('./constraints/RegionConstraint');
 const { AmountConstraint } = require('./constraints/AmountConstraint');
@@ -28,6 +29,7 @@ const { ApprovalPolicy } = require('./ApprovalPolicy');
 /** constraint 名稱 → 實作。這是唯一的註冊點。 */
 const CONSTRAINT_REGISTRY = Object.freeze({
   OwnershipConstraint,
+  MerchantConstraint,
   StateConstraint,
   RegionConstraint,
   AmountConstraint,

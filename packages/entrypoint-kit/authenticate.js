@@ -56,6 +56,8 @@ async function authenticate(wxContext, container) {
       id: user.id,
       openid,
       role: user.roleType,
+      // 多租戶預留：目前所有使用者都屬於平台
+      merchantId: user.merchantId || 'platform',
       // 客戶專屬：OwnershipConstraint 的資源歸屬
       customerId,
       // 師傅專屬：資源歸屬約束（OwnershipConstraint）靠這個欄位

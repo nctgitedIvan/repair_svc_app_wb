@@ -13,6 +13,7 @@ function makeUseCase() {
     { id: 'u2', openid: 'openid-2', roleType: 'technician', status: 'active', technicianId: 't1' },
     { id: 'u3', openid: 'openid-3', roleType: 'admin', status: 'active', permissions: ['admin.full'] },
     { id: 'u4', openid: 'openid-4', roleType: 'customer', status: 'disabled' },
+    { id: 'u5', openid: 'openid-5', roleType: 'technician', status: 'active', technicianId: 't5', merchantId: 'merchant-a' },
   ]);
   return new AuthenticateUseCase({ userRepository: repo });
 }
@@ -26,9 +27,15 @@ test('AuthenticateUseCase：第 1 層身分驗證', async (t) => {
     assert.equal(result.value.openid, 'openid-1');
   });
 
-  await t.test('師傅帶出 technicianId', async () => {
+  await t.test('師傅帶出 technicianId 與預設 merchantId', async () => {
     const result = await makeUseCase().execute({ openid: 'openid-2' });
     assert.equal(result.value.technicianId, 't1');
+    assert.equal(result.value.merchantId, 'platform');
+  });
+
+  await t.test('使用者的 merchantId 會帶入 actor（多租戶）', async () => {
+    const result = await makeUseCase().execute({ openid: 'openid-5' });
+    assert.equal(result.value.merchantId, 'merchant-a');
   });
 
   await t.test('admin 帶出權限組', async () => {

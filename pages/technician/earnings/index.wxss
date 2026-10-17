@@ -1,0 +1,19 @@
+@import '../common/tech-page.wxss';
+
+.tech-earnings__total {
+  font-size: 48rpx;
+  font-weight: 600;
+  color: #fa4126;
+}
+
+.tech-earnings__frozen {
+  margin-top: 12rpx;
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.tech-earnings__frozen-num {
+  margin-left: 8rpx;
+  font-size: 24rpx;
+  color: #666666;
+}

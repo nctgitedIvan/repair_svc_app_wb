@@ -22,6 +22,7 @@ const UserRepository = Object.freeze({
    * @property {string}  openid
    * @property {'customer'|'cs_agent'|'technician'|'admin'} roleType
    * @property {'active'|'disabled'|'pending'} status
+   * @property {string} [merchantId]             多租戶預留，預設 'platform'
    * @property {string|null} technicianId        師傅專屬，供所有權約束使用
    * @property {string[]}    regions             客服專屬，供區域約束使用
    * @property {object|null} dailyRefundBudget   { date, usedCents, limitCents }，供金額約束使用

@@ -6,6 +6,7 @@
  * ServiceRecord（camelCase，對齊 fake 與 docs/01 §7.4）：
  * ```js
  * {
+ *   merchantId, // 多租戶預留；目前皆為 'platform'
  *   serviceId, name, nameEn, description, detailHtml, images: [],
  *   category, categoryId, order, priceCents,
  *   durationMinutes, skillTags: [], isActive,

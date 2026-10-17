@@ -39,6 +39,8 @@ class Order {
     this.#props = {
       orderId: props.orderId,
       orderNo: props.orderNo,
+      /** 多租戶預留：目前所有資料都屬於平台 */
+      merchantId: props.merchantId || 'platform',
       customerId: props.customerId,
       csAgentId: props.csAgentId || null,
       technicianId: props.technicianId || null,
@@ -104,6 +106,7 @@ class Order {
     return new Order({
       orderId: row.orderId,
       orderNo: new OrderNo(row.orderNo),
+      merchantId: row.merchantId || 'platform',
       customerId: row.customerId,
       csAgentId: row.csAgentId,
       technicianId: row.technicianId,
@@ -135,6 +138,7 @@ class Order {
 
   get id() { return this.#props.orderId; }
   get orderNo() { return this.#props.orderNo; }
+  get merchantId() { return this.#props.merchantId; }
   get customerId() { return this.#props.customerId; }
   get csAgentId() { return this.#props.csAgentId; }
   get technicianId() { return this.#props.technicianId; }
@@ -237,6 +241,7 @@ class Order {
     return {
       orderId: this.#props.orderId,
       orderNo: this.#props.orderNo.value,
+      merchantId: this.#props.merchantId,
       status: this.#props.status.key,
       statusValue: this.#props.status.value,
       customerId: this.#props.customerId,
@@ -258,6 +263,7 @@ class Order {
     return {
       orderId: this.#props.orderId,
       orderNo: this.#props.orderNo.value,
+      merchantId: this.#props.merchantId,
       customerId: this.#props.customerId,
       csAgentId: this.#props.csAgentId,
       technicianId: this.#props.technicianId,

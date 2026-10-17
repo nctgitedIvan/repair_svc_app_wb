@@ -55,9 +55,9 @@ App({
       wx.reLaunch({
         url: target,
         fail: () => {
-          // 目標頁尚未建立時（師傅端／客服端工作台是 P7a-2 才建）
+          // 目標頁尚未建立時（客服端工作台仍待建置）
           // 留在當前頁並在 console 留下一行說明，而不是靜默無感
-          console.warn(`[roleRouter] 目標頁尚未建立：${target}（P7a-2 建置）`);
+          console.warn(`[roleRouter] 目標頁尚未建立：${target}`);
         },
       });
     } catch (err) {

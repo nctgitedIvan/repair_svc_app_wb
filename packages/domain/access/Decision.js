@@ -72,6 +72,8 @@ const Reason = Object.freeze({
   NOT_OWNER: 'NOT_OWNER',
   /** ABAC：不是被指派的師傅 */
   NOT_ASSIGNED_TECHNICIAN: 'NOT_ASSIGNED_TECHNICIAN',
+  /** ABAC：跨商戶（多租戶隔離） */
+  MERCHANT_MISMATCH: 'MERCHANT_MISMATCH',
   /** ABAC：不在客服負責區域 */
   OUT_OF_REGION: 'OUT_OF_REGION',
   /** ABAC：狀態前提不成立 */

@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "我的任務",
+  "usingComponents": {
+    "tech-tabbar": "../components/tech-tabbar/index",
+    "t-icon": "tdesign-miniprogram/icon/icon",
+    "t-toast": "tdesign-miniprogram/toast/toast"
+  }
+}
