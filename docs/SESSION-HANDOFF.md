@@ -2,7 +2,8 @@
 
 > **用途**：換 session 時，把本文件整份貼給新的 Claude 即可無縫接手。
 > **維護規則**：每完成一個大階段更新一次。
-> 最後更新：2026-10-16（P4c 完成 · P7a-1 完成 · **P7a-2a 5/7** · 路線 C 完成 · T3.5／T3.6／T3.6.1 追加完成）
+> 最後更新：2026-10-17（P7a-2a：T1–T4、T3.5、T3.6、T3.6.1、T6a、T6a.1、T6a.2 完成；
+> **T6a.3 進行中：A1／A2 完成，B／C／D 待做**）
 
 ---
 
@@ -24,7 +25,7 @@
 | 3 | **P4b** Order 聚合、狀態機、定價 | ✅ 完成 |
 | 3 | **P4c** 策略與存取控制 | ✅ 完成（兩次交付 + crypto 白名單補強） |
 | — | **P7a-1** 前端基礎設施＋tabBar／路由 | ✅ 完成（T1–T9） |
-| — | **P7a-2a** 購物車＋商品＋結算 | 🟡 **5/7**（T1–T4 完成；**另有計畫外的 T3.5、T3.6**；T5–T7 待做） |
+| — | **P7a-2a** 購物車＋商品＋結算 | 🟡 **5/7**（T1–T4 完成；計畫外追加 T3.5／T3.6／T3.6.1／T6a／T6a.1／T6a.2；**T6a.3 進行中 A1／A2 完成**；T5、T6b、T7 待做） |
 | — | **P7a-2b** 服務詳情＋分類頁＋首頁調整 | ⬜ 未開始 |
 | 4 | **P2** 資料庫與 Repository | ⏸ **可開工**（路線 C 已解阻斷） |
 | 5 | **P3** 身分與權限 | ⏸ |
@@ -38,7 +39,7 @@
 **執行順序**：`P0 → P1 → P4 → P2 → P3 → P5 → P6 → P7 → P8 → P9 → P10`
 **可並行**：P7a（前端，不依賴後端）、P8（P5 後）
 
-**測試數：1071 全過**（P0 結束 51 → P1 229 → P4c 783 → P7a-1 863 → P7a-2a T3 918 → T4 966 → T3.6 994 → T3.6.1 1002 → T6a 1065 → **T6a.1 1071**）
+**測試數：1086 全過**（… → T3.6.1 1002 → T6a 1065 → T6a.1 1071 → T6a.2 1071 → T6a.3-1 1087 → **T6a.3-2 1086**）
 
 ---
 
@@ -95,7 +96,7 @@
 | 購物車儲存 | P7a-2a 用本機 Storage，**schema 對齊後端**，P7b 改後端 |
 | 購物車上限 | 50 項 |
 | tabBar（5 項） | 首頁 \| **分類** \| 購物車 \| 訂單 \| 我的 —— T3.5 改名（標題＋圖示）、**T3.6 改指向 `pages/category/index`**（TDesign 原始分類頁，接上新 API） |
-| 分類頁佈局 | 左側一級分類（後台可配置）／右側兩列網格／**不做二級分類** |
+| 分類頁佈局 | 左側一級分類／右側**二級 tabs**／下方兩列網格（**T3.6 已改為二級分類**，`docs/01` §3.7.9 有修正註記） |
 | 首頁順序 | **常用零件在上、熱門服務在下** |
 
 ### 3.4 架構關鍵決策
@@ -119,15 +120,15 @@
 | 項目 | 值 |
 |---|---|
 | 分支 | `refactor/hexagonal` |
-| 最後程式 commit | **`573f49b`**（T6a.1-4；其後為本次 docs commit） |
+| 最後程式 commit | **`3097b00`**（T6a.3-2；其後為本次 docs commit） |
 | 基線 | `main` = `a747010`（TDesign 模版原始狀態） |
-| Tag | `p0-done`、`p1-done`、`pre-p7a2a-tabbar`、`pre-p7a2a-t35`、`pre-p7a2a-t4`、`pre-p7a2a-t36`、`pre-p7a2a-t361`、**`pre-p7a2a-t6a`** |
+| Tag | `p0-done`、`p1-done`、`pre-p7a2a-tabbar`、`pre-p7a2a-t35`、`pre-p7a2a-t4`、`pre-p7a2a-t36`、`pre-p7a2a-t361`、`pre-p7a2a-t6a`（**T6a.1／T6a.2／T6a.3 未另打 tag**） |
 | 備份分支 | `backup-origin-main`、`backup-origin-refactor` |
-| 遠端 | `git@github.com:nctgitedIvan/repair_svc_app_wb.git` |
-| 領先／落後 | **領先 63 個 commit**（尚未 push） |
+| 遠端 | `git@github.com:nctgitedIvan/repair_svc_app_wb.git`（**已 push 到 `origin/refactor/hexagonal`**） |
+| 領先／落後 | 以 `git rev-list --count main..HEAD` 為準（本版為 90，含本次 docs commit） |
 
-> ⚠️ 上一版這裡寫「領先 23」，與 `git rev-list --count main..HEAD` 不符（實際 63）。
-> 以指令輸出為準 —— 見 §10 第 1 點。
+> ⚠️ 這一格**每次更新都容易過時**（前兩版都寫錯：23→63→實際 90）。
+> **請一律以指令輸出為準** —— 見 §10 第 1 點。
 
 **回滾**（由近到遠）：
 - `git reset --hard pre-p7a2a-t6a` —— 放棄 T6a（詳情頁接新 API + 加購 + 收藏）
@@ -160,12 +161,28 @@
 
 ## 6. 下一步要做什麼
 
+### 6.0 🟡 **立即：T6a.3 的 B／C／D（A1／A2 已完成）**
+
+> 計畫：`docs/P7a-2a-T6a.3-計畫.md`（§3 的切分）。
+> **A1**（`ac62314`）：fake 新形狀（`specs` 維度／`skus`／`images`／`nameEn`／`detailHtml`）
+> ＋ `detailView` 直接映射 ＋ 讀取點切換（`catalogView`／`cartView`）。
+> **A2**（`3097b00`）：移除資料中的舊 `thumb`。**測試 1086 全綠。**
+
+| # | 內容 | 注意 |
+|---|---|---|
+| **B**（T6a.3-3） | ① `pages/goods/details/index.js`：`onSpecChange` 用 `stockOfSku` 把 `detail.maxBuyQuantity` 收斂成**選中 SKU** 的庫存；`onPopupAddCart` 改用 `findSkuBySelection` 取 **skuId**（並刪掉 `selectedSpecIdOf`）② `index.wxml`：詳情介紹改 `<rich-text nodes="{{detail.detailHtml}}">`（空則隱藏）③ `utils/cart.js`：`STORAGE_KEY` → **`repair.cart.v2`** ④ `utils/detailView.js`：刪 `selectedSpecIdOf` | 改完 `selectedSpecIdOf` 就沒有使用者了（grep 確認） |
+| **C**（T6a.3-4） | `buy-bar/index.wxss`：兩顆按鈕**各自全圓角＋間距**（236rpx×2＋12）；`details/index.wxss`：rich-text 容器樣式、間距微調 | 確認不破壞 T6a.2 的 8 項收斂 |
+| **D**（T6a.3-5） | 文件：本文件 §4／§6、`docs/P7a-2a-T4-計畫.md` §11.3 的**種子片段改 `repair.cart.v2` 與新 lineId `prd-1:sku-std`**、`docs/01` §7.4.7 標記收斂完成 | T4 種子片段不改，舊驗收步驟會失效 |
+
+> ⚠️ **驗證方式**：`npm run verify > log 2>&1; echo $?` —— **不要用 `| grep … && git commit`**
+> （管線退出碼來自 grep，會造成假綠燈；T6a.3-2 已因此誤提交一次）。
+
 ### 立即：P7a-2a 的 T5–T7
 
 | # | 任務 | 風險 |
 |---|---|---|
 | T5 | 商品列表（`pages/goods/list`） | 中 |
-| **T6a** | 詳情頁（`pages/goods/details`：**接上新 API**＋「加入購物車」＋**收藏**＋**服務與商品共用同一頁**） | ✅ **完成**（`8cc2a88`） |
+| **T6a** | 詳情頁（`pages/goods/details`：**接上新 API**＋「加入購物車」＋**收藏**＋**服務與商品共用同一頁**）<br>＋ T6a.1（四個新需求）／T6a.2（內容超出）／T6a.3（資料模型與 UI） | 🟡 **T6a.3 進行中**（見 §6.0） |
 | **T6b** | 客服詢問流程 ＋ 「我的詢問」入口<br>（⚠️ **「我的收藏」已於 T6a.1-4 完成**，T6b 只剩詢問） | 中 |
 | T7 | 結算頁（`pages/order/order-confirm`，移除優惠券／發票；**必須移除 T4 的相容橋接**，見 §6.2） | **高** |
 
@@ -253,6 +270,8 @@ T4 為了不讓現行結算頁白屏，額外寫了一份舊格式的結算資�
 | **`docs/P7a-2a-T3.6.1-診斷報告.md`** | **4 個 bug 的診斷**（價錢為零／圖片不一致的真正位置在商品詳情頁，附證據）＋ 七問決議 |
 | **`docs/P7a-2a-T6a-計畫.md`** | **T6a（詳情頁）的逐檔計畫 ＋ 執行結果**：規模（9 個入口、規格彈窗的合成與兩個既有問題）、服務／商品的差異、commit 切分、驗收 C1–C12 |
 | **`docs/P7a-2a-T6a.1-診斷報告.md`** | **T6a.1（四個新需求）的診斷**：立即購買與 P7a2a-C2 的衝突、星星圖示的實情、內容超出頁面的兩個機制、卡片佈局 |
+| **`docs/P7a-2a-T6a.2-診斷報告.md`** | **T6a.2（詳情頁內容超出）的診斷**：兩處固定寬度各超出 10rpx、缺 `overflow-x` 防線、四個檢查點的核對、其他頁面的稽核 |
+| **`docs/P7a-2a-T6a.3-計畫.md`** | **T6a.3 逐檔計畫**：資料形狀（維度 specs／skus／images）、commit 切分 A1／A2／B／C／D、驗收、風險 |
 | `docs/P1-計畫.md` / `P1-驗收報告.md` | P1 計畫與 23 項驗收 |
 | **`docs/SESSION-HANDOFF.md`** | **本文件** |
 
