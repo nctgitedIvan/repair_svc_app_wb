@@ -1,15 +1,28 @@
 {
   "pages": [
     "pages/home/home",
-    "pages/services/index",
-    "pages/orders/index",
-    "pages/usercenter/index",
-    "pages/chat/index",
-    "pages/admin/overview/index",
     "pages/category/index",
-    "pages/cart/index"
+    "pages/cart/index",
+    "pages/orders/index",
+    "pages/usercenter/index"
   ],
   "subpackages": [
+    {
+      "root": "pages/goods",
+      "name": "goods",
+      "pages": [
+        "list/index",
+        "details/index"
+      ]
+    },
+    {
+      "root": "pages/order",
+      "name": "order",
+      "pages": [
+        "order-confirm/index",
+        "order-detail/index"
+      ]
+    },
     {
       "root": "pages/user",
       "name": "user",
@@ -24,48 +37,17 @@
       ]
     },
     {
-      "root": "pages/goods",
-      "name": "goods",
+      "root": "pages/chat",
+      "name": "chat",
       "pages": [
-        "list/index",
-        "details/index",
-        "search/index",
-        "result/index",
-        "comments/index",
-        "comments/create/index"
+        "index"
       ]
     },
     {
-      "root": "pages/order",
-      "name": "order",
+      "root": "pages/admin",
+      "name": "admin",
       "pages": [
-        "order-confirm/index",
-        "receipt/index",
-        "pay-result/index",
-        "order-list/index",
-        "order-detail/index",
-        "apply-service/index",
-        "after-service-list/index",
-        "after-service-detail/index",
-        "fill-tracking-no/index",
-        "delivery-detail/index",
-        "invoice/index"
-      ]
-    },
-    {
-      "root": "pages/coupon",
-      "name": "coupon",
-      "pages": [
-        "coupon-list/index",
-        "coupon-detail/index",
-        "coupon-activity-goods/index"
-      ]
-    },
-    {
-      "root": "pages/promotion",
-      "name": "promotion",
-      "pages": [
-        "promotion-detail/index"
+        "overview/index"
       ]
     }
   ],

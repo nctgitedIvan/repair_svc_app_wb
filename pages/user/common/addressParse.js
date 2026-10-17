@@ -1,4 +1,4 @@
-import { areaData } from '../config/index';
+import { areaData } from './areaData.js';
 
 const addressParse = (provinceName, cityName, countryName) => {
   return new Promise((resolve, reject) => {

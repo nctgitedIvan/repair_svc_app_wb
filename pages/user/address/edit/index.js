@@ -1,6 +1,6 @@
 import Toast from 'tdesign-miniprogram/toast/index';
 import { fetchDeliveryAddress } from '../../../../services/address/fetchAddress';
-import { areaData } from '../../../../config/index';
+import { areaData } from '../../common/areaData.js';
 import { resolveAddress, rejectAddress } from '../../../../services/address/list';
 
 const phoneUtil = require('../../../../utils/phone');

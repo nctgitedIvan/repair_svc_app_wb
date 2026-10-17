@@ -2,42 +2,130 @@
   "description": "项目配置文件，详见文档：https://developers.weixin.qq.com/miniprogram/dev/devtools/projectconfig.html",
   "packOptions": {
     "ignore": [
-      {
-        "value": "packages",
-        "type": "folder"
-      },
-      {
-        "value": "scripts",
-        "type": "folder"
-      },
-      {
-        "value": "tests",
-        "type": "folder"
-      },
-      {
-        "value": "docs",
-        "type": "folder"
-      },
-      {
-        "value": ".husky",
-        "type": "folder"
-      },
-      {
-        "value": "cloudfunctions",
-        "type": "folder"
-      },
-      {
-        "value": "vitest.config.js",
-        "type": "file"
-      },
-      {
-        "value": ".eslintrc.js",
-        "type": "file"
-      },
-      {
-        "value": ".prettierrc",
-        "type": "file"
-      }
+      { "value": "packages", "type": "folder" },
+      { "value": "scripts", "type": "folder" },
+      { "value": "tests", "type": "folder" },
+      { "value": "docs", "type": "folder" },
+      { "value": ".husky", "type": "folder" },
+      { "value": ".github", "type": "folder" },
+      { "value": ".vscode", "type": "folder" },
+      { "value": "cloudfunctions", "type": "folder" },
+      { "value": "admin-web", "type": "folder" },
+      { "value": "node_modules", "type": "folder" },
+      { "value": "legacy", "type": "folder" },
+      { "value": "vitest.config.js", "type": "file" },
+      { "value": ".eslintrc.js", "type": "file" },
+      { "value": ".prettierrc", "type": "file" },
+      { "value": "project.private.config.json", "type": "file" },
+      { "value": "config/eslintCheck.js", "type": "file" },
+      { "value": "LICENSE", "type": "file" },
+      { "value": "package-lock.json", "type": "file" },
+      { "value": ".DS_Store", "type": "suffix" },
+      { "value": ".md", "type": "suffix" },
+      { "value": ".log", "type": "suffix" },
+      { "value": ".d.ts", "type": "suffix" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/.wechatide.ib.json", "type": "file" },
+
+      { "value": "pages/services", "type": "folder" },
+      { "value": "pages/coupon", "type": "folder" },
+      { "value": "pages/promotion", "type": "folder" },
+      { "value": "pages/goods/search", "type": "folder" },
+      { "value": "pages/goods/result", "type": "folder" },
+      { "value": "pages/goods/comments", "type": "folder" },
+      { "value": "pages/order/receipt", "type": "folder" },
+      { "value": "pages/order/pay-result", "type": "folder" },
+      { "value": "pages/order/order-list", "type": "folder" },
+      { "value": "pages/order/apply-service", "type": "folder" },
+      { "value": "pages/order/after-service-list", "type": "folder" },
+      { "value": "pages/order/after-service-detail", "type": "folder" },
+      { "value": "pages/order/fill-tracking-no", "type": "folder" },
+      { "value": "pages/order/delivery-detail", "type": "folder" },
+      { "value": "pages/order/invoice", "type": "folder" },
+      { "value": "pages/order/order-confirm/pay.js", "type": "file" },
+      { "value": "pages/order/order-confirm/getNotes.wxs", "type": "file" },
+      { "value": "pages/order/order-confirm/handleInvoice.wxs", "type": "file" },
+      { "value": "pages/order/order-confirm/order.wxs", "type": "file" },
+      { "value": "pages/order/order-confirm/components", "type": "folder" },
+      { "value": "pages/goods/details/components/inquiry-popup", "type": "folder" },
+      { "value": "pages/goods/details/components/promotion-popup", "type": "folder" },
+
+      { "value": "components/goods-card", "type": "folder" },
+      { "value": "components/goods-list", "type": "folder" },
+      { "value": "components/loading-content", "type": "folder" },
+      { "value": "components/promotion", "type": "folder" },
+
+      { "value": "model/good.js", "type": "file" },
+      { "value": "model/comments.js", "type": "file" },
+      { "value": "model/comments", "type": "folder" },
+      { "value": "model/cart.js", "type": "file" },
+      { "value": "model/category.js", "type": "file" },
+      { "value": "model/detailsComments.js", "type": "file" },
+      { "value": "model/search.js", "type": "file" },
+      { "value": "model/swiper.js", "type": "file" },
+      { "value": "model/activity.js", "type": "file" },
+      { "value": "model/activities.js", "type": "file" },
+      { "value": "model/coupon.js", "type": "file" },
+      { "value": "model/promotion.js", "type": "file" },
+      { "value": "model/submitComment.js", "type": "file" },
+      { "value": "model/order", "type": "folder" },
+
+      { "value": "services/activity", "type": "folder" },
+      { "value": "services/cart", "type": "folder" },
+      { "value": "services/comments", "type": "folder" },
+      { "value": "services/coupon", "type": "folder" },
+      { "value": "services/good", "type": "folder" },
+      { "value": "services/home", "type": "folder" },
+      { "value": "services/order", "type": "folder" },
+      { "value": "services/promotion", "type": "folder" },
+      { "value": "services/usercenter/fetchUsercenter.js", "type": "file" },
+
+      { "value": "miniprogram_npm/tdesign-miniprogram/action-sheet", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/avatar-group", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/back-top", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/calendar", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/check-tag", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/checkbox", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/checkbox-group", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/col", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/collapse", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/collapse-panel", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/color-picker", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/count-down", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/date-time-picker", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/drawer", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/dropdown-item", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/dropdown-menu", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/fab", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/footer", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/grid", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/grid-item", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/guide", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/image-viewer", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/indexes", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/indexes-anchor", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/link", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/message", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/message-item", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/miniprogram_npm", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/navbar", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/notice-bar", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/picker", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/picker-item", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/progress", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/pull-down-refresh", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/rate", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/result", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/row", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/scroll-view", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/side-bar", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/side-bar-item", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/skeleton", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/slider", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/step-item", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/steps", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/transition", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/tree-select", "type": "folder" },
+      { "value": "miniprogram_npm/tdesign-miniprogram/upload", "type": "folder" }
     ],
     "include": []
   },
@@ -98,81 +186,93 @@
     "miniprogram": {
       "list": [
         {
-          "name": "首页入口",
+          "name": "首頁",
           "pathName": "pages/home/home",
           "query": "",
           "scene": null
         },
         {
-          "name": "示例页-商品分类",
-          "pathName": "pages/goods/category/index",
+          "name": "分類",
+          "pathName": "pages/category/index",
           "query": "",
           "scene": null
         },
         {
-          "name": "示例页-个人中心",
+          "name": "購物車",
+          "pathName": "pages/cart/index",
+          "query": "",
+          "scene": null
+        },
+        {
+          "name": "訂單",
+          "pathName": "pages/orders/index",
+          "query": "",
+          "scene": null
+        },
+        {
+          "name": "我的",
           "pathName": "pages/usercenter/index",
           "query": "",
           "scene": null
         },
         {
-          "name": "示例页-商品列表",
+          "name": "商品列表",
           "pathName": "pages/goods/list/index",
           "query": "",
           "scene": null
         },
         {
-          "name": "示例页-商品详情",
+          "name": "商品詳情",
           "pathName": "pages/goods/details/index",
           "query": "",
           "scene": null
         },
         {
-          "name": "示例页-商品评论",
-          "pathName": "pages/goods/comments/index",
+          "name": "結算頁",
+          "pathName": "pages/order/order-confirm/index",
           "query": "",
           "scene": null
         },
         {
-          "name": "示例页-售后列表",
-          "pathName": "pages/order/after-service-list/index",
+          "name": "訂單詳情",
+          "pathName": "pages/order/order-detail/index",
+          "query": "orderNo=R20261016000001",
+          "scene": null
+        },
+        {
+          "name": "客服聊天",
+          "pathName": "pages/chat/index",
+          "query": "targetId=cs-1&productId=prd-1",
+          "scene": null
+        },
+        {
+          "name": "地址列表",
+          "pathName": "pages/user/address/list/index",
           "query": "",
           "scene": null
         },
         {
-          "name": "示例页-售后详情",
-          "pathName": "pages/order/after-service-detail/index",
-          "query": "rightsNo=123123423",
-          "scene": null
-        },
-        {
-          "name": "示例页-搜索页",
-          "pathName": "pages/goods/search/index",
+          "name": "收藏",
+          "pathName": "pages/user/favorites/index",
           "query": "",
           "scene": null
         },
         {
-          "name": "示例页-搜索结果",
-          "pathName": "pages/goods/result/index",
+          "name": "詢問",
+          "pathName": "pages/user/inquiries/index",
           "query": "",
           "scene": null
         },
         {
-          "name": "示例页-商品评价",
-          "pathName": "pages/goods/comments/create/index",
+          "name": "設置",
+          "pathName": "pages/user/settings/index",
           "query": "",
           "scene": null
         },
         {
-          "name": "示例页-申请售后",
-          "pathName": "pages/order/apply-service/index",
-          "query": "orderNo=132222623132329291&skuId=135691625",
-          "scene": null
-        },
-        {
-          "name": "示例页-发票详情",
-          "pathName": "pages/order/invoice/index",
-          "query": "orderNo=132381532610540875",
+          "name": "管理概覽",
+          "pathName": "pages/admin/overview/index",
+          "query": "",
           "scene": null
         }
       ]
