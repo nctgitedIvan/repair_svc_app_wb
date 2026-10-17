@@ -18,8 +18,15 @@ const path = require('node:path');
 const ROOT = path.resolve(__dirname, '../../..');
 const FN_DIR = path.join(ROOT, 'cloudfunctions');
 
-/** 測試中的骨架函數（spike-hello 是 P0 驗證端點，不在此契約內） */
-const SKELETON_FUNCTIONS = ['customer-api', 'payment-callback', 'scheduled-jobs', 'technician-api'];
+/**
+ * 四支業務 API（P5 路由）＋ 兩支系統函數（spike-hello 是 P0 驗證端點，不在此契約內）。
+ *
+ * 四支業務 API 共用完整 container；payment-callback／scheduled-jobs 目前只需要
+ * 健康檢查的最小依賴，因此**不列入「鍵完全相同」的比較**。
+ */
+const API_FUNCTIONS = ['customer-api', 'technician-api', 'cs-api', 'admin-api'];
+const SYSTEM_FUNCTIONS = ['payment-callback', 'scheduled-jobs'];
+const SKELETON_FUNCTIONS = [...API_FUNCTIONS, ...SYSTEM_FUNCTIONS];
 
 /**
  * container 契約：每個鍵必須存在，且具備 Port 契約宣告的方法。
@@ -48,9 +55,10 @@ test('composition：四支骨架雲函數都存在', async (t) => {
     });
   }
 
-  await t.test('未建立 P1 範圍外的雲函數（cs-api / admin-api）', () => {
-    assert.equal(fs.existsSync(path.join(FN_DIR, 'cs-api')), false, 'cs-api 應在 P8 才建立');
-    assert.equal(fs.existsSync(path.join(FN_DIR, 'admin-api')), false, 'admin-api 應在 P8 才建立');
+  await t.test('P5 路由所需的 cs-api / admin-api 已建立', () => {
+    for (const name of ['cs-api', 'admin-api']) {
+      assert.equal(fs.existsSync(path.join(FN_DIR, name)), true, `${name} 應存在（P5 雲函數路由）`);
+    }
   });
 });
 
@@ -73,8 +81,8 @@ test('composition：每個 bootstrap 產出的 container 都滿足契約', async
     });
   }
 
-  await t.test('⚠️ 四支的依賴鍵必須完全相同（防走鐘）', () => {
-    const shapes = SKELETON_FUNCTIONS.map((name) => {
+  await t.test('⚠️ 四支業務 API 的依賴鍵必須完全相同（防走鐘）', () => {
+    const shapes = API_FUNCTIONS.map((name) => {
       const container = loadBootstrap(name).buildContainer();
       return { name, keys: Object.keys(container).sort().join(',') };
     });

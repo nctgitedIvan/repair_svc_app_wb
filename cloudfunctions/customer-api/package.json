@@ -2,10 +2,10 @@
   "name": "customer-api",
   "version": "1.0.0",
   "private": true,
-  "description": "客戶端入口。P1 骨架，僅健康檢查。",
+  "description": "客戶端入口。下單／支付／退款／驗收；event.action 路由。",
   "main": "index.js",
   "dependencies": {
     "wx-server-sdk": "latest"
   },
-  "repairSharedHash": "bc866095d988055c8098c9afff73b0db756656e3df636db0426840e71e04c5df"
+  "repairSharedHash": "664b25d997f35328b3de4461962c1f52e0b3c750f7e797a5a240d698942e0f1b"
 }

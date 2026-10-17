@@ -4,6 +4,10 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 
 const { authenticate } = require('../../../packages/entrypoint-kit/authenticate');
+const {
+  InMemoryCustomerRepository,
+  InMemoryCsAgentRepository,
+} = require('../../../packages/adapters');
 const { buildTestContainer, TEST_USERS } = require('../../helpers/container');
 
 function containerWith() {
@@ -85,5 +89,48 @@ test('authenticate：成功路徑', async (t) => {
 test('authenticate：契約檢查', async (t) => {
   await t.test('缺少 userRepository 會拋錯（組裝錯誤要讓它爆）', async () => {
     await assert.rejects(() => authenticate({ OPENID: 'x' }, {}), TypeError);
+  });
+});
+
+test('authenticate：解析業務識別碼（P5 路由需要）', async (t) => {
+  await t.test('客戶的 customerId 由 customers 集合解析（OwnershipConstraint 用）', async () => {
+    const customerRepository = new InMemoryCustomerRepository();
+    await customerRepository.save({ customerId: 'cust-1', userId: TEST_USERS.customer.id });
+    const container = buildTestContainer({
+      userRepository: buildTestContainer().userRepository.seed(Object.values(TEST_USERS)),
+      customerRepository,
+    });
+
+    const r = await authenticate({ OPENID: TEST_USERS.customer.openid }, container);
+    assert.equal(r.ok, true);
+    assert.equal(r.value.customerId, 'cust-1');
+  });
+
+  await t.test('客服的 csAgentId 由 cs_agents 集合解析（每日退款額度用）', async () => {
+    const csAgentRepository = new InMemoryCsAgentRepository();
+    await csAgentRepository.save({ csAgentId: 'cs-1', userId: TEST_USERS.csAgent.id });
+    const container = buildTestContainer({
+      userRepository: buildTestContainer().userRepository.seed(Object.values(TEST_USERS)),
+      csAgentRepository,
+    });
+
+    const r = await authenticate({ OPENID: TEST_USERS.csAgent.openid }, container);
+    assert.equal(r.value.csAgentId, 'cs-1');
+  });
+
+  await t.test('admin 的 permissions 有帶出（權限組 → 有效權限）', async () => {
+    const admin = { ...TEST_USERS.admin, permissions: ['finance_manager'] };
+    const container = buildTestContainer({
+      userRepository: buildTestContainer().userRepository.seed([admin]),
+    });
+
+    const r = await authenticate({ OPENID: admin.openid }, container);
+    assert.deepEqual(r.value.permissions, ['finance_manager']);
+  });
+
+  await t.test('沒有 customerRepository／csAgentRepository 時，安全回 null（不炸）', async () => {
+    const r = await authenticate({ OPENID: TEST_USERS.customer.openid }, containerWith());
+    assert.equal(r.value.customerId, null);
+    assert.equal(r.value.csAgentId, null);
   });
 });

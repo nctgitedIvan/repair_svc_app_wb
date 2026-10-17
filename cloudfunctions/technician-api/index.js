@@ -1,25 +1,71 @@
 'use strict';
 
 /**
- * technician-api —— 師傅端入口。敏感資料隔離邊界（P1 骨架，僅健康檢查）。
+ * technician-api —— 師傅端入口。敏感資料隔離邊界（event.action 路由）。
  *
  * 入口職責邊界（docs/01 §1.6.4）：只做
  *   ① 參數校驗  ② 身分驗證  ③ 呼叫 use case  ④ 回傳結果
- * P1 尚無 Use Case，故只有健康檢查。P5 起改用 createHandler 宣告式寫法。
  *
  * ⛔ 不得出現業務規則：if 判斷訂單狀態、金額加減、for 迴圈處理業務資料。
+ * ⛔ 不得 import 任何「回傳完整客戶資料」的 Use Case（docs/01 §5.3）。
+ *
+ * 健康檢查：不帶 `action` 的呼叫仍回傳服務資訊。
  */
 
 const cloud = require('wx-server-sdk');
 cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 
-// require bootstrap 的副作用即執行 assertSharedBuild()（失敗則本函數無法啟動）
 const { buildContainer, SERVICE } = require('./bootstrap');
+const {
+  AuthenticateUseCase,
+  AcceptOrderUseCase,
+  CompleteOrderUseCase,
+} = require('@repair/application');
+const { createRouter } = require('@repair/entrypoint-kit');
 const manifest = require('@repair/build-manifest');
 
 const container = buildContainer();
 
-exports.main = async (event) => {
+const ORDER_ID = { type: 'string', required: true, maxLength: 128 };
+
+/**
+ * action → { schema, UseCase }
+ *
+ * | action | Use Case | 說明 |
+ * |---|---|---|
+ * | `auth.me` | AuthenticateUseCase | 已登入 |
+ * | `order.accept` | AcceptOrderUseCase | 被指派本人接單 |
+ * | `order.complete` | CompleteOrderUseCase | 完工回報；若尚未到場，Use Case 會先轉 IN_SERVICE |
+ *
+ * ⚠️ 尚未有 Use Case 的 action（P5-2 後續）：
+ *    - `order.reject`（拒單）
+ *    - `order.arrive`（到場打卡；目前摺在 complete 內）
+ *    - `technician.earnings`（收益查詢）
+ *    不要為了「湊路由」在入口直接呼叫 repository／orderQuery。
+ */
+const routes = {
+  'auth.me': {
+    schema: {},
+    UseCase: AuthenticateUseCase,
+  },
+  'order.accept': {
+    schema: { orderId: ORDER_ID },
+    UseCase: AcceptOrderUseCase,
+  },
+  'order.complete': {
+    schema: { orderId: ORDER_ID },
+    UseCase: CompleteOrderUseCase,
+  },
+};
+
+const handle = createRouter({
+  routes,
+  container,
+  getWxContext: () => cloud.getWXContext(),
+  logger: container.logger,
+});
+
+function health(event) {
   const capabilities = container.settlementGateway.capabilities();
 
   return {
@@ -29,15 +75,21 @@ exports.main = async (event) => {
     runtime: {
       node: process.version,
       env: cloud.getWXContext().ENV || null,
-      // 不洩漏 OPENID 本身，只回報「拿不拿得到」
       hasOpenid: Boolean(cloud.getWXContext().OPENID),
     },
     dependencies: {
-      // P1 全是 in-memory；P2 起會逐步顯示 CloudDB*
       adapters: 'in-memory',
       settlementMode: capabilities.settlementMode,
       supportsSharingReturn: capabilities.supportsSharingReturn,
     },
+    actions: Object.keys(routes).sort(),
     receivedEvent: event === undefined ? null : event,
   };
+}
+
+exports.main = async (event) => {
+  if (event === undefined || event === null || (typeof event === 'object' && Object.keys(event).length === 0)) {
+    return health(event);
+  }
+  return handle(event);
 };

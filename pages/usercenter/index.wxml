@@ -1,60 +1,53 @@
-<view class="uc-page" wx:if="{{ready}}">
-  <view class="uc-header">
-    <view class="uc-avatar">
-      <t-image
-        wx:if="{{profile.avatarUrl}}"
-        src="{{profile.avatarUrl}}"
-        t-class="uc-avatar__img"
-        mode="aspectFill"
-      />
-      <t-icon wx:else name="user" size="56rpx" color="#ffffff" />
-    </view>
-    <view class="uc-info">
-      <view class="uc-name">{{profile.nickname || '維修平台用戶'}}</view>
-      <view class="uc-phone">{{profile.displayPhone || '尚未綁定手機號'}}</view>
-    </view>
+<t-user-center-card
+  userInfo="{{userInfo}}"
+  isPhoneHide="{{true}}"
+  name-class="custom-name-class"
+  phone-class="custom-phone-class"
+  avatar-class="customer-avatar-class"
+  currAuthStep="{{currAuthStep}}"
+  bind:gotoUserEditPage="gotoUserEditPage"
+/>
+<view class="content-wrapper">
+  <view class="order-group-wrapper">
+    <t-order-group
+      title="我的訂單"
+      desc="全部訂單"
+      orderTagInfos="{{orderTagInfos}}"
+      bind:onClickTop="jumpAllOrder"
+      bind:onClickItem="jumpNav"
+    />
   </view>
-
-  <view class="uc-card">
-    <view class="uc-card__head">
-      <view class="uc-card__title">我的訂單</view>
-      <view class="uc-card__more" bindtap="onAllOrders">
-        全部訂單
-        <t-icon name="chevron-right" size="28rpx" color="#999999" />
-      </view>
-    </view>
-    <view class="uc-order-grid">
-      <view
-        class="uc-order-item"
-        wx:for="{{orderEntries}}"
-        wx:key="key"
-        data-key="{{item.key}}"
-        bindtap="onOrderTap"
+  <view wx:for="{{menuData}}" wx:key="key" class="cell-box">
+    <t-cell-group>
+      <t-cell
+        wx:for="{{item.items}}"
+        wx:for-item="xitem"
+        wx:for-index="xindex"
+        wx:key="type"
+        title="{{xitem.title}}"
+        arrow="{{!xitem.icon}}"
+        note="{{xitem.tit}}"
+        data-type="{{xitem.type}}"
+        bordered="{{false}}"
+        bind:click="onClickCell"
+        t-class="t-cell-padding"
+        t-class-note="order-group-note"
+        t-class-left="order-group__left"
       >
-        <view class="uc-order-icon">
-          <t-icon name="{{item.icon}}" size="44rpx" color="#fa4126" />
-          <view class="uc-order-count" wx:if="{{item.count > 0}}">{{item.count}}</view>
-        </view>
-        <view class="uc-order-label">{{item.label}}</view>
-      </view>
-    </view>
-  </view>
-
-  <view class="uc-card uc-menu">
-    <view
-      class="uc-menu-item"
-      wx:for="{{menuItems}}"
-      wx:key="type"
-      data-type="{{item.type}}"
-      bindtap="onMenuTap"
-    >
-      <view class="uc-menu-icon">
-        <t-icon name="{{item.icon}}" size="40rpx" color="#666666" />
-      </view>
-      <view class="uc-menu-title">{{item.title}}</view>
-      <t-icon name="chevron-right" size="32rpx" color="#cccccc" />
-    </view>
+        <t-icon wx:if="{{xitem.icon}}" name="{{xitem.icon}}" size="48rpx" slot="note" />
+      </t-cell>
+    </t-cell-group>
   </view>
 </view>
-
+<view class="footer__version" wx:if="{{versionNo !== ''}}">當前版本 {{versionNo}}</view>
+<t-popup visible="{{showMakePhone}}" placement="bottom" bind:visible-change="closeMakePhone" data-index="2">
+  <view class="popup-content">
+    <view class="popup-title border-bottom-1px" wx:if="{{customerServiceInfo.serviceTimeDuration}}">
+      服務時間: {{customerServiceInfo.serviceTimeDuration}}
+    </view>
+    <view class="popup-phone {{showKefu ? 'border-bottom-1px' : ''}}" bind:tap="call">電話客服</view>
+    <button class="popup-phone border-bottom-1px online" open-type="contact" wx:if="{{showKefu}}">在線客服</button>
+    <view class="popup-close" bind:tap="closeMakePhone">取消</view>
+  </view>
+</t-popup>
 <t-toast id="t-toast" />

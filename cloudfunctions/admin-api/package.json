@@ -1,0 +1,11 @@
+{
+  "name": "admin-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "管理端 JSON API。退款審批／分帳；event.action 路由。",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  },
+  "repairSharedHash": "664b25d997f35328b3de4461962c1f52e0b3c750f7e797a5a240d698942e0f1b"
+}

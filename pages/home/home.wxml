@@ -1,5 +1,5 @@
 <view style="text-align: center; color: #b9b9b9" wx:if="{{pageLoading}}">
-  <t-loading theme="circular" size="40rpx" text="加载中..." inherit-color />
+  <t-loading theme="circular" size="40rpx" text="載入中..." inherit-color />
 </view>
 
 <view class="home-page-header">
@@ -29,11 +29,16 @@
 </view>
 
 <view class="home-page-container">
-  <view class="home-announcement" wx:if="{{announcement}}">
-    <t-icon name="notification" size="32rpx" color="#fa4126" />
-    <text class="home-announcement__text">{{announcement}}</text>
-  </view>
+  <!-- 公告（fetchHome） -->
+  <t-notice-bar
+    wx:if="{{announcement}}"
+    t-class="home-notice"
+    visible="{{true}}"
+    content="{{announcement}}"
+    prefix-icon="notification"
+  />
 
+  <!-- 金剛區（fetchHome.quickEntries） -->
   <view class="home-quick" wx:if="{{quickEntries.length > 0}}">
     <view
       class="home-quick__item"
@@ -43,99 +48,52 @@
       bindtap="onQuickEntryTap"
     >
       <view class="home-quick__icon">
-        <t-icon name="{{item.icon}}" size="44rpx" color="#fa4126" />
+        <t-icon name="{{item.icon}}" size="48rpx" color="#fa4126" />
       </view>
       <view class="home-quick__text">{{item.title}}</view>
     </view>
   </view>
 
-  <view class="home-section" wx:if="{{productItems.length > 0}}">
-    <view class="home-section__title">常用零件</view>
-    <view class="catalog-grid">
-      <view
-        class="catalog-card catalog-card--wide"
-        wx:for="{{productItems}}"
-        wx:key="id"
-        data-list="product"
-        data-index="{{index}}"
-        bindtap="onCardTap"
-      >
-        <view class="catalog-card__thumb">
-          <t-image
-            wx:if="{{item.thumb}}"
-            t-class="catalog-card__img"
-            src="{{item.thumb}}"
-            mode="aspectFill"
-            lazy-load
-          />
-        </view>
-        <view class="catalog-card__body">
-          <view class="catalog-card__title">{{item.title}}</view>
-          <view class="catalog-card__tags">
-            <view class="catalog-card__tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</view>
-          </view>
-          <view class="catalog-card__bottom">
-            <price price="{{item.price}}" wr-class="catalog-card__price" />
-            <t-icon
-              prefix="wr"
-              name="cart"
-              size="40rpx"
-              color="#FA4126"
-              catchtap="onAddCart"
-              data-list="product"
-              data-index="{{index}}"
-            />
-          </view>
-        </view>
-      </view>
-    </view>
+  <!-- 原版 TDesign tabs：促銷分類改為「常用零件／熱門服務」 -->
+  <view class="home-page-tabs">
+    <t-tabs
+      t-class="t-tabs"
+      t-class-active="tabs-external__active"
+      t-class-item="tabs-external__item"
+      defaultValue="{{0}}"
+      space-evenly="{{false}}"
+      bind:change="tabChangeHandle"
+    >
+      <t-tab-panel
+        wx:for="{{tabList}}"
+        wx:for-index="index"
+        wx:key="key"
+        label="{{item.text}}"
+        value="{{item.key}}"
+      />
+    </t-tabs>
   </view>
 
-  <view class="home-section" wx:if="{{serviceItems.length > 0}}">
-    <view class="home-section__title">熱門服務</view>
-    <view class="catalog-grid">
-      <view
-        class="catalog-card catalog-card--wide"
-        wx:for="{{serviceItems}}"
-        wx:key="id"
-        data-list="service"
-        data-index="{{index}}"
-        bindtap="onCardTap"
-      >
-        <view class="catalog-card__thumb">
-          <t-image
-            wx:if="{{item.thumb}}"
-            t-class="catalog-card__img"
-            src="{{item.thumb}}"
-            mode="aspectFill"
-            lazy-load
-          />
-        </view>
-        <view class="catalog-card__body">
-          <view class="catalog-card__title">{{item.title}}</view>
-          <view class="catalog-card__tags">
-            <view class="catalog-card__tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</view>
-          </view>
-          <view class="catalog-card__bottom">
-            <price price="{{item.price}}" wr-class="catalog-card__price" />
-            <t-icon
-              prefix="wr"
-              name="cart"
-              size="40rpx"
-              color="#FA4126"
-              catchtap="onAddCart"
-              data-list="service"
-              data-index="{{index}}"
-            />
-          </view>
-        </view>
-      </view>
-    </view>
-  </view>
+  <goods-list
+    wr-class="goods-list-container"
+    goodsList="{{goodsList}}"
+    bind:click="goodListClickHandle"
+    bind:addcart="goodListAddCartHandle"
+  />
 
-  <view class="home-empty" wx:if="{{!catalogLoading && !loadError && productItems.length === 0 && serviceItems.length === 0}}">
+  <view
+    class="home-empty"
+    wx:if="{{catalogLoaded && !loadError && goodsList.length === 0}}"
+  >
     目前沒有可顯示的服務或零件
   </view>
-</view>
 
-<t-toast id="t-toast" />
+  <load-more
+    list-is-empty="{{!goodsList.length}}"
+    status="{{goodsListLoadStatus}}"
+    no-more-text="沒有更多了"
+    bind:retry="onReTry"
+  />
+
+  <t-toast id="t-toast" />
+</view>

@@ -15,5 +15,6 @@ const { validate } = require('./validate');
 const { authenticate } = require('./authenticate');
 const { toResponse } = require('./toResponse');
 const { createHandler } = require('./createHandler');
+const { createRouter } = require('./createRouter');
 
-module.exports = { validate, authenticate, toResponse, createHandler };
+module.exports = { validate, authenticate, toResponse, createHandler, createRouter };

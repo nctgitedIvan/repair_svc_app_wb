@@ -2,154 +2,113 @@ page {
   background-color: #f5f5f5;
 }
 
-.uc-page {
-  min-height: 100vh;
-  padding-bottom: calc(env(safe-area-inset-bottom) + 40rpx);
-}
-
-.uc-header {
-  display: flex;
-  align-items: center;
-  padding: 48rpx 32rpx 40rpx;
-  background: linear-gradient(135deg, #fa4126 0%, #ff8a5c 100%);
-}
-
-.uc-avatar {
-  flex: none;
-  width: 120rpx;
-  height: 120rpx;
-  border-radius: 60rpx;
-  overflow: hidden;
-  background-color: rgba(255, 255, 255, 0.25);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.uc-avatar__img {
-  display: block;
-  width: 100%;
-  height: 100%;
-}
-
-.uc-info {
-  flex: 1;
-  min-width: 0;
-  margin-left: 24rpx;
-}
-
-.uc-name {
-  font-size: 36rpx;
-  font-weight: 600;
-  color: #ffffff;
-  word-break: break-all;
-}
-
-.uc-phone {
-  margin-top: 8rpx;
-  font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.uc-card {
-  margin: 20rpx 24rpx 0;
-  background-color: #fff;
-  border-radius: 16rpx;
-  overflow: hidden;
-}
-
-.uc-card__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24rpx 24rpx 8rpx;
-}
-
-.uc-card__title {
-  font-size: 28rpx;
-  font-weight: 600;
-  color: #333333;
-}
-
-.uc-card__more {
-  display: flex;
-  align-items: center;
-  font-size: 24rpx;
-  color: #999999;
-}
-
-.uc-order-grid {
-  display: flex;
-  padding: 16rpx 0 28rpx;
-}
-
-.uc-order-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.uc-order-icon {
+.content-wrapper {
+  margin-top: 340rpx;
   position: relative;
-  width: 76rpx;
-  height: 76rpx;
-  border-radius: 38rpx;
-  background-color: #fff1ec;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 0 30rpx;
 }
 
-.uc-order-count {
-  position: absolute;
-  top: -8rpx;
-  right: -12rpx;
-  min-width: 32rpx;
-  height: 32rpx;
-  line-height: 32rpx;
-  padding: 0 6rpx;
-  border-radius: 16rpx;
-  background-color: #fa4126;
-  color: #fff;
-  font-size: 20rpx;
-  text-align: center;
+.order-group-wrapper {
+  margin-bottom: 16rpx;
 }
 
-.uc-order-label {
-  margin-top: 12rpx;
-  font-size: 24rpx;
-  color: #555555;
-}
-
-.uc-menu {
-  padding: 4rpx 0;
-}
-
-.uc-menu-item {
-  display: flex;
-  align-items: center;
-  min-height: 96rpx;
-  padding: 0 24rpx;
-  border-bottom: 1rpx solid #f5f5f5;
-}
-
-.uc-menu-item:last-child {
-  border-bottom: none;
-}
-
-.uc-menu-icon {
-  flex: none;
-  width: 48rpx;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.uc-menu-title {
-  flex: 1;
-  min-width: 0;
-  margin-left: 20rpx;
+.order-group-note {
   font-size: 28rpx;
-  color: #333333;
+}
+
+.cell-box {
+  border-radius: 10rpx;
+  overflow: hidden;
+  margin-bottom: 20rpx;
+}
+
+.cell-box .order-group__left {
+  margin-right: 0;
+}
+
+.cell-box .t-cell-padding {
+  padding: 24rpx 18rpx 24rpx 32rpx;
+}
+
+/* ── 客服彈窗（原版樣式） ── */
+
+.popup-content {
+  background: #f5f5f5;
+  margin-bottom: env(safe-area-inset-bottom);
+  border-radius: 16rpx 16rpx 0 0;
+}
+
+.popup-content .popup-title {
+  background: #fff;
+  text-align: center;
+  font-size: 24rpx;
+  color: #999;
+  height: 112rpx;
+  line-height: 112rpx;
+  border-radius: 16rpx 16rpx 0 0;
+}
+
+.border-bottom-1px {
+  position: relative;
+}
+
+.border-bottom-1px::after {
+  position: absolute;
+  display: block;
+  content: '';
+  box-sizing: border-box;
+  top: 0;
+  left: 0;
+  width: 200%;
+  height: 200%;
+  transform: scale(0.5);
+  transform-origin: left top;
+  border-bottom: 2rpx solid #e5e5e5;
+}
+
+.popup-content .popup-phone,
+.popup-content .popup-close {
+  background: #fff;
+  height: 100rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  font-size: 30rpx;
+  font-family: PingFangSC-Regular, PingFang SC;
+  font-weight: 400;
+  color: #333;
+}
+
+.popup-content .popup-phone.online {
+  margin-bottom: 20rpx;
+}
+
+.popup-content .popup-phone.online::after {
+  content: none;
+}
+
+.popup-content .popup-close {
+  color: #333;
+  border: 0;
+  margin-top: 16rpx;
+}
+
+.footer__version {
+  text-align: center;
+  margin-top: 50rpx;
+  color: #999;
+  margin-bottom: 4rpx;
+  font-size: 24rpx;
+  line-height: 32rpx;
+}
+
+/*
+ * 底部留白（T6a.1-4）。
+ *
+ * tabBar 頁面，自訂 tabBar 會蓋住頁面底部約 112rpx
+ * （`t-tab-bar-item` 是 `height: 80rpx` ＋ `margin: 16rpx 0`）。
+ */
+.content-wrapper {
+  padding-bottom: 140rpx;
 }

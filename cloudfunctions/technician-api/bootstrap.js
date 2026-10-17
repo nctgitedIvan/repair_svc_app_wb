@@ -8,21 +8,42 @@
  *
  * 為什麼每個雲函數各有一份、不共用：
  *   每個部署單元自己決定依賴，正是 composition root 的意義。
- *   未來 technician-api 可能用完全不同的組合。
  *   共用會把組裝邏輯塞進 entrypoint-kit，反而破壞「只有 bootstrap 可以 new adapter」。
  *   走鐘風險由 tests/unit/composition/containerContract.test.js 守住。
  *
- * P1 階段全部使用 in-memory 實作。P2 起逐步換上 CloudDB*，仍只改本檔。
+ * ⚠️ P5-5 待辦：目前仍是 InMemory。上雲前依 `docs/05` §7 換成 CloudDB*，
+ *    仍只改本檔。InMemory 的資料不跨冷啟動，**不可當作生產資料庫**。
  */
 
 const manifest = require('@repair/build-manifest');
 const pkg = require('./package.json');
 const {
   InMemoryOrderRepository,
+  InMemoryOrderItemRepository,
   InMemoryUserRepository,
+  InMemoryCustomerRepository,
+  InMemoryCsAgentRepository,
+  InMemoryTechnicianRepository,
+  InMemoryServiceRepository,
+  InMemoryProductRepository,
+  InMemoryCartRepository,
+  InMemoryFavoriteRepository,
+  InMemoryInquiryRepository,
+  InMemoryPaymentRepository,
+  InMemoryRefundRepository,
+  InMemoryProfitSharingRepository,
+  InMemoryWorkOrderRepository,
+  InMemoryWorkOrderMessageRepository,
+  InMemoryAuditLogRepository,
+  InMemorySystemConfigRepository,
+  InMemoryCategoryRepository,
+  InMemoryIdSequenceRepository,
+  InMemoryOrderQueryAdapter,
   InMemorySettlementAdapter,
-  SystemClockAdapter,
   InMemoryLoggerAdapter,
+  MockPaymentGateway,
+  SequenceIdGeneratorAdapter,
+  SystemClockAdapter,
 } = require('@repair/adapters');
 
 const SERVICE = 'technician-api';
@@ -54,12 +75,51 @@ function assertSharedBuild() {
  *    禁止換成 WeChatPaySettlementAdapter / PlatformEscrowSettlementAdapter（docs/01 §9.0）。
  */
 function buildContainer() {
+  const clock = new SystemClockAdapter();
+  const logger = new InMemoryLoggerAdapter();
+  const idSequence = new InMemoryIdSequenceRepository();
+
+  const orderRepository = new InMemoryOrderRepository();
+  const customerRepository = new InMemoryCustomerRepository();
+
   return {
-    orderRepository: new InMemoryOrderRepository(),
+    // 訂單聚合
+    orderRepository,
+    orderItemRepository: new InMemoryOrderItemRepository(),
+
+    // 身分
     userRepository: new InMemoryUserRepository(),
+    customerRepository,
+    csAgentRepository: new InMemoryCsAgentRepository(),
+    technicianRepository: new InMemoryTechnicianRepository(),
+
+    // 目錄
+    serviceRepository: new InMemoryServiceRepository(),
+    productRepository: new InMemoryProductRepository(),
+    categoryRepository: new InMemoryCategoryRepository(),
+
+    // P7b 前置（購物車／收藏／詢問）
+    cartRepository: new InMemoryCartRepository(),
+    favoriteRepository: new InMemoryFavoriteRepository(),
+    inquiryRepository: new InMemoryInquiryRepository(),
+
+    // 金流與工單
+    paymentRepository: new InMemoryPaymentRepository(),
+    refundRepository: new InMemoryRefundRepository(),
+    profitSharingRepository: new InMemoryProfitSharingRepository(),
+    workOrderRepository: new InMemoryWorkOrderRepository(),
+    workOrderMessageRepository: new InMemoryWorkOrderMessageRepository(),
+    auditLogRepository: new InMemoryAuditLogRepository(),
+    systemConfigRepository: new InMemorySystemConfigRepository(),
+
+    // 基礎設施
+    idSequence,
+    idGenerator: new SequenceIdGeneratorAdapter({ idSequence, clock }),
+    orderQuery: new InMemoryOrderQueryAdapter({ orderRepository, customerRepository, clock }),
+    paymentGateway: new MockPaymentGateway(),
     settlementGateway: new InMemorySettlementAdapter(),
-    clock: new SystemClockAdapter(),
-    logger: new InMemoryLoggerAdapter(),
+    clock,
+    logger,
   };
 }
 

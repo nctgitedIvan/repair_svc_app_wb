@@ -4,6 +4,8 @@
   left: 0;
   width: 100%;
   height: 480rpx;
+  /* T6a 防線：width:100% ＋ 左右 padding 不得撐出水平捲軸 */
+  box-sizing: border-box;
   background-image: url('https://tdesign.gtimg.com/miniprogram/template/retail/template/user-center-bg-v1.png');
   background-size: cover;
   background-repeat: no-repeat;

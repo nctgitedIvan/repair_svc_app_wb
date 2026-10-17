@@ -183,7 +183,7 @@ export async function fetchHome() {
     ],
     quickEntries: [
       { key: 'category', title: '分類', icon: 'app' },
-      { key: 'orders', title: '訂單', icon: 'order' },
+      { key: 'orders', title: '訂單', icon: 'list' },
       { key: 'cart', title: '購物車', icon: 'cart' },
       { key: 'favorites', title: '收藏', icon: 'star' },
     ],

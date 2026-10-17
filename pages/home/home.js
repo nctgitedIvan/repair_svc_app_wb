@@ -5,26 +5,45 @@ const catalogView = require('../../utils/catalogView.js');
 const cartRules = require('../../utils/cart.js');
 const { CartCode } = require('../../utils/cartCodes.js');
 
+/** 每次載入的卡片數（沿用原版首頁的 TDesign 列表節奏） */
+const PAGE_SIZE = 10;
+
 /**
- * 首頁（P8 資料一致性修正）。
+ * 首頁（原版 TDesign 零售版型 ＋ 維修平台資料）。
  *
- * ## 資料來源
+ * ## 版面（刻意還原 P8 之前的 TDesign 結構）
  *
- * 與分類頁、商品列表頁**完全相同**：
- * `fetchProducts`／`fetchServices` → `catalogView.mergeCatalog` → `toCardModel`。
+ * ```
+ * 搜尋框 → Banner 輪播 → 公告 → 金剛區（快捷入口）
+ *   → Tabs（常用零件／熱門服務）→ goods-list 卡片 → load-more
+ * ```
  *
- * 不再使用舊電商的 `fetchGoodsList`（model/good），也移除舊的促銷 tabs。
- * 常用零件在上、熱門服務在下（`docs/01` §3.7.0）。
+ * ## 資料來源（紅線）
+ *
+ * 全部走 `services/api`：
+ * - `fetchHome()`       → Banner／公告／快捷入口
+ * - `fetchProducts()`   → 零件卡片（常用零件）
+ * - `fetchServices()`   → 服務卡片（熱門服務）
+ *
+ * 卡片一律由 `catalogView.toCardModel()` 產生，與分類頁／商品列表頁**同一套**
+ * 呈現資料（`docs/01` §3.7.0、§3.7.10）。頁面不寫死任何商品或價格。
+ *
+ * ⚠️ 舊電商的 `fetchGoodsList`／`model/good`／促銷 tabs 一律不再使用。
  */
 Page({
   data: {
     imgSrcs: [],
     announcement: '',
     quickEntries: [],
-    productItems: [],
-    serviceItems: [],
+    tabList: [
+      { text: '常用零件', key: 0 },
+      { text: '熱門服務', key: 1 },
+    ],
+    goodsList: [],
+    goodsListLoadStatus: 0,
     pageLoading: false,
     catalogLoading: false,
+    catalogLoaded: false,
     loadError: false,
     current: 1,
     autoplay: true,
@@ -33,6 +52,13 @@ Page({
     navigation: { type: 'dots' },
     swiperImageProps: { mode: 'scaleToFill' },
   },
+
+  /** 兩個 tab 的完整卡片來源（不進 data，避免每次渲染搬整份目錄） */
+  tabCards: [[], []],
+  /** 每個 tab 已載入的卡片數（本機分頁） */
+  tabLoaded: [0, 0],
+  /** 目前 tab（0 = 常用零件、1 = 熱門服務） */
+  currentTab: 0,
 
   onShow() {
     const tabBar = this.getTabBar && this.getTabBar();
@@ -47,13 +73,19 @@ Page({
     this.init();
   },
 
+  onReachBottom() {
+    if (this.data.goodsListLoadStatus === 0 && this.data.goodsList.length > 0) {
+      this.renderTab(false);
+    }
+  },
+
   init() {
     this.loadHomePage();
     this.loadCatalog();
   },
 
+  /** Banner／公告／快捷入口 */
   loadHomePage() {
-    wx.stopPullDownRefresh();
     this.setData({ pageLoading: true });
 
     fetchHome()
@@ -65,44 +97,79 @@ Page({
           pageLoading: false,
         });
       })
-      .catch(() => {
+      .catch((err) => {
+        console.warn('[home] 載入首頁資料失敗', err);
         this.setData({ pageLoading: false });
-      });
+      })
+      .then(() => wx.stopPullDownRefresh());
   },
 
+  /** 目錄：零件與服務一次抓完，之後只在本機切 tab／分頁 */
   async loadCatalog() {
     this.setData({ catalogLoading: true, loadError: false });
     try {
       const [products, services] = await Promise.all([fetchProducts(), fetchServices()]);
-      const merged = catalogView.mergeCatalog({
-        services: services.list,
-        products: products.list,
-      });
-      const cards = merged.map((item) => catalogView.toCardModel(item)).filter(Boolean);
+      const cards = catalogView
+        .mergeCatalog({ services: services.list, products: products.list })
+        .map((item) => catalogView.toCardModel(item))
+        .filter(Boolean);
 
-      this.setData({
-        catalogLoading: false,
-        productItems: cards.filter((card) => card.itemType === catalogView.ItemType.PRODUCT).slice(0, 6),
-        serviceItems: cards.filter((card) => card.itemType === catalogView.ItemType.SERVICE).slice(0, 6),
-      });
+      this.tabCards = [
+        cards.filter((card) => card.itemType === catalogView.ItemType.PRODUCT),
+        cards.filter((card) => card.itemType === catalogView.ItemType.SERVICE),
+      ];
+      this.tabLoaded = [0, 0];
+      this.currentTab = 0;
+
+      this.renderTab(true);
+      this.setData({ catalogLoading: false, catalogLoaded: true, loadError: false });
     } catch (err) {
       console.warn('[home] 載入目錄失敗', err);
-      this.setData({ catalogLoading: false, loadError: true });
+      this.setData({
+        catalogLoading: false,
+        catalogLoaded: true,
+        loadError: true,
+        goodsList: [],
+        goodsListLoadStatus: 3,
+      });
       Toast({ context: this, selector: '#t-toast', message: '首頁載入失敗，請稍後再試', icon: '' });
     }
   },
 
-  cardAt(e) {
-    const { list, index } = e.currentTarget.dataset;
-    const source = list === 'service' ? this.data.serviceItems : this.data.productItems;
-    const card = source[Number(index)];
-    return card || null;
+  /** 渲染目前 tab 的下一頁；`fresh` 為 true 時從第一頁重來 */
+  renderTab(fresh) {
+    const cards = this.tabCards[this.currentTab] || [];
+    if (fresh) this.tabLoaded[this.currentTab] = 0;
+
+    const start = this.tabLoaded[this.currentTab];
+    const next = cards.slice(start, start + PAGE_SIZE);
+    this.tabLoaded[this.currentTab] = start + next.length;
+
+    this.setData({
+      goodsList: fresh ? next : this.data.goodsList.concat(next),
+      goodsListLoadStatus: this.tabLoaded[this.currentTab] >= cards.length ? 2 : 0,
+    });
   },
 
-  /** 點卡片 → 詳情頁（參數與分類頁／列表頁一致） */
-  onCardTap(e) {
-    const card = this.cardAt(e);
+  tabChangeHandle(e) {
+    const tabIndex = Number(e.detail && e.detail.value);
+    if (![0, 1].includes(tabIndex) || tabIndex === this.currentTab) return;
+
+    this.currentTab = tabIndex;
+    wx.pageScrollTo({ scrollTop: 0 });
+    this.renderTab(true);
+  },
+
+  onReTry() {
+    this.loadCatalog();
+  },
+
+  /** 點卡片 → 詳情頁（參數與分類頁／商品列表頁一致） */
+  goodListClickHandle(e) {
+    const index = Number(e.detail && e.detail.index);
+    const card = this.data.goodsList[index];
     if (!card || !card.id) return;
+
     const param =
       card.itemType === catalogView.ItemType.SERVICE
         ? `serviceId=${card.id}`
@@ -110,9 +177,10 @@ Page({
     wx.navigateTo({ url: `/pages/goods/details/index?${param}` });
   },
 
-  /** 卡片加購：與分類頁／列表頁同一套規則 */
-  onAddCart(e) {
-    const card = this.cardAt(e);
+  /** 卡片加購：與分類頁／商品列表頁同一套規則 */
+  goodListAddCartHandle(e) {
+    const index = Number(e.detail && e.detail.index);
+    const card = this.data.goodsList[index];
     const action = catalogView.addActionFor(card);
     if (!action) return;
 
@@ -170,6 +238,6 @@ Page({
   },
 
   navToSearchPage() {
-    wx.navigateTo({ url: '/pages/goods/search/index' });
+    wx.navigateTo({ url: '/pages/goods/list/index' });
   },
 });

@@ -1,5 +1,5 @@
 {
-  "navigationBarTitleText": "首页",
+  "navigationBarTitleText": "首頁",
   "onReachBottomDistance": 10,
   "backgroundTextStyle": "light",
   "enablePullDownRefresh": true,
@@ -8,9 +8,12 @@
     "t-loading": "tdesign-miniprogram/loading/loading",
     "t-swiper": "tdesign-miniprogram/swiper/swiper",
     "t-swiper-nav": "tdesign-miniprogram/swiper-nav/swiper-nav",
-    "t-image": "/components/webp-image/index",
+    "t-notice-bar": "tdesign-miniprogram/notice-bar/notice-bar",
     "t-icon": "tdesign-miniprogram/icon/icon",
-    "t-toast": "tdesign-miniprogram/toast/toast",
-    "price": "/components/price/index"
+    "t-tabs": "tdesign-miniprogram/tabs/tabs",
+    "t-tab-panel": "tdesign-miniprogram/tab-panel/tab-panel",
+    "goods-list": "/components/goods-list/index",
+    "load-more": "/components/load-more/index",
+    "t-toast": "tdesign-miniprogram/toast/toast"
   }
 }

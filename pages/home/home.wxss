@@ -1,20 +1,32 @@
-@import '../../style/catalog-card.wxss';
+/*
+ * 首頁 —— 還原 TDesign 零售版型的視覺骨架。
+ *
+ * 版權／尺寸沿用原版：
+ *   Banner 300rpx、頁面左右 24rpx、卡片由共用 goods-card 提供（342rpx × 2）。
+ * 本次只新增「公告」與「金剛區」兩個區塊，其餘不動。
+ */
 
 page {
   box-sizing: border-box;
   padding-bottom: calc(env(safe-area-inset-bottom) + 96rpx);
-  background-color: #f5f5f5;
+}
+
+.t-tabs.t-tabs--top .t-tabs__scroll {
+  border-bottom: none !important;
 }
 
 .home-page-header {
   background: linear-gradient(#fff, #f5f5f5);
-  padding: 0 24rpx;
 }
 
 .home-page-container {
-  display: block;
-  padding: 8rpx 24rpx 40rpx;
   background: #f5f5f5;
+}
+
+.home-page-container,
+.home-page-header {
+  display: block;
+  padding: 0 24rpx;
 }
 
 .home-page-header .t-search__input-container {
@@ -37,39 +49,28 @@ page {
   border-radius: 10rpx;
 }
 
-.home-section {
-  margin-top: 20rpx;
-}
+/* ── 公告（t-notice-bar） ── */
 
-.home-announcement {
-  display: flex;
-  align-items: center;
+.home-notice {
   margin-top: 16rpx;
-  padding: 16rpx 20rpx;
-  background-color: #fff7f2;
   border-radius: 12rpx;
+  font-size: 24rpx;
 }
 
-.home-announcement__text {
-  flex: 1;
-  min-width: 0;
-  margin-left: 12rpx;
-  font-size: 24rpx;
-  color: #8a4b3a;
-  line-height: 34rpx;
-}
+/* ── 金剛區（快捷入口） ── */
 
 .home-quick {
   display: flex;
   justify-content: space-around;
-  margin-top: 20rpx;
+  margin-top: 16rpx;
   padding: 24rpx 8rpx;
-  background-color: #fff;
+  background-color: #ffffff;
   border-radius: 16rpx;
 }
 
 .home-quick__item {
   flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -88,25 +89,65 @@ page {
 .home-quick__text {
   margin-top: 10rpx;
   font-size: 22rpx;
+  line-height: 30rpx;
   color: #555555;
+  text-align: center;
 }
 
-.home-section__title {
-  font-size: 30rpx;
-  font-weight: 600;
-  color: #333333;
-  line-height: 44rpx;
-  margin-bottom: 16rpx;
+/* ── Tabs（原版樣式） ── */
+
+.home-page-tabs {
+  margin-top: 8rpx;
+  --td-tab-nav-bg-color: transparent;
+  --td-tab-border-color: transparent;
+  --td-tab-item-color: #666;
+  --td-tab-track-color: #fa4126;
 }
 
-.home-page-container .catalog-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
+.home-page-container .t-tabs {
+  background: #f5f5f5 !important;
+}
+
+.home-page-container .t-tabs .t-tabs-nav {
+  background-color: transparent;
+  line-height: 80rpx;
+  font-size: 28rpx;
+  color: #333;
+}
+
+.home-page-container .t-tabs .t-tabs-scroll {
+  border: none !important;
+}
+
+.home-page-container .tabs-external__item {
+  font-size: 28rpx;
+}
+
+.home-page-container .tabs-external__active {
+  color: #333333 !important;
+  font-size: 32rpx;
+}
+
+.home-page-container .tabs-external__track {
+  height: 6rpx !important;
+  border-radius: 4rpx !important;
+  width: 48rpx !important;
+}
+
+.t-tabs.t-tabs--top .t-tabs__item,
+.t-tabs.t-tabs--bottom .t-tabs__item {
+  height: 86rpx !important;
+}
+
+/* ── 卡片列表（共用 goods-list／goods-card） ── */
+
+.home-page-container .goods-list-container {
+  background: #f5f5f5 !important;
+  margin-top: 16rpx;
 }
 
 .home-empty {
-  padding: 120rpx 0;
+  padding: 100rpx 0;
   text-align: center;
   color: #999999;
   font-size: 26rpx;
