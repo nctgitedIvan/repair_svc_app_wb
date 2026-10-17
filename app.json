@@ -18,6 +18,7 @@
         "address/edit/index",
         "name-edit/index",
         "favorites/index",
+        "inquiries/index",
         "settings/index"
       ]
     },

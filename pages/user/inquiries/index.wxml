@@ -1,0 +1,51 @@
+<!--
+  我的詢問（T6b）。
+
+  ⚠️ 客服回覆需 P5：P7a 的正常資料都是 pending；
+     若本機有 replied／closed（人工種子資料），這裡也會照實顯示。
+-->
+<view class="inq-page" wx:if="{{ready && rows.length > 0}}">
+  <view
+    class="inq-item"
+    wx:for="{{rows}}"
+    wx:key="inquiryId"
+    bindtap="onRowTap"
+    data-product-id="{{item.productId}}"
+  >
+    <view class="inq-item__thumb">
+      <t-image
+        wx:if="{{item.image}}"
+        t-class="inq-item__img"
+        src="{{item.image}}"
+        mode="aspectFill"
+        lazy-load
+      />
+    </view>
+
+    <view class="inq-item__body">
+      <view class="inq-item__head">
+        <view class="inq-item__name">{{item.name}}</view>
+        <view class="inq-item__status inq-item__status--{{item.status}}">{{item.statusLabel}}</view>
+      </view>
+
+      <view class="inq-item__message">{{item.message}}</view>
+
+      <view class="inq-item__reply" wx:if="{{item.lastReply}}">
+        <text class="inq-item__reply-label">客服回覆：</text>{{item.lastReply}}
+      </view>
+
+      <view class="inq-item__meta">
+        <price wx:if="{{item.priceCents > 0}}" price="{{item.priceCents}}" wr-class="inq-item__price" />
+        <text class="inq-item__time">{{item.createdAtText}}</text>
+      </view>
+    </view>
+  </view>
+</view>
+
+<!-- 空清單 -->
+<view class="inq-empty" wx:if="{{ready && rows.length === 0}}">
+  <view class="inq-empty__text">還沒有詢問任何商品</view>
+  <view class="inq-empty__btn" bindtap="onGotoShop">去逛逛零件</view>
+</view>
+
+<t-toast id="t-toast" />

@@ -26,6 +26,12 @@ const menuData = [
       type: 'favorite',
     },
     {
+      title: '我的詢問',
+      tit: '',
+      url: '',
+      type: 'inquiry',
+    },
+    {
       title: '設置',
       tit: '',
       url: '',
@@ -168,6 +174,11 @@ Page({
       // T6a.1-4
       case 'favorite': {
         wx.navigateTo({ url: '/pages/user/favorites/index' });
+        break;
+      }
+      // T6b
+      case 'inquiry': {
+        wx.navigateTo({ url: '/pages/user/inquiries/index' });
         break;
       }
       case 'setting': {
