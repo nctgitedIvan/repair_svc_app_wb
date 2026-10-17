@@ -29,6 +29,14 @@ Component({
       type: Number,
       value: 999,
     },
+    /**
+     * T7：彈窗底部按鈕文字。
+     * 加入購物車（預設）或立即購買（商品詳情的 buy-now 模式）。
+     */
+    confirmText: {
+      type: String,
+      value: '加入購物車',
+    },
     limitMinCount: {
       type: Number,
       value: 1,

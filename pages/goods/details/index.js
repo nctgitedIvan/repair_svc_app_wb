@@ -72,6 +72,9 @@ function buildJumpArray({ isFavorite, canFavorite }) {
 }
 
 Page({
+  /** 規格彈窗的來源：`'cart'`（加入購物車）或 `'buy-now'`（立即購買） */
+  specAction: 'cart',
+
   /** 原始項目（加入購物車與收藏時要 name／priceCents／thumb） */
   item: null,
   /** 收藏資料（本機 Storage） */
@@ -99,6 +102,8 @@ Page({
     selectedAttrStr: '',
     // ── 詢問彈窗（T6b） ──
     isInquiryPopupShow: false,
+    /** 規格彈窗的按鈕文字（T7：加入購物車／立即購買） */
+    specConfirmText: '加入購物車',
   },
 
   onLoad(query) {
@@ -268,26 +273,97 @@ Page({
   },
 
   /**
-   * 「立即購買／立即預約」＝ **跳過購物車、直接進結算**（使用者 2026-10-17 的決策）。
+   * 「立即購買／立即預約」＝ **跳過購物車、直接進結算**（T7）。
    *
-   * ⚠️ 真正的結算流程是 **T7** 的範圍（現在的 `/pages/order/order-confirm`
-   *    還是舊電商頁），所以這裡先給佔位提示，不導向壞掉的頁面。
-   *
-   * T6a.3-5：服務走同一顆按鈕，文案改為「立即預約」（服務不進購物車，§3.7.2）。
+   * - 商品、無規格：直接寫 payload → 結算頁
+   * - 商品、有規格：開規格彈窗（按鈕文字「立即購買」），選好 SKU 後再進結算
+   * - 服務：寫服務 payload（預約時間佔位）→ 結算頁
    */
   onBuyNow() {
     const { detail } = this.data;
     if (!detail.id) return;
-    if (detail.itemType === ItemType.PRODUCT && !detail.canAddToCart) return;
-    if (detail.itemType === ItemType.SERVICE && detail.isDelisted) return;
 
-    const isService = detail.itemType === ItemType.SERVICE;
-    Toast({
-      context: this,
-      selector: '#t-toast',
-      message: isService ? '立即預約功能建置中（T7 完成）' : '立即購買功能建置中（T7 完成）',
-      icon: '',
+    if (detail.itemType === ItemType.SERVICE) {
+      if (detail.isDelisted) return;
+      this.goServiceCheckout();
+      return;
+    }
+
+    if (!detail.canAddToCart) return;
+
+    if (!detail.hasSpecs) {
+      this.goProductCheckout(null, 1);
+      return;
+    }
+
+    const model = detailView.toSpecPopupModel({ item: this.item, itemType: this.item.itemType });
+    if (!model) {
+      this.goProductCheckout(null, 1);
+      return;
+    }
+
+    this.specAction = 'buy-now';
+    this.selectedSku = {};
+    this.baseMaxBuyQuantity = detail.maxBuyQuantity;
+    this.setData({
+      isSpecsPopupShow: true,
+      specList: model.specList,
+      skuList: model.skuList,
+      buyNum: 1,
+      selectedAttrStr: '',
+      specConfirmText: '立即購買',
     });
+  },
+
+  /** 商品（單筆）→ 結算 payload */
+  goProductCheckout(sku, quantity) {
+    const { detail } = this.data;
+    const unitPriceCents =
+      sku && Number.isInteger(sku.priceCents) ? sku.priceCents : detail.priceCents;
+    const payload = {
+      source: 'buy-now',
+      orderType: 'product',
+      items: [
+        {
+          itemType: 'product',
+          itemId: detail.id,
+          skuId: sku ? sku.skuId : null,
+          quantity,
+        },
+      ],
+      expectedTotalCents: unitPriceCents * quantity,
+      cartLineIds: [],
+      addressId: null,
+      appointmentAt: null,
+    };
+    this.goCheckout(payload);
+  },
+
+  /** 服務（單筆）→ 結算 payload；預約時間由 P7a-2b 補上 */
+  goServiceCheckout() {
+    const { detail } = this.data;
+    const payload = {
+      source: 'service',
+      orderType: 'service',
+      items: [{ itemType: 'service', itemId: detail.id, quantity: 1 }],
+      expectedTotalCents: Number.isInteger(detail.priceCents) ? detail.priceCents : 0,
+      cartLineIds: [],
+      addressId: null,
+      appointmentAt: null,
+    };
+    this.goCheckout(payload);
+  },
+
+  /** 寫入統一的結算 payload，導向結算頁 */
+  goCheckout(payload) {
+    try {
+      wx.setStorageSync(cartRules.CHECKOUT_KEY, JSON.stringify(payload));
+    } catch (err) {
+      console.warn('[details] 寫入結算資料失敗', err);
+      Toast({ context: this, selector: '#t-toast', message: '無法前往結算，請稍後再試', icon: '' });
+      return;
+    }
+    wx.navigateTo({ url: '/pages/order/order-confirm/index' });
   },
 
   // ── 加入購物車 ──
@@ -312,6 +388,7 @@ Page({
     }
 
     this.selectedSku = {};
+    this.specAction = 'cart';
     // 未選完規格時的上限（buildDetailView 算出的「所有 SKU 最大庫存」）
     this.baseMaxBuyQuantity = detail.maxBuyQuantity;
     this.setData({
@@ -320,6 +397,7 @@ Page({
       skuList: model.skuList,
       buyNum: 1,
       selectedAttrStr: '',
+      specConfirmText: '加入購物車',
     });
   },
 
@@ -377,6 +455,11 @@ Page({
         return;
       }
     }
+    // T7：同一個彈窗支援「加入購物車」與「立即購買」
+    if (this.specAction === 'buy-now') {
+      this.goProductCheckout(sku, this.data.buyNum);
+      return;
+    }
     this.commitAddToCart(sku ? sku.skuId : null, this.data.buyNum, sku);
   },
 
@@ -421,6 +504,7 @@ Page({
   },
 
   onSpecsPopupHide() {
+    this.specAction = 'cart';
     this.setData({ isSpecsPopupShow: false });
   },
 

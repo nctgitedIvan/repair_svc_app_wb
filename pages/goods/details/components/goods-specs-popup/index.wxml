@@ -87,7 +87,7 @@
       -->
       <view class="sku-operate">
         <view class="selected-sku-btn sku-operate-addCart {{!isStock ? 'disabled' : ''}}" bindtap="addCart">
-          加入購物車
+          {{confirmText}}
         </view>
       </view>
     </view>

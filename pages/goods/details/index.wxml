@@ -103,6 +103,7 @@
     limit-max-count="{{detail.maxBuyQuantity}}"
     is-stock="{{isStock}}"
     count="{{buyNum}}"
+    confirm-text="{{specConfirmText}}"
     bind:closeSpecsPopup="onSpecsPopupHide"
     bind:change="onSpecChange"
     bind:changeNum="onBuyNumChange"
