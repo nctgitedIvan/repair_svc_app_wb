@@ -39,7 +39,7 @@
 **執行順序**：`P0 → P1 → P4 → P2 → P3 → P5 → P6 → P7 → P8 → P9 → P10`
 **可並行**：P7a（前端，不依賴後端）、P8（P5 後）
 
-**測試數：1216 全過**（… → T7 1178 → **P2a-1 1190 → P2a-2 1216**）
+**測試數：1242 全過（1 skipped：CloudDB 契約）**（… → T7 1178 → P2a-1 1190 → P2a-2 1216 → **P2a-3 1242**）
 
 ---
 
@@ -120,12 +120,12 @@
 | 項目 | 值 |
 |---|---|
 | 分支 | `refactor/hexagonal` |
-| 最後程式 commit | **P2a-2（`2633926`）**；本次為 handoff 進度更新 |
+| 最後程式 commit | **P2a-3（`b5e9b2c`）**；本次為 handoff 進度更新 |
 | 基線 | `main` = `a747010`（TDesign 模版原始狀態） |
 | Tag | `p0-done`、`p1-done`、`pre-p7a2a-tabbar`、`pre-p7a2a-t35`、`pre-p7a2a-t4`、`pre-p7a2a-t36`、`pre-p7a2a-t361`、`pre-p7a2a-t6a`（**T6a.1／T6a.2／T6a.3／T5／T6b／T7／P2a 未另打 tag**） |
 | 備份分支 | `backup-origin-main`、`backup-origin-refactor` |
 | 遠端 | `git@github.com:nctgitedIvan/repair_svc_app_wb.git`（**已 push 到 `origin/refactor/hexagonal`**） |
-| 領先／落後 | 以 `git rev-list --count main..HEAD` 為準（本版為 **114**，含本次 handoff commit） |
+| 領先／落後 | 以 `git rev-list --count main..HEAD` 為準（本版為 **116**，含本次 handoff commit） |
 
 > ⚠️ 這一格**每次更新都容易過時**（前兩版都寫錯：23→63→實際 90）。
 > **請一律以指令輸出為準** —— 見 §10 第 1 點。
@@ -291,7 +291,8 @@
 |---|---|---|
 | P2a-1：22 集合 manifest、`setup-db`、索引清單、操作指南 | `1240c1a` | ✅ 完成 |
 | P2a-2：`CloudDBClient`／`CloudDBUnitOfWork`／`InMemoryUnitOfWork`／layering 規則 | `2633926` | ✅ 完成 |
-| **下一步：部署 `setup-db`** | — | ⏸ **等使用者執行**（見 `docs/P2-a-setup-db-操作指南.md`） |
+| **P2a-3**：IdSequence／AuditLog／SystemConfig／Category 的 Port＋InMemory／CloudDB＋契約測試 | `b5e9b2c` | ✅ 完成（25 pass／1 skipped CloudDB） |
+| **下一步：P2-0 探針代碼（保留，待雲端）→ P2b-1（身分 Repositories）** | — | ⏭ 進行中 |
 
 > `setup-db` 同時是 **P0 的正式驗收**：它載入 `@repair/build-manifest`、
 > `@repair/shared-kernel/Money`、`Result`，回傳共享碼檢查與 22 集合建立結果。
