@@ -2,7 +2,7 @@
 
 > 產出日期：2026-10-17
 > 分支：`refactor/hexagonal`（HEAD = `1932bc6`，T5 已完成）
-> **狀態：計畫。未動任何代碼。**
+> **狀態：✅ 已完成（2026-10-17）。T6b-1／T6b-2／T6b-3／T6b-4 全部交付。**
 > 依據：`docs/01` §7.2 第 8 點（`inquiries`）、§4.1／§4.2（Use Case）、
 > `docs/P7a-2a-計畫.md` §13、`docs/04-前端規範.md`
 
@@ -279,3 +279,23 @@ Storage key：**`repair.inquiries.v1`**（與 `repair.cart.v2`／`repair.favorit
 | T6b-2 | `git revert`（詳情頁與彈窗元件） |
 | T6b-3 | `git revert`（我的入口、清單頁、app.json） |
 | T6b-4 | `git revert`（文件） |
+
+---
+
+## 13. 執行結果（2026-10-17）
+
+| 階段 | commit | 結果 |
+|---|---|---|
+| 計畫 | `f66aba9` | 本文件批准存檔 |
+| **T6b-1** | `70a8c7b` | `utils/inquiry.js`＋35 項測試：快照（`images[0]`）、預設訊息、200 字截斷、100 筆上限、id 碰撞、正規化、新到舊排序 |
+| **T6b-2** | `8f72d5a` | `inquiry-popup` 元件；詳情頁「客服」接線；商品寫入本機、服務給 Toast |
+| **T6b-3** | `1a12b76` | 「我的詢問」入口＋`pages/user/inquiries`（唯讀清單、空態、狀態標籤） |
+| **T6b-4** | 本次收尾 | handoff／`P7a-2a-計畫.md`／本文件狀態更新 |
+
+**自動驗證**：每個 commit 後 `npm run verify` 皆 exit 0；最終測試 **1153**。
+**人工驗收**：C1–C9 待使用者在開發者工具執行。
+
+**已知限制（不偏離計畫）**：
+- 沒有客服端頁面；`status` 正常情況下都是 `pending`，可用種子資料驗證 `replied`／`closed` 的顯示。
+- 服務詢問未支援（schema 鍵是 `product_id`）。
+- `customerId` 是 `__local__` 佔位符，P5 必須改由 OPENID 決定。
