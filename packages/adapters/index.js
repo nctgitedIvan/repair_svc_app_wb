@@ -35,6 +35,11 @@ const { InMemoryCartRepository } = require('./inmemory/InMemoryCartRepository');
 const { InMemoryFavoriteRepository } = require('./inmemory/InMemoryFavoriteRepository');
 const { InMemoryInquiryRepository } = require('./inmemory/InMemoryInquiryRepository');
 const { InMemoryOrderItemRepository } = require('./inmemory/InMemoryOrderItemRepository');
+const { InMemoryPaymentRepository } = require('./inmemory/InMemoryPaymentRepository');
+const { InMemoryRefundRepository } = require('./inmemory/InMemoryRefundRepository');
+const { InMemoryProfitSharingRepository } = require('./inmemory/InMemoryProfitSharingRepository');
+const { InMemoryWorkOrderRepository } = require('./inmemory/InMemoryWorkOrderRepository');
+const { InMemoryWorkOrderMessageRepository } = require('./inmemory/InMemoryWorkOrderMessageRepository');
 const { createCloudDBClient } = require('./clouddb/CloudDBClient');
 const { createCloudDBUnitOfWork } = require('./clouddb/CloudDBUnitOfWork');
 const { createCloudDBIdSequenceRepository } = require('./clouddb/CloudDBIdSequenceRepository');
@@ -52,6 +57,11 @@ const { createCloudDBFavoriteRepository } = require('./clouddb/CloudDBFavoriteRe
 const { createCloudDBInquiryRepository } = require('./clouddb/CloudDBInquiryRepository');
 const { createCloudDBOrderRepository } = require('./clouddb/CloudDBOrderRepository');
 const { createCloudDBOrderItemRepository } = require('./clouddb/CloudDBOrderItemRepository');
+const { createCloudDBPaymentRepository } = require('./clouddb/CloudDBPaymentRepository');
+const { createCloudDBRefundRepository } = require('./clouddb/CloudDBRefundRepository');
+const { createCloudDBProfitSharingRepository } = require('./clouddb/CloudDBProfitSharingRepository');
+const { createCloudDBWorkOrderRepository } = require('./clouddb/CloudDBWorkOrderRepository');
+const { createCloudDBWorkOrderMessageRepository } = require('./clouddb/CloudDBWorkOrderMessageRepository');
 
 module.exports = {
   SystemClockAdapter,
@@ -74,6 +84,11 @@ module.exports = {
   InMemoryFavoriteRepository,
   InMemoryInquiryRepository,
   InMemoryOrderItemRepository,
+  InMemoryPaymentRepository,
+  InMemoryRefundRepository,
+  InMemoryProfitSharingRepository,
+  InMemoryWorkOrderRepository,
+  InMemoryWorkOrderMessageRepository,
   createCloudDBClient,
   createCloudDBUnitOfWork,
   createCloudDBIdSequenceRepository,
@@ -91,4 +106,9 @@ module.exports = {
   createCloudDBInquiryRepository,
   createCloudDBOrderRepository,
   createCloudDBOrderItemRepository,
+  createCloudDBPaymentRepository,
+  createCloudDBRefundRepository,
+  createCloudDBProfitSharingRepository,
+  createCloudDBWorkOrderRepository,
+  createCloudDBWorkOrderMessageRepository,
 };
