@@ -39,7 +39,7 @@
 **執行順序**：`P0 → P1 → P4 → P2 → P3 → P5 → P6 → P7 → P8 → P9 → P10`
 **可並行**：P7a（前端，不依賴後端）、P8（P5 後）
 
-**測試數：1356 全過（6 skipped：CloudDB 契約）**（… → P2c-2 1326 → **P3+P5 1356**）
+**測試數：1369 全過（6 skipped：CloudDB 契約）**（… → P3+P5 1356 → **電話／三頁對接 1369**）
 
 ---
 
@@ -120,12 +120,12 @@
 | 項目 | 值 |
 |---|---|
 | 分支 | `refactor/hexagonal` |
-| 最後程式 commit | **P8 第二階段（`40a1853`）**；本次為 handoff 更新 |
+| 最後程式 commit | **電話／三頁對接（`9287335`）**；本次為 handoff 更新 |
 | 基線 | `main` = `a747010`（TDesign 模版原始狀態） |
 | Tag | `p0-done`、`p1-done`、`pre-p7a2a-tabbar`、`pre-p7a2a-t35`、`pre-p7a2a-t4`、`pre-p7a2a-t36`、`pre-p7a2a-t361`、`pre-p7a2a-t6a`（**P2／P3／P5／P8 未另打 tag**） |
 | 備份分支 | `backup-origin-main`、`backup-origin-refactor` |
 | 遠端 | `git@github.com:nctgitedIvan/repair_svc_app_wb.git`（**已 push 到 `origin/refactor/hexagonal`**） |
-| 領先／落後 | 以 `git rev-list --count main..HEAD` 為準（本版為 **129**，含本次 handoff commit） |
+| 領先／落後 | 以 `git rev-list --count main..HEAD` 為準（本版為 **131**，含本次 handoff commit） |
 
 > ⚠️ 這一格**每次更新都容易過時**（前兩版都寫錯：23→63→實際 90）。
 > **請一律以指令輸出為準** —— 見 §10 第 1 點。
@@ -339,6 +339,21 @@
 - Mock 資料在記憶體，重啟重置；圖片上傳為 data URL／佔位圖。
 - 尚未接真 `admin-api`／CloudDB；正式安全規範見 `docs/01` §4.9。
 
+### 6.1.3 ✅ 全局電話與三頁資料對接（2026-10-17）
+
+| 項目 | 內容 |
+|---|---|
+| 電話格式 | **853 + 8 位**／**86 + 11 位**／純 11 位；`PhoneNumber` 提供 `e164`／`formatted`／`masked` |
+| 遮罩 | 澳門 `853 66** ****`；大陸 `138 **** 5678` |
+| 前端 | `utils/phone.js`；地址編輯頁區號選擇器（預設 +853，可選 +86） |
+| 後台 | `admin-web/src/utils/phone.js`；師傅電話格式化＋編輯（PATCH `/api/technicians/:id`） |
+| 首頁 | `fetchHome`（Banner／公告／快捷入口）＋常用零件／熱門服務，全部走 `services/api` |
+| 訂單頁 | 四 tabs（全部／待付款／進行中／已完成）、訂單卡片、支付／取消／退款／詳情（Toast） |
+| 我的 | `fetchUserProfile`／`fetchOrders`；移除優惠券／積分；訂單宮格；收藏／詢問／地址／客服／設置 |
+| API | 新增 `fetchHome`／`fetchOrders`／`fetchUserProfile`（fake＋real stub） |
+
+**驗證**：`npm run verify` 全綠（**1369**）；`admin-web` build exit 0；Mock 電話 PATCH 與稽核實測通過。
+
 ### 之後
 
 `P9`（整合測試與驗收）→ 未來有雲環境：`setup-db` → `probe-tx` → CloudDB 契約測試 → 切換 bootstrap。
@@ -419,7 +434,7 @@
 5. 不要動業務代碼（P7a 階段除外，限計畫列出的檔案）、
    不要動資料庫、不要建階段外的雲函數
 
-目前進度：P4c 完成、P7a-1 完成、**P7a-2a 7/7 全部完成**、**P2 全部完成（無雲環境模式）**、**P3／P5 完成（Mock 金流）**、**P8 Mock 後台完成**。
+目前進度：P4c 完成、P7a-1 完成、**P7a-2a 7/7 全部完成**、**P2 全部完成（無雲環境模式）**、**P3／P5 完成（Mock 金流）**、**P8 Mock 後台完成**、**全局電話與首頁／訂單／我的資料對接完成**。
 下一步：**P9（整合測試）**；P6 等商戶號；P7a-2b 延後。
 特別注意：T6（商品詳情）要實作「加入購物車」寫入 utils/cart.js ——
 在那之前購物車沒有生產者（T4 的人工驗收需先用 Storage 種子資料）。
@@ -439,7 +454,7 @@ T7（結算頁）必須移除 T4 留下的相容橋接，見 §6.2。
 ## 10. 給接手者的四個提醒
 
 1. **這份文件可能已過時**。若 Git 狀態與 §4 不符，以 `git log` 為準。
-2. **`npm run verify` 必須隨時全綠**（依賴方向 + 前端檢查 + 共享碼同步 + **1356** 測試）。
+2. **`npm run verify` 必須隨時全綠**（依賴方向 + 前端檢查 + 共享碼同步 + **1369** 測試）。
    紅了先修，不要繼續往下做。
 3. **兩個守衛會擋你，那是設計不是 bug**：
    - 改 `packages/` 後忘記 `npm run sync` → 雲函數拒絕啟動
