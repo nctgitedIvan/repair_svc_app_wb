@@ -2,7 +2,7 @@
 
 > 產出日期：2026-10-17
 > 分支：`refactor/hexagonal`（HEAD = `591a27b`，T6a.3 已完成）
-> **狀態：計畫。未動任何代碼。**
+> **狀態：✅ 已完成（2026-10-17）。T5-1／T5-2／T5-3／T5-4 全部交付。**
 > 依據：`docs/P7a-2a-計畫.md` M4、`docs/01` §3.7（服務與商品）、`docs/04-前端規範.md`、T6a.3 後的資料模型
 
 ---
@@ -247,3 +247,21 @@ paginateItems(items, { page, pageSize }) // → { list, total, hasMore }
 | T5-2 | `git revert`（UI 層） |
 | T5-3 | `git revert`（空態／邊界） |
 | T5-4 | `git revert`（文件） |
+
+---
+
+## 11. 執行結果（2026-10-17）
+
+| 階段 | commit | 結果 |
+|---|---|---|
+| 計畫 | `7a9dd36` | 本文件批准存檔 |
+| **T5-1** | `ce56966` | `catalogView` 四個純函式＋30 項測試；列表頁改接 `fetchCategories`／`fetchServices`／`fetchProducts`；導覽改 `productId`／`serviceId`；加購分流 |
+| **T5-2** | `2d6f574` | `t-search`、一級分類 chips、排序、價格區間驗證、載入更多、空態／重試外框 |
+| **T5-3** | `efc742b` | `AddAction.SOLD_OUT`（售完優先於選規格）、失敗文案統一、分類頁 M8（有規格導向詳情） |
+| **T5-4** | 本次收尾 | handoff／本文件／`P7a-2a-計畫.md` 進度更新 |
+
+**自動驗證**：每個 commit 後 `npm run verify` 皆為 exit 0；最終測試 **1118**。
+**人工驗收**：C1–C12 待使用者在開發者工具執行。
+
+**與計畫的差異**：無功能層面的偏離；T5-3 依使用者指示把「售完守門」集中在
+`addActionFor()`，讓列表頁與分類頁共用同一條規則（原本只寫在列表頁）。
