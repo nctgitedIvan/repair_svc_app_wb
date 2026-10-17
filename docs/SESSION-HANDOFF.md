@@ -3,7 +3,7 @@
 > **用途**：換 session 時，把本文件整份貼給新的 Claude 即可無縫接手。
 > **維護規則**：每完成一個大階段更新一次。
 > 最後更新：2026-10-17（**P7a-2a 全部完成：T1–T7**，含 T3.5／T3.6／T3.6.1／T6a 系列／T6b；
-> **下一步：P2a-1／P2a-2 已完成；等使用者部署並執行 `setup-db`**）
+> **下一步：P3（身分與權限）→ P5（Use Cases）；P2 已完成（無雲環境模式）**）
 
 ---
 
@@ -27,7 +27,7 @@
 | — | **P7a-1** 前端基礎設施＋tabBar／路由 | ✅ 完成（T1–T9） |
 | — | **P7a-2a** 購物車＋商品＋結算 | ✅ **7/7 完成**（T1–T7；含計畫外 T3.5／T3.6／T3.6.1 與 T6a 系列／T6b） |
 | — | **P7a-2b** 服務詳情＋分類頁＋首頁調整 | ⬜ 未開始 |
-| 4 | **P2** 資料庫與 Repository | 🟡 **P2a-1／P2a-2 完成**；`setup-db` 待使用者部署執行（見 §6.1） |
+| 4 | **P2** 資料庫與 Repository | ✅ **完成（無雲環境模式）**：22 集合 manifest／20 個 Port／InMemory＋CloudDB／契約測試；CloudDB 尚未實跑 |
 | 5 | **P3** 身分與權限 | ⏸ |
 | 6 | **P5** application Use Cases | ⏸ |
 | 7 | **P6** 支付、分帳、退款 | ⛔ 外部阻斷（等商戶號與分帳權限） |
@@ -39,7 +39,7 @@
 **執行順序**：`P0 → P1 → P4 → P2 → P3 → P5 → P6 → P7 → P8 → P9 → P10`
 **可並行**：P7a（前端，不依賴後端）、P8（P5 後）
 
-**測試數：1242 全過（1 skipped：CloudDB 契約）**（… → T7 1178 → P2a-1 1190 → P2a-2 1216 → **P2a-3 1242**）
+**測試數：1326 全過（6 skipped：CloudDB 契約）**（… → P2a-2 1216 → P2a-3 1242 → P2b-1 1263 → P2b-2 1274 → P2b-3 1291 → P2c-1 1303 → **P2c-2 1326**）
 
 ---
 
@@ -120,12 +120,12 @@
 | 項目 | 值 |
 |---|---|
 | 分支 | `refactor/hexagonal` |
-| 最後程式 commit | **P2a-3（`b5e9b2c`）**；本次為 handoff 進度更新 |
+| 最後程式 commit | **P2c-2（`71aead0`）**；本次為 P2 完成 handoff |
 | 基線 | `main` = `a747010`（TDesign 模版原始狀態） |
-| Tag | `p0-done`、`p1-done`、`pre-p7a2a-tabbar`、`pre-p7a2a-t35`、`pre-p7a2a-t4`、`pre-p7a2a-t36`、`pre-p7a2a-t361`、`pre-p7a2a-t6a`（**T6a.1／T6a.2／T6a.3／T5／T6b／T7／P2a 未另打 tag**） |
+| Tag | `p0-done`、`p1-done`、`pre-p7a2a-tabbar`、`pre-p7a2a-t35`、`pre-p7a2a-t4`、`pre-p7a2a-t36`、`pre-p7a2a-t361`、`pre-p7a2a-t6a`（**P2 全部未另打 tag**） |
 | 備份分支 | `backup-origin-main`、`backup-origin-refactor` |
 | 遠端 | `git@github.com:nctgitedIvan/repair_svc_app_wb.git`（**已 push 到 `origin/refactor/hexagonal`**） |
-| 領先／落後 | 以 `git rev-list --count main..HEAD` 為準（本版為 **116**，含本次 handoff commit） |
+| 領先／落後 | 以 `git rev-list --count main..HEAD` 為準（本版為 **123**，含本次 handoff commit） |
 
 > ⚠️ 這一格**每次更新都容易過時**（前兩版都寫錯：23→63→實際 90）。
 > **請一律以指令輸出為準** —— 見 §10 第 1 點。
@@ -283,23 +283,30 @@
 ### 6.1 下一步：P2
 
 計畫：**`docs/P2-逐檔計畫.md`**（已批准；`414f0f9`）。
-重點：P2-0 事務探針 → 22 集合／索引／權限 → 18 個 Repository Port（含 InMemory／CloudDB）→ 契約測試。
+重點：P2-0 事務探針 → 22 集合／索引／權限 → **20 個 Repository Port**（含 InMemory／CloudDB）→ 契約測試。
 
-**目前進度（2026-10-17）**：
+**完成進度（2026-10-17，無雲環境模式）**：
 
 | 步驟 | commit | 狀態 |
 |---|---|---|
-| P2a-1：22 集合 manifest、`setup-db`、索引清單、操作指南 | `1240c1a` | ✅ 完成 |
-| P2a-2：`CloudDBClient`／`CloudDBUnitOfWork`／`InMemoryUnitOfWork`／layering 規則 | `2633926` | ✅ 完成 |
-| **P2a-3**：IdSequence／AuditLog／SystemConfig／Category 的 Port＋InMemory／CloudDB＋契約測試 | `b5e9b2c` | ✅ 完成（25 pass／1 skipped CloudDB） |
-| **下一步：P2-0 探針代碼（保留，待雲端）→ P2b-1（身分 Repositories）** | — | ⏭ 進行中 |
+| P2a-1：22 集合 manifest、`setup-db`、索引清單、操作指南 | `1240c1a` | ✅ |
+| P2a-2：`CloudDBClient`／兩版 `UnitOfWork`／layering 規則 | `2633926` | ✅ |
+| P2a-3：IdSequence／AuditLog／SystemConfig／Category | `b5e9b2c` | ✅ |
+| P2-0：`probe-tx` 探針（只寫不跑） | `2e67e45` | ✅ |
+| P2b-1：User／Customer／CsAgent／Technician | `e385ed8` | ✅ |
+| P2b-2：Service／Product | `854bf1d` | ✅ |
+| P2b-3：Cart／Favorite／Inquiry | `ba8d5c1` | ✅ |
+| P2c-1：Order／OrderItem | `cd2bbfa` | ✅ |
+| P2c-2：Payment／Refund／ProfitSharing／WorkOrder／WorkOrderMessage | `71aead0` | ✅ |
 
-> `setup-db` 同時是 **P0 的正式驗收**：它載入 `@repair/build-manifest`、
-> `@repair/shared-kernel/Money`、`Result`，回傳共享碼檢查與 22 集合建立結果。
+**驗證**：`npm run verify` 全綠；**1326 tests（6 skipped：CloudDB 契約）**。
+**限制**：CloudDB adapter 已寫好但**未對真實雲端執行**；`setup-db`／`probe-tx` 尚未部署。
+未來上雲時：跑 `setup-db` → `probe-tx` → `RUN_CLOUD_CONTRACT=1` 的契約測試。
 
 ### 之後
 
-`P2a-3`（契約測試框架＋基礎 Port）→ P2b／P2c → P3 → P5 → P6 → P7a-2b／P7b。
+`P3`（身分與權限 wiring）→ `P5`（訂單／派單／金流 Use Cases，用 InMemory＋MockPaymentGateway）
+→ P8（admin-web）→ 未來有雲環境再切 CloudDB。
 
 ### 每階段的固定流程
 
@@ -376,8 +383,8 @@
 5. 不要動業務代碼（P7a 階段除外，限計畫列出的檔案）、
    不要動資料庫、不要建階段外的雲函數
 
-目前進度：P4c 完成、P7a-1 完成、**P7a-2a 7/7 全部完成**（T1–T7）。
-下一步：**P2（資料庫與 Repository）**；P7a-2b 延後（見 §6.0.4）。
+目前進度：P4c 完成、P7a-1 完成、**P7a-2a 7/7 全部完成**、**P2 全部完成（無雲環境模式）**。
+下一步：**P3（身分與權限）→ P5（Use Cases）**；P7a-2b 延後。
 特別注意：T6（商品詳情）要實作「加入購物車」寫入 utils/cart.js ——
 在那之前購物車沒有生產者（T4 的人工驗收需先用 Storage 種子資料）。
 T7（結算頁）必須移除 T4 留下的相容橋接，見 §6.2。
