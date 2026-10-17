@@ -26,12 +26,19 @@ const { InMemoryIdSequenceRepository } = require('./inmemory/InMemoryIdSequenceR
 const { InMemoryAuditLogRepository } = require('./inmemory/InMemoryAuditLogRepository');
 const { InMemorySystemConfigRepository } = require('./inmemory/InMemorySystemConfigRepository');
 const { InMemoryCategoryRepository } = require('./inmemory/InMemoryCategoryRepository');
+const { InMemoryCustomerRepository } = require('./inmemory/InMemoryCustomerRepository');
+const { InMemoryCsAgentRepository } = require('./inmemory/InMemoryCsAgentRepository');
+const { InMemoryTechnicianRepository } = require('./inmemory/InMemoryTechnicianRepository');
 const { createCloudDBClient } = require('./clouddb/CloudDBClient');
 const { createCloudDBUnitOfWork } = require('./clouddb/CloudDBUnitOfWork');
 const { createCloudDBIdSequenceRepository } = require('./clouddb/CloudDBIdSequenceRepository');
 const { createCloudDBAuditLogRepository } = require('./clouddb/CloudDBAuditLogRepository');
 const { createCloudDBSystemConfigRepository } = require('./clouddb/CloudDBSystemConfigRepository');
 const { createCloudDBCategoryRepository } = require('./clouddb/CloudDBCategoryRepository');
+const { createCloudDBUserRepository } = require('./clouddb/CloudDBUserRepository');
+const { createCloudDBCustomerRepository } = require('./clouddb/CloudDBCustomerRepository');
+const { createCloudDBCsAgentRepository } = require('./clouddb/CloudDBCsAgentRepository');
+const { createCloudDBTechnicianRepository } = require('./clouddb/CloudDBTechnicianRepository');
 
 module.exports = {
   SystemClockAdapter,
@@ -45,10 +52,17 @@ module.exports = {
   InMemoryAuditLogRepository,
   InMemorySystemConfigRepository,
   InMemoryCategoryRepository,
+  InMemoryCustomerRepository,
+  InMemoryCsAgentRepository,
+  InMemoryTechnicianRepository,
   createCloudDBClient,
   createCloudDBUnitOfWork,
   createCloudDBIdSequenceRepository,
   createCloudDBAuditLogRepository,
   createCloudDBSystemConfigRepository,
   createCloudDBCategoryRepository,
+  createCloudDBUserRepository,
+  createCloudDBCustomerRepository,
+  createCloudDBCsAgentRepository,
+  createCloudDBTechnicianRepository,
 };
