@@ -3,7 +3,7 @@
 > **用途**：換 session 時，把本文件整份貼給新的 Claude 即可無縫接手。
 > **維護規則**：每完成一個大階段更新一次。
 > 最後更新：2026-10-17（**P7a-2a 全部完成：T1–T7**，含 T3.5／T3.6／T3.6.1／T6a 系列／T6b；
-> **下一步：P8 第二階段（退款審批／分帳／分類／權限）或 P6（真實支付，等商戶號）**）
+> **下一步：P9 整合測試；P6 真實支付等商戶號**）
 
 ---
 
@@ -32,7 +32,7 @@
 | 6 | **P5** application Use Cases | ✅ **完成（Mock 金流）**：訂單生命週期／退款／分帳／稽核／工單 |
 | 7 | **P6** 支付、分帳、退款 | ⛔ 外部阻斷（等商戶號與分帳權限；P5 已用 Mock 完成邏輯） |
 | 8 | **P7b** 前端接線 | ⏸ 依賴 P5 |
-| 9 | **P8** 後台 Web API | 🟡 **第一階段完成**：`admin-web`（React＋Vite＋Ant Design 5）＋ Mock Server；尚未接真 `admin-api` |
+| 9 | **P8** 後台 Web API | ✅ **Mock 後台完成（無雲模式）**：`admin-web` 第一／第二階段；尚未接真 `admin-api` |
 | 10 | **P9** 整合測試 | ⏸ |
 | 11 | **P10** 上線 | ⏸ |
 
@@ -120,12 +120,12 @@
 | 項目 | 值 |
 |---|---|
 | 分支 | `refactor/hexagonal` |
-| 最後程式 commit | **P8（`903972f`）**；本次為 handoff 更新 |
+| 最後程式 commit | **P8 第二階段（`40a1853`）**；本次為 handoff 更新 |
 | 基線 | `main` = `a747010`（TDesign 模版原始狀態） |
 | Tag | `p0-done`、`p1-done`、`pre-p7a2a-tabbar`、`pre-p7a2a-t35`、`pre-p7a2a-t4`、`pre-p7a2a-t36`、`pre-p7a2a-t361`、`pre-p7a2a-t6a`（**P2／P3／P5／P8 未另打 tag**） |
 | 備份分支 | `backup-origin-main`、`backup-origin-refactor` |
 | 遠端 | `git@github.com:nctgitedIvan/repair_svc_app_wb.git`（**已 push 到 `origin/refactor/hexagonal`**） |
-| 領先／落後 | 以 `git rev-list --count main..HEAD` 為準（本版為 **127**，含本次 handoff commit） |
+| 領先／落後 | 以 `git rev-list --count main..HEAD` 為準（本版為 **129**，含本次 handoff commit） |
 
 > ⚠️ 這一格**每次更新都容易過時**（前兩版都寫錯：23→63→實際 90）。
 > **請一律以指令輸出為準** —— 見 §10 第 1 點。
@@ -316,7 +316,7 @@
 - CloudDB 仍未實跑；切換點在 Composition Root。
 - 完成訂單時若尚未回報到場，`CompleteOrder` 會自動先做 `reportArrival` 再完工（狀態機要求）。
 
-### 6.1.2 🟡 P8 第一階段完成（2026-10-17）
+### 6.1.2 ✅ P8 Mock 後台完成（2026-10-17，第一＋第二階段）
 
 `admin-web/` 是**獨立專案**（不影響根目錄 `npm run verify`）：
 
@@ -324,19 +324,24 @@
 |---|---|
 | 前端 | React 18＋Vite＋Ant Design 5＋React Router＋axios |
 | Mock Server | Node＋Express＋JWT（`admin-web/mock-server`，admin/admin） |
-| 頁面 | 登入、Dashboard、商品（含規格／SKU 編輯）、服務、訂單（詳情／指派）、師傅（審核／收益） |
+| 第一階段 | 登入、Dashboard、商品（含規格／SKU 編輯）、服務、訂單（詳情／指派）、師傅（審核／收益） |
+| 第二階段 | 退款審批、分帳管理（80% 分潤）、分類管理（兩層 CRUD）、權限管理（RBAC 權限組） |
+| 安全 | 5 次失敗鎖 30 分鐘、JWT permissions、寫入稽核（console＋`GET /api/audit-logs`） |
 | 啟動 | `cd admin-web && npm install`；`npm run mock`＋`npm run dev` |
-| 驗證 | `npm run build` 成功；Vite dev server 回 200；Mock API 登入／統計／派單／審核／收益皆正常 |
+| 驗證 | `npm run build` 成功；Vite dev 200；登入鎖定與各 API 實測通過 |
+
+**三端資料一致性（本批）**：
+- 首頁／分類頁／商品列表頁皆使用 `fetchProducts`／`fetchServices`＋`catalogView.toCardModel`
+- 三頁共用 `style/catalog-card.wxss` 的自畫卡片（圖片容器、兩行標題、標籤、價格左／購物車右）
+- 導覽統一帶 `productId`／`serviceId`
 
 **限制**：
-- Mock 資料在記憶體，重啟重置。
-- 尚未接真 `admin-api`／CloudDB；圖片上傳模擬為 data URL／佔位圖。
-- 退款審批、分帳、分類管理、權限組管理屬第二階段。
+- Mock 資料在記憶體，重啟重置；圖片上傳為 data URL／佔位圖。
+- 尚未接真 `admin-api`／CloudDB；正式安全規範見 `docs/01` §4.9。
 
 ### 之後
 
-`P8` 第二階段（退款審批／分帳／分類／權限）
-→ 未來有雲環境：`setup-db` → `probe-tx` → CloudDB 契約測試 → 切換 bootstrap。
+`P9`（整合測試與驗收）→ 未來有雲環境：`setup-db` → `probe-tx` → CloudDB 契約測試 → 切換 bootstrap。
 → P6（真實支付）等商戶號。
 
 ### 每階段的固定流程
@@ -414,8 +419,8 @@
 5. 不要動業務代碼（P7a 階段除外，限計畫列出的檔案）、
    不要動資料庫、不要建階段外的雲函數
 
-目前進度：P4c 完成、P7a-1 完成、**P7a-2a 7/7 全部完成**、**P2 全部完成（無雲環境模式）**、**P3／P5 完成（Mock 金流）**。
-下一步：**P8 第二階段（退款審批／分帳／分類／權限）**；P7a-2b 延後。
+目前進度：P4c 完成、P7a-1 完成、**P7a-2a 7/7 全部完成**、**P2 全部完成（無雲環境模式）**、**P3／P5 完成（Mock 金流）**、**P8 Mock 後台完成**。
+下一步：**P9（整合測試）**；P6 等商戶號；P7a-2b 延後。
 特別注意：T6（商品詳情）要實作「加入購物車」寫入 utils/cart.js ——
 在那之前購物車沒有生產者（T4 的人工驗收需先用 Storage 種子資料）。
 T7（結算頁）必須移除 T4 留下的相容橋接，見 §6.2。
