@@ -1,6 +1,79 @@
-<view class="page">
-  <view class="placeholder">
-    <view class="placeholder__title">訂單</view>
-    <view class="placeholder__desc">訂單列表將於 P7a-2 建置</view>
+<view class="orders-page">
+  <view class="orders-tabs">
+    <view
+      class="orders-tab {{activeTab === item.key ? 'orders-tab--active' : ''}}"
+      wx:for="{{tabs}}"
+      wx:key="key"
+      data-key="{{item.key}}"
+      bindtap="onTabChange"
+    >
+      {{item.label}}
+    </view>
+  </view>
+
+  <view class="orders-loading" wx:if="{{loading}}">載入中…</view>
+
+  <view class="orders-error" wx:if="{{!loading && loadError}}">
+    <view class="orders-error__text">訂單載入失敗</view>
+    <view class="orders-error__btn" bindtap="onRetry">重新載入</view>
+  </view>
+
+  <view class="orders-list" wx:if="{{!loading && !loadError && orders.length > 0}}">
+    <view class="order-card" wx:for="{{orders}}" wx:key="orderId">
+      <view class="order-card__head">
+        <view class="order-card__no">{{item.orderNo}}</view>
+        <view class="order-card__status order-card__status--{{item.status}}">{{item.statusLabel}}</view>
+      </view>
+
+      <view class="order-card__items">
+        <view class="order-card__item" wx:for="{{item.items}}" wx:for-item="goods" wx:key="index">
+          <view class="order-card__item-name">{{goods.nameSnapshot}}</view>
+          <view class="order-card__item-amount">¥{{goods.amountCents / 100}}</view>
+        </view>
+      </view>
+
+      <view class="order-card__meta">
+        <text class="order-card__time">{{item.createdAtText}}</text>
+        <view class="order-card__total">
+          合計
+          <price price="{{item.amounts.totalCents}}" wr-class="order-card__total-num" />
+        </view>
+      </view>
+
+      <view class="order-card__actions">
+        <view class="order-action" data-action="detail" bindtap="onOrderAction">查看詳情</view>
+        <view
+          class="order-action order-action--primary"
+          wx:if="{{item.status === 'PENDING_PAYMENT'}}"
+          data-action="pay"
+          bindtap="onOrderAction"
+        >
+          去支付
+        </view>
+        <view
+          class="order-action"
+          wx:if="{{item.status === 'PENDING_PAYMENT'}}"
+          data-action="cancel"
+          bindtap="onOrderAction"
+        >
+          取消訂單
+        </view>
+        <view
+          class="order-action"
+          wx:if="{{item.status === 'COMPLETED'}}"
+          data-action="refund"
+          bindtap="onOrderAction"
+        >
+          申請退款
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="orders-empty" wx:if="{{!loading && !loadError && orders.length === 0}}">
+    <t-icon name="order" size="96rpx" color="#dddddd" />
+    <view class="orders-empty__text">目前沒有訂單</view>
+    <view class="orders-empty__btn" bindtap="onGotoShop">去逛逛零件</view>
   </view>
 </view>
+<t-toast id="t-toast" />

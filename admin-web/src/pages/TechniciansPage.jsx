@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Button, Drawer, Space, Table, Tag, message } from 'antd';
-import { CheckOutlined, ReloadOutlined, WalletOutlined } from '@ant-design/icons';
+import { Button, Drawer, Form, Input, Modal, Space, Table, Tag, message } from 'antd';
+import { CheckOutlined, EditOutlined, ReloadOutlined, WalletOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import client from '../api/client';
 import { formatMoney } from '../utils/format';
+import { formatPhone, isValidPhone } from '../utils/phone';
 
 const STATUS_COLORS = {
   pending: 'gold',
@@ -24,6 +25,9 @@ export default function TechniciansPage() {
   const [loading, setLoading] = useState(false);
   const [earnings, setEarnings] = useState(null);
   const [earningsLoading, setEarningsLoading] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [form] = Form.useForm();
 
   const load = useCallback(() => {
     setLoading(true);
@@ -62,6 +66,41 @@ export default function TechniciansPage() {
     }
   };
 
+  const openEdit = (record) => {
+    setEditing(record);
+    form.setFieldsValue({
+      name: record.name,
+      phone: record.phone,
+      skillTags: (record.skillTags || []).join(','),
+    });
+  };
+
+  const saveEdit = async () => {
+    const values = await form.validateFields();
+    if (!isValidPhone(values.phone)) {
+      message.error('手機號格式不正確（+853 8 位／+86 11 位）');
+      return;
+    }
+    setSaving(true);
+    try {
+      await client.patch(`/technicians/${editing.technicianId}`, {
+        name: values.name,
+        phone: values.phone,
+        skillTags: String(values.skillTags || '')
+          .split(/[,，]/)
+          .map((value) => value.trim())
+          .filter(Boolean),
+      });
+      message.success('師傅資料已更新');
+      setEditing(null);
+      load();
+    } catch (err) {
+      message.error((err.response && err.response.data && err.response.data.message) || '更新失敗');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const columns = [
     {
       title: '師傅',
@@ -69,7 +108,7 @@ export default function TechniciansPage() {
       render: (_, record) => (
         <div>
           <div>{record.name}</div>
-          <div className="text-muted">{record.phone}</div>
+          <div className="text-muted">{formatPhone(record.phone)}</div>
         </div>
       ),
     },
@@ -120,6 +159,9 @@ export default function TechniciansPage() {
           )}
           <Button type="link" icon={<WalletOutlined />} onClick={() => showEarnings(record)}>
             查看收益
+          </Button>
+          <Button type="link" icon={<EditOutlined />} onClick={() => openEdit(record)}>
+            編輯
           </Button>
         </Space>
       ),
@@ -188,6 +230,33 @@ export default function TechniciansPage() {
           </>
         )}
       </Drawer>
+
+      <Modal
+        title="編輯師傅資料"
+        open={!!editing}
+        onCancel={() => setEditing(null)}
+        onOk={saveEdit}
+        confirmLoading={saving}
+        okText="儲存"
+        cancelText="取消"
+        destroyOnClose
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item name="name" label="姓名" rules={[{ required: true, message: '請輸入姓名' }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item
+            name="phone"
+            label="手機號（支援 +853 澳門／+86 大陸）"
+            rules={[{ required: true, message: '請輸入手機號' }]}
+          >
+            <Input placeholder="+853 6612 3456 或 +86 138 1234 5678" />
+          </Form.Item>
+          <Form.Item name="skillTags" label="技能標籤（逗號分隔）">
+            <Input />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }

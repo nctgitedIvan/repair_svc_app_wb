@@ -15,25 +15,29 @@ const { MaskedPhone, CN_MOBILE_RE } = require('../../../../packages/domain/share
 
 test('遮罩規則', async (t) => {
   await t.test('11 位大陸手機 → 前 3 後 4', () => {
-    assert.equal(MaskedPhone.of('13812345678').masked, '138****5678');
-    assert.equal(MaskedPhone.of('13900001111').masked, '139****1111');
-    assert.equal(MaskedPhone.of('18600001234').masked, '186****1234');
+    assert.equal(MaskedPhone.of('13812345678').masked, '138 **** 5678');
+    assert.equal(MaskedPhone.of('13900001111').masked, '139 **** 1111');
+    assert.equal(MaskedPhone.of('18600001234').masked, '186 **** 1234');
+    assert.equal(MaskedPhone.of('+8613812345678').masked, '138 **** 5678');
+  });
+
+  await t.test('⚠️ 澳門 853 + 8 位 → 853 66** ****', () => {
+    assert.equal(MaskedPhone.of('+85366123456').masked, '853 66** ****');
+    assert.equal(MaskedPhone.of('85366123456').masked, '853 66** ****');
+    assert.equal(MaskedPhone.of('853 6612 3456').masked, '853 66** ****');
   });
 
   await t.test('已遮罩者原樣回傳（**冪等**，不會二次遮罩）', () => {
-    assert.equal(MaskedPhone.of('138****1234').masked, '138****1234');
-    assert.equal(MaskedPhone.of(MaskedPhone.of('13812345678').masked).masked, '138****5678');
+    assert.equal(MaskedPhone.of('138 **** 1234').masked, '138 **** 1234');
+    assert.equal(MaskedPhone.of(MaskedPhone.of('13812345678').masked).masked, '138 **** 5678');
+    assert.equal(MaskedPhone.of('853 66** ****').masked, '853 66** ****');
   });
 
-  await t.test('非標準格式保守遮罩（寧可遮太多）', () => {
-    const masked = MaskedPhone.of('0755-12345678').masked;
-    assert.ok(masked.includes('*'), '必須含遮罩字元');
-    assert.ok(masked.length === '0755-12345678'.length, '長度不變，避免洩漏資訊量以外的線索');
-  });
-
-  await t.test('極短輸入不爆', () => {
-    assert.equal(MaskedPhone.of('12').masked, '**');
-    assert.equal(MaskedPhone.of('1').masked, '*');
+  await t.test('⚠️ 不支援的格式直接拒絕（不猜測區號）', () => {
+    assert.throws(() => MaskedPhone.of('0755-12345678'), Error);
+    assert.throws(() => MaskedPhone.of('12345678'), Error, '純 8 位不是合法格式');
+    assert.throws(() => MaskedPhone.of('12'), Error);
+    assert.throws(() => MaskedPhone.of('1'), Error);
   });
 
   await t.test('拒絕空值', () => {
@@ -45,7 +49,8 @@ test('遮罩規則', async (t) => {
 
 test('⚠️ 型別層保證：無法取回完整號碼', async (t) => {
   await t.test('fromMasked 傳入完整號碼也會被遮罩（不能藉此繞過）', () => {
-    assert.equal(MaskedPhone.fromMasked('13812345678').masked, '138****5678');
+    assert.equal(MaskedPhone.fromMasked('13812345678').masked, '138 **** 5678');
+    assert.equal(MaskedPhone.fromMasked('+85366123456').masked, '853 66** ****');
   });
 
   await t.test('對外唯一欄位是 masked', () => {
@@ -82,8 +87,8 @@ test('值物件語意', async (t) => {
   await t.test('與其他值物件型別不相等（即使內容相同）', () => {
     const { OrderNo } = require('../../../../packages/domain/shared/OrderNo');
     const masked = MaskedPhone.of('13812345678');
-    assert.equal(masked.equals('138****5678'), false);
-    assert.equal(masked.equals({ masked: '138****5678' }), false);
+    assert.equal(masked.equals('138 **** 5678'), false);
+    assert.equal(masked.equals({ masked: '138 **** 5678' }), false);
     assert.equal(masked.equals(new OrderNo('R20261016000001')), false);
   });
 

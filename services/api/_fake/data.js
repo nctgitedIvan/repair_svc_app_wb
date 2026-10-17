@@ -427,7 +427,9 @@ const ORDERS = Object.freeze([
     technicianId: 'tech-1',
     csAgentId: 'cs-1',
     appointmentAt: Date.parse('2026-10-20T06:00:00Z'),
+    createdAt: Date.parse('2026-10-16T02:00:00Z'),
     totalCents: 12500,
+    address: '廣東省深圳市寶安區沙井街道中心路28號',
     items: [
       { itemType: 'service', nameSnapshot: '冷氣維修', amountCents: 10000, feeType: 'SERVICE_FEE' },
       { itemType: 'product', nameSnapshot: '冷媒 R410', amountCents: 2500, feeType: 'MATERIAL_FEE' },
@@ -440,9 +442,37 @@ const ORDERS = Object.freeze([
     technicianId: 'tech-1',
     csAgentId: 'cs-1',
     appointmentAt: Date.parse('2026-10-18T02:00:00Z'),
+    createdAt: Date.parse('2026-10-16T03:00:00Z'),
     completedAt: Date.parse('2026-10-18T04:00:00Z'),
     totalCents: 6000,
+    address: '廣東省深圳市寶安區沙井街道中心路28號',
     items: [{ itemType: 'service', nameSnapshot: '冷氣清洗', amountCents: 6000, feeType: 'SERVICE_FEE' }],
+  },
+  {
+    orderNo: 'R20261017000003',
+    status: 'PENDING_PAYMENT', // 值 10
+    customerId: 'cust-1',
+    technicianId: null,
+    csAgentId: null,
+    appointmentAt: Date.parse('2026-10-22T06:00:00Z'),
+    createdAt: Date.parse('2026-10-17T01:00:00Z'),
+    totalCents: 1600,
+    address: '廣東省深圳市寶安區沙井街道中心路28號',
+    items: [
+      { itemType: 'product', nameSnapshot: '排水管接頭', amountCents: 1600, feeType: 'MATERIAL_FEE' },
+    ],
+  },
+  {
+    orderNo: 'R20261017000004',
+    status: 'IN_SERVICE', // 值 50
+    customerId: 'cust-1',
+    technicianId: 'tech-1',
+    csAgentId: 'cs-1',
+    appointmentAt: Date.parse('2026-10-19T02:00:00Z'),
+    createdAt: Date.parse('2026-10-17T02:00:00Z'),
+    totalCents: 8000,
+    address: '廣東省深圳市寶安區沙井街道中心路28號',
+    items: [{ itemType: 'service', nameSnapshot: '水管疏通', amountCents: 8000, feeType: 'SERVICE_FEE' }],
   },
 ]);
 

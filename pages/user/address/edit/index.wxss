@@ -93,3 +93,23 @@ page .divider-line {
   --td-input-vertical-padding: 12px;
   --td-input-bg-color: #f3f3f3;
 }
+
+/* 澳門／大陸區號 + 手機號 */
+.phone-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.phone-code {
+  flex: none;
+  margin-right: 16rpx;
+  color: #333333;
+  font-size: 28rpx;
+  white-space: nowrap;
+}
+
+.phone-input {
+  flex: 1;
+  min-width: 0;
+}

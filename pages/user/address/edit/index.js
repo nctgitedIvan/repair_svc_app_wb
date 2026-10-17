@@ -3,7 +3,8 @@ import { fetchDeliveryAddress } from '../../../../services/address/fetchAddress'
 import { areaData } from '../../../../config/index';
 import { resolveAddress, rejectAddress } from '../../../../services/address/list';
 
-const innerPhoneReg = '^1(?:3\\d|4[4-9]|5[0-35-9]|6[67]|7[0-8]|8\\d|9\\d)\\d{8}$';
+const phoneUtil = require('../../../../utils/phone');
+
 const innerNameReg = '^[a-zA-Z\\d\\u4e00-\\u9fa5]+$';
 const labelsOptions = [
   { id: 0, name: '家' },
@@ -16,6 +17,11 @@ Page({
   },
   externalClasses: ['theme-wrapper-class'],
   data: {
+    phoneOptions: phoneUtil.COUNTRY_OPTIONS,
+    phoneCountryCode: phoneUtil.COUNTRY.MACAU,
+    countryIndex: 0,
+    phoneMaxLength: 8,
+    phonePlaceholder: '6612 3456',
     locationState: {
       labelIndex: null,
       addressId: '',
@@ -67,13 +73,26 @@ Page({
   },
   getAddressDetail(id) {
     fetchDeliveryAddress(id).then((detail) => {
-      this.setData({ locationState: detail }, () => {
-        const { isLegal, tips } = this.onVerifyInputLegal();
-        this.setData({
-          submitActive: isLegal,
-        });
-        this.privateData.verifyTips = tips;
-      });
+      const split = phoneUtil.splitPhone(detail.phone);
+      const optionIndex = this.data.phoneOptions.findIndex((option) => option.value === split.countryCode);
+      const option = phoneUtil.optionOf(split.countryCode);
+
+      this.setData(
+        {
+          locationState: { ...detail, phone: split.nationalNumber },
+          phoneCountryCode: split.countryCode,
+          countryIndex: optionIndex >= 0 ? optionIndex : 0,
+          phoneMaxLength: option.digits,
+          phonePlaceholder: option.placeholder,
+        },
+        () => {
+          const { isLegal, tips } = this.onVerifyInputLegal();
+          this.setData({
+            submitActive: isLegal,
+          });
+          this.privateData.verifyTips = tips;
+        },
+      );
     });
   },
   onInputValue(e) {
@@ -163,10 +182,7 @@ Page({
 
   onVerifyInputLegal() {
     const { name, phone, detailAddress, districtName } = this.data.locationState;
-    const prefixPhoneReg = String(this.properties.phoneReg || innerPhoneReg);
-    const prefixNameReg = String(this.properties.nameReg || innerNameReg);
-    const nameRegExp = new RegExp(prefixNameReg);
-    const phoneRegExp = new RegExp(prefixPhoneReg);
+    const nameRegExp = new RegExp(innerNameReg);
 
     if (!name || !name.trim()) {
       return {
@@ -186,10 +202,13 @@ Page({
         tips: '请填写手机号',
       };
     }
-    if (!phoneRegExp.test(phone)) {
+    if (!phoneUtil.isValidPhone(`+${this.data.phoneCountryCode}${phone}`)) {
       return {
         isLegal: false,
-        tips: '请填写正确的手机号',
+        tips:
+          this.data.phoneCountryCode === phoneUtil.COUNTRY.MACAU
+            ? '请填写正确的澳门手机号（8 位）'
+            : '请填写正确的大陆手机号（11 位）',
       };
     }
     if (!districtName || !districtName.trim()) {
@@ -294,6 +313,24 @@ Page({
       });
     });
   },
+  onCountryChange(e) {
+    const index = Number(e.detail.value);
+    const option = this.data.phoneOptions[index] || this.data.phoneOptions[0];
+    this.setData(
+      {
+        countryIndex: index,
+        phoneCountryCode: option.value,
+        phoneMaxLength: option.digits,
+        phonePlaceholder: option.placeholder,
+        'locationState.phone': '',
+      },
+      () => {
+        const { isLegal, tips } = this.onVerifyInputLegal();
+        this.setData({ submitActive: isLegal });
+        this.privateData.verifyTips = tips;
+      },
+    );
+  },
   formSubmit() {
     const { submitActive } = this.data;
     if (!submitActive) {
@@ -307,6 +344,7 @@ Page({
       return;
     }
     const { locationState } = this.data;
+    const phone = `+${this.data.phoneCountryCode}${locationState.phone}`;
 
     this.hasSava = true;
 
@@ -316,7 +354,7 @@ Page({
       authToken: null,
       id: locationState.addressId,
       addressId: locationState.addressId,
-      phone: locationState.phone,
+      phone,
       name: locationState.name,
       countryName: locationState.countryName,
       countryCode: locationState.countryCode,
@@ -340,9 +378,17 @@ Page({
   getWeixinAddress(e) {
     const { locationState } = this.data;
     const weixinAddress = e.detail;
+    const split = phoneUtil.splitPhone(weixinAddress.phone);
+    const option = phoneUtil.optionOf(split.countryCode);
+    const optionIndex = this.data.phoneOptions.findIndex((item) => item.value === split.countryCode);
+
     this.setData(
       {
-        locationState: { ...locationState, ...weixinAddress },
+        locationState: { ...locationState, ...weixinAddress, phone: split.nationalNumber },
+        phoneCountryCode: split.countryCode,
+        countryIndex: optionIndex >= 0 ? optionIndex : 0,
+        phoneMaxLength: option.digits,
+        phonePlaceholder: option.placeholder,
       },
       () => {
         const { isLegal, tips } = this.onVerifyInputLegal();

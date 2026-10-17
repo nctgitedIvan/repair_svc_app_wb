@@ -14,6 +14,7 @@ import { ReloadOutlined, SendOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import client from '../api/client';
 import { formatMoney, STATUS_COLORS } from '../utils/format';
+import { formatPhone } from '../utils/phone';
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -68,7 +69,7 @@ export default function OrdersPage() {
       render: (_, record) => (
         <div>
           <div>{record.customerName}</div>
-          <div className="text-muted">{record.customerPhone}</div>
+          <div className="text-muted">{formatPhone(record.customerPhone)}</div>
         </div>
       ),
     },
@@ -151,7 +152,7 @@ export default function OrdersPage() {
                 <Tag color={STATUS_COLORS[detail.status]}>{detail.statusLabel}</Tag>
               </Descriptions.Item>
               <Descriptions.Item label="客戶">
-                {detail.customerName}（{detail.customerPhone}）
+                {detail.customerName}（{formatPhone(detail.customerPhone)}）
               </Descriptions.Item>
               <Descriptions.Item label="師傅">{detail.technicianName || '未指派'}</Descriptions.Item>
               <Descriptions.Item label="地址">{detail.address}</Descriptions.Item>

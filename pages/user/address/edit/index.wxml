@@ -27,18 +27,28 @@
           />
         </t-cell>
         <t-cell class="form-cell" t-class-title="t-cell-title" title="手机号">
-          <t-input
-            slot="note"
-            class="t-input"
-            t-class="field-text"
-            borderless
-            type="number"
-            value="{{locationState.phone}}"
-            maxlength="11"
-            placeholder="联系您的手机号"
-            bind:change="onInputValue"
-            data-item="phone"
-          />
+          <view slot="note" class="phone-row">
+            <picker
+              mode="selector"
+              range="{{phoneOptions}}"
+              range-key="label"
+              value="{{countryIndex}}"
+              bindchange="onCountryChange"
+            >
+              <view class="phone-code">{{phoneOptions[countryIndex].label}}</view>
+            </picker>
+            <t-input
+              class="t-input phone-input"
+              t-class="field-text"
+              borderless
+              type="number"
+              value="{{locationState.phone}}"
+              maxlength="{{phoneMaxLength}}"
+              placeholder="{{phonePlaceholder}}"
+              bind:change="onInputValue"
+              data-item="phone"
+            />
+          </view>
         </t-cell>
         <t-cell class="form-cell" t-class-title="t-cell-title" title="地区">
           <t-input

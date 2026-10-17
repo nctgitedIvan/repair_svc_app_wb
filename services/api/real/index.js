@@ -20,6 +20,8 @@ function notImplemented(name) {
 }
 
 export const getMyRole = notImplemented('getMyRole');
+export const fetchHome = notImplemented('fetchHome');
+export const fetchUserProfile = notImplemented('fetchUserProfile');
 export const fetchCategories = notImplemented('fetchCategories');
 export const fetchServices = notImplemented('fetchServices');
 export const fetchServiceDetail = notImplemented('fetchServiceDetail');
@@ -27,6 +29,7 @@ export const fetchProducts = notImplemented('fetchProducts');
 export const fetchProductDetail = notImplemented('fetchProductDetail');
 export const fetchProductCatalogIndex = notImplemented('fetchProductCatalogIndex');
 export const fetchMyOrders = notImplemented('fetchMyOrders');
+export const fetchOrders = notImplemented('fetchOrders');
 export const fetchOrderDetail = notImplemented('fetchOrderDetail');
 export const fetchTechnicianTasks = notImplemented('fetchTechnicianTasks');
 export const fetchTechnicianEarnings = notImplemented('fetchTechnicianEarnings');

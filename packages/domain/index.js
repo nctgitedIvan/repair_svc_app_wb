@@ -18,6 +18,7 @@ const assertions = require('./shared/assertions');
 
 // ── 領域值物件 ──
 const { MaskedPhone } = require('./shared/MaskedPhone');
+const { PhoneNumber, COUNTRY_CODE } = require('./shared/PhoneNumber');
 const { Address } = require('./shared/Address');
 const { AddressView, DisclosureLevel } = require('./shared/AddressView');
 const { OrderNo } = require('./shared/OrderNo');
@@ -72,6 +73,8 @@ module.exports = {
   ...assertions,
   // 值物件
   MaskedPhone,
+  PhoneNumber,
+  COUNTRY_CODE,
   Address,
   AddressView,
   DisclosureLevel,

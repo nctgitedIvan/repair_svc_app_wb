@@ -1,269 +1,111 @@
-import { fetchUserCenter } from '../../services/usercenter/fetchUsercenter';
 import Toast from 'tdesign-miniprogram/toast/index';
+import { fetchOrders, fetchUserProfile } from '../../services/api/index';
+import { formatPhone } from '../../utils/phone';
+
+const IN_PROGRESS_STATUSES = [
+  'ASSIGNED_PENDING_ACCEPT',
+  'ACCEPTED_PENDING_VISIT',
+  'IN_SERVICE',
+  'PENDING_ACCEPTANCE',
+  'DISPUTED',
+];
+
+const MENU_ITEMS = [
+  { type: 'favorite', title: '我的收藏', icon: 'star' },
+  { type: 'inquiry', title: '我的詢問', icon: 'chat' },
+  { type: 'address', title: '地址管理', icon: 'location' },
+  { type: 'service', title: '聯繫客服', icon: 'service' },
+  { type: 'setting', title: '設置', icon: 'setting' },
+];
 
 /**
- * 「我的」的選單。
+ * 我的（tabBar 第 5 項）。
  *
- * ⚠️ **T6a.1-4 新增「我的收藏」與「設置」兩個入口。**
- *
- * ⚠️ **這一頁尚未全面改造**（那是 **P7a-2b** 的範圍，見 `docs/P7a-2a-計畫.md`）：
- *    目前仍留著電商時代的「优惠券」「积分」（簡體、且優惠券依 A7 已下線），
- *    以及「帮助中心」的佔位 Toast。P7a-2b 會一併整理（改為訂單／地址／工單入口）。
- *    本批**只新增、不刪除**，避免把兩件事混在一起。
+ * 資料一律來自 `services/api`：`fetchUserProfile()`／`fetchOrders()`。
+ * 訂單宮格只做「帶 tab 跳轉」：把目標 tab 寫進 Storage，訂單頁 onShow 讀取。
  */
-const menuData = [
-  [
-    {
-      title: '收货地址',
-      tit: '',
-      url: '',
-      type: 'address',
-    },
-    {
-      title: '我的收藏',
-      tit: '',
-      url: '',
-      type: 'favorite',
-    },
-    {
-      title: '我的詢問',
-      tit: '',
-      url: '',
-      type: 'inquiry',
-    },
-    {
-      title: '設置',
-      tit: '',
-      url: '',
-      type: 'setting',
-    },
-  ],
-  [
-    {
-      title: '优惠券',
-      tit: '',
-      url: '',
-      type: 'coupon',
-    },
-    {
-      title: '帮助中心',
-      tit: '',
-      url: '',
-      type: 'help-center',
-    },
-    {
-      title: '客服热线',
-      tit: '',
-      url: '',
-      type: 'service',
-      icon: 'service',
-    },
-  ],
-];
-
-const orderTagInfos = [
-  {
-    title: '待付款',
-    iconName: 'wallet',
-    orderNum: 0,
-    tabType: 5,
-    status: 1,
-  },
-  {
-    title: '待发货',
-    iconName: 'deliver',
-    orderNum: 0,
-    tabType: 10,
-    status: 1,
-  },
-  {
-    title: '待收货',
-    iconName: 'package',
-    orderNum: 0,
-    tabType: 40,
-    status: 1,
-  },
-  {
-    title: '待评价',
-    iconName: 'comment',
-    orderNum: 0,
-    tabType: 60,
-    status: 1,
-  },
-  {
-    title: '退款/售后',
-    iconName: 'exchang',
-    orderNum: 0,
-    tabType: 0,
-    status: 1,
-  },
-];
-
-const getDefaultData = () => ({
-  showMakePhone: false,
-  userInfo: {
-    avatarUrl: '',
-    nickName: '正在登录...',
-    phoneNumber: '',
-  },
-  menuData,
-  orderTagInfos,
-  customerServiceInfo: {},
-  currAuthStep: 1,
-  showKefu: true,
-  versionNo: '',
-});
-
 Page({
-  data: getDefaultData(),
-
-  onLoad() {
-    this.getVersionInfo();
+  data: {
+    ready: false,
+    profile: {},
+    orderEntries: [],
+    menuItems: MENU_ITEMS,
   },
 
   onShow() {
-    this.getTabBar().init();
-    this.init();
-  },
-  onPullDownRefresh() {
-    this.init();
+    const tabBar = this.getTabBar && this.getTabBar();
+    if (tabBar) tabBar.init();
+    this.load();
   },
 
-  init() {
-    this.fetUseriInfoHandle();
-  },
+  async load() {
+    try {
+      const [profile, orders] = await Promise.all([fetchUserProfile(), fetchOrders()]);
+      const list = orders.list || [];
 
-  fetUseriInfoHandle() {
-    fetchUserCenter().then(({ userInfo, countsData, orderTagInfos: orderInfo, customerServiceInfo }) => {
-      // eslint-disable-next-line no-unused-expressions
-      menuData?.[0].forEach((v) => {
-        countsData.forEach((counts) => {
-          if (counts.type === v.type) {
-            // eslint-disable-next-line no-param-reassign
-            v.tit = counts.num;
-          }
-        });
-      });
-      const info = orderTagInfos.map((v, index) => ({
-        ...v,
-        ...orderInfo[index],
-      }));
+      const counts = {
+        pendingPayment: list.filter((order) => order.status === 'PENDING_PAYMENT').length,
+        pendingAssign: list.filter((order) => order.status === 'PAID_PENDING_ASSIGN').length,
+        inProgress: list.filter((order) => IN_PROGRESS_STATUSES.includes(order.status)).length,
+        refund: list.filter((order) => order.status === 'COMPLETED').length,
+      };
+
       this.setData({
-        userInfo,
-        menuData,
-        orderTagInfos: info,
-        customerServiceInfo,
-        currAuthStep: 2,
+        ready: true,
+        profile: {
+          ...profile,
+          displayPhone: formatPhone(profile.phone),
+        },
+        orderEntries: [
+          { key: 'pendingPayment', label: '待付款', icon: 'wallet', count: counts.pendingPayment },
+          { key: 'pendingAssign', label: '待派單', icon: 'deliver', count: counts.pendingAssign },
+          { key: 'inProgress', label: '進行中', icon: 'package', count: counts.inProgress },
+          { key: 'refund', label: '退款/售後', icon: 'exchang', count: counts.refund },
+        ],
       });
-      wx.stopPullDownRefresh();
-    });
-  },
-
-  onClickCell({ currentTarget }) {
-    const { type } = currentTarget.dataset;
-
-    switch (type) {
-      case 'address': {
-        wx.navigateTo({ url: '/pages/user/address/list/index' });
-        break;
-      }
-      case 'service': {
-        this.openMakePhone();
-        break;
-      }
-      // T6a.1-4
-      case 'favorite': {
-        wx.navigateTo({ url: '/pages/user/favorites/index' });
-        break;
-      }
-      // T6b
-      case 'inquiry': {
-        wx.navigateTo({ url: '/pages/user/inquiries/index' });
-        break;
-      }
-      case 'setting': {
-        wx.navigateTo({ url: '/pages/user/settings/index' });
-        break;
-      }
-      case 'help-center': {
-        Toast({
-          context: this,
-          selector: '#t-toast',
-          message: '你点击了帮助中心',
-          icon: '',
-          duration: 1000,
-        });
-        break;
-      }
-      case 'point': {
-        Toast({
-          context: this,
-          selector: '#t-toast',
-          message: '你点击了积分菜单',
-          icon: '',
-          duration: 1000,
-        });
-        break;
-      }
-      case 'coupon': {
-        wx.navigateTo({ url: '/pages/coupon/coupon-list/index' });
-        break;
-      }
-      default: {
-        Toast({
-          context: this,
-          selector: '#t-toast',
-          message: '未知跳转',
-          icon: '',
-          duration: 1000,
-        });
-        break;
-      }
+    } catch (err) {
+      console.warn('[usercenter] 載入個人資料失敗', err);
+      this.setData({ ready: true });
+      Toast({ context: this, selector: '#t-toast', message: '資料載入失敗，請稍後再試', icon: '' });
     }
   },
 
-  jumpNav(e) {
-    const status = e.detail.tabType;
+  onOrderTap(e) {
+    const { key } = e.currentTarget.dataset;
+    const tabMap = {
+      pendingPayment: 'pending_payment',
+      pendingAssign: 'in_progress',
+      inProgress: 'in_progress',
+      refund: 'completed',
+    };
+    wx.setStorageSync('orders.activeTab', tabMap[key] || 'all');
+    wx.switchTab({ url: '/pages/orders/index' });
+  },
 
-    if (status === 0) {
-      wx.navigateTo({ url: '/pages/order/after-service-list/index' });
-    } else {
-      wx.navigateTo({ url: `/pages/order/order-list/index?status=${status}` });
+  onAllOrders() {
+    wx.setStorageSync('orders.activeTab', 'all');
+    wx.switchTab({ url: '/pages/orders/index' });
+  },
+
+  onMenuTap(e) {
+    const { type } = e.currentTarget.dataset;
+    const routes = {
+      favorite: '/pages/user/favorites/index',
+      inquiry: '/pages/user/inquiries/index',
+      address: '/pages/user/address/list/index',
+      setting: '/pages/user/settings/index',
+    };
+    if (routes[type]) {
+      wx.navigateTo({ url: routes[type] });
+      return;
     }
-  },
-
-  jumpAllOrder() {
-    wx.navigateTo({ url: '/pages/order/order-list/index' });
-  },
-
-  openMakePhone() {
-    this.setData({ showMakePhone: true });
-  },
-
-  closeMakePhone() {
-    this.setData({ showMakePhone: false });
-  },
-
-  call() {
-    wx.makePhoneCall({
-      phoneNumber: this.data.customerServiceInfo.servicePhone,
-    });
-  },
-
-  gotoUserEditPage() {
-    const { currAuthStep } = this.data;
-    if (currAuthStep === 2) {
-      wx.navigateTo({ url: '/pages/user/person-info/index' });
-    } else {
-      this.fetUseriInfoHandle();
+    if (type === 'service') {
+      const phone = this.data.profile && this.data.profile.customerServicePhone;
+      if (phone && wx.makePhoneCall) {
+        wx.makePhoneCall({ phoneNumber: phone, fail: () => {} });
+      } else {
+        Toast({ context: this, selector: '#t-toast', message: '客服熱線建置中', icon: '' });
+      }
     }
-  },
-
-  getVersionInfo() {
-    const versionInfo = wx.getAccountInfoSync();
-    const { version, envVersion = __wxConfig } = versionInfo.miniProgram;
-    this.setData({
-      versionNo: envVersion === 'release' ? version : envVersion,
-    });
   },
 });

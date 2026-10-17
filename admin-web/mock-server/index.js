@@ -398,6 +398,29 @@ app.get('/api/technicians/:id/earnings', (req, res) => {
   });
 });
 
+app.patch('/api/technicians/:id', (req, res) => {
+  const technician = technicians.find((entry) => entry.technicianId === req.params.id);
+  if (!technician) return res.status(404).json({ message: '師傅不存在' });
+
+  const body = req.body || {};
+  if (body.name !== undefined) technician.name = body.name;
+  if (body.phone !== undefined) {
+    if (!isValidPhone(body.phone)) {
+      return res.status(400).json({ message: '手機號格式不正確（+853 8 位／+86 11 位）' });
+    }
+    technician.phone = body.phone;
+  }
+  if (Array.isArray(body.skillTags)) technician.skillTags = body.skillTags;
+  return res.json(technician);
+});
+
+function isValidPhone(phone) {
+  const raw = String(phone || '').replace(/[\s\-()]/g, '').replace(/^\+/, '');
+  if (/^853\d{8}$/.test(raw)) return true;
+  if (/^86\d{11}$/.test(raw)) return /^1[3-9]\d{9}$/.test(raw.slice(2));
+  return /^1[3-9]\d{9}$/.test(raw);
+}
+
 // ── 退款審批 ──
 function refundView(refund) {
   const order = orders.find((entry) => entry.orderId === refund.orderId);

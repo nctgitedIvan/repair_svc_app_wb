@@ -63,7 +63,7 @@ test('OrderQueryPort：角色化查詢與脫敏', async (t) => {
       { id: 'usr-t1', role: 'technician', technicianId: 'tech-1' },
       ORDER_ID,
     );
-    assert.equal(view.customerPhone, '138****5678');
+    assert.equal(view.customerPhone, '138 **** 5678');
     assert.equal(view.customerPhoneLevel, 'MASKED');
     assert.equal(view.address.level, 'DISTRICT');
     assert.equal(view.address.detailAddress, null);
@@ -77,7 +77,7 @@ test('OrderQueryPort：角色化查詢與脫敏', async (t) => {
     );
     assert.equal(view.address.level, 'FULL');
     assert.equal(view.address.detailAddress, order.address.detailAddress);
-    assert.equal(view.customerPhone, '138****5678', '師傅電話永遠遮罩，沒有例外');
+    assert.equal(view.customerPhone, '138 **** 5678', '師傅電話永遠遮罩，沒有例外');
   });
 
   await t.test('非指派師傅：null', async () => {

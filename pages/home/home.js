@@ -1,6 +1,5 @@
 import Toast from 'tdesign-miniprogram/toast/index';
-import { fetchHome } from '../../services/home/home';
-import { fetchProducts, fetchServices } from '../../services/api/index';
+import { fetchHome, fetchProducts, fetchServices } from '../../services/api/index';
 
 const catalogView = require('../../utils/catalogView.js');
 const cartRules = require('../../utils/cart.js');
@@ -20,6 +19,8 @@ const { CartCode } = require('../../utils/cartCodes.js');
 Page({
   data: {
     imgSrcs: [],
+    announcement: '',
+    quickEntries: [],
     productItems: [],
     serviceItems: [],
     pageLoading: false,
@@ -56,8 +57,13 @@ Page({
     this.setData({ pageLoading: true });
 
     fetchHome()
-      .then(({ swiper }) => {
-        this.setData({ imgSrcs: swiper || [], pageLoading: false });
+      .then(({ swiper, announcement, quickEntries }) => {
+        this.setData({
+          imgSrcs: swiper || [],
+          announcement: announcement || '',
+          quickEntries: quickEntries || [],
+          pageLoading: false,
+        });
       })
       .catch(() => {
         this.setData({ pageLoading: false });
@@ -145,6 +151,22 @@ Page({
       return;
     }
     Toast({ context: this, selector: '#t-toast', message: '已加入購物車', icon: '' });
+  },
+
+  onQuickEntryTap(e) {
+    const { key } = e.currentTarget.dataset;
+    const tabRoutes = {
+      category: '/pages/category/index',
+      cart: '/pages/cart/index',
+      orders: '/pages/orders/index',
+    };
+    if (tabRoutes[key]) {
+      wx.switchTab({ url: tabRoutes[key] });
+      return;
+    }
+    if (key === 'favorites') {
+      wx.navigateTo({ url: '/pages/user/favorites/index' });
+    }
   },
 
   navToSearchPage() {

@@ -1,5 +1,7 @@
 import dayjs from 'dayjs';
 
+const phoneUtil = require('./phone');
+
 const formatTime = (date, template) => dayjs(date).format(template);
 
 /**
@@ -99,28 +101,18 @@ const rpx2px = (rpx, round = false) => {
 };
 
 /**
- * 手机号码*加密函数
+ * 手机号码*加密函数（支援澳門 853／大陸 86）
  * @param {string} phone 电话号
- * @returns
+ * @returns {string}
  */
-const phoneEncryption = (phone) => {
-  return phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
-};
-
-// 内置手机号正则字符串
-const innerPhoneReg =
-  '^1(?:3\\d|4[4-9]|5[0-35-9]|6[67]|7[0-8]|8\\d|9\\d)\\d{8}$';
+const phoneEncryption = (phone) => phoneUtil.maskPhone(phone);
 
 /**
- * 手机号正则校验
+ * 手机号正则校验（853+8／86+11／純 11 位）
  * @param phone 手机号
- * @param phoneReg 正则字符串
  * @returns true - 校验通过 false - 校验失败
  */
-const phoneRegCheck = (phone) => {
-  const phoneRegExp = new RegExp(innerPhoneReg);
-  return phoneRegExp.test(phone);
-};
+const phoneRegCheck = (phone) => phoneUtil.isValidPhone(phone);
 
 module.exports = {
   formatTime,

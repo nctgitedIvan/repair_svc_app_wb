@@ -1,4 +1,8 @@
 {
   "navigationBarTitleText": "訂單",
-  "usingComponents": {}
+  "usingComponents": {
+    "t-icon": "tdesign-miniprogram/icon/icon",
+    "t-toast": "tdesign-miniprogram/toast/toast",
+    "price": "/components/price/index"
+  }
 }

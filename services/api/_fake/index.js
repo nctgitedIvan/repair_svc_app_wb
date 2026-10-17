@@ -18,6 +18,50 @@ import {
 
 const DELAY_MS = 120;
 
+const ORDER_STATUS_LABELS = {
+  PENDING_PAYMENT: '待付款',
+  PAID_PENDING_ASSIGN: '待派單',
+  ASSIGNED_PENDING_ACCEPT: '已派單待接單',
+  ACCEPTED_PENDING_VISIT: '已接單待上門',
+  IN_SERVICE: '服務中',
+  PENDING_ACCEPTANCE: '待驗收',
+  COMPLETED: '已完成',
+  DISPUTED: '爭議中',
+  CANCELED_UNPAID: '已取消（未付款）',
+  CANCELED_PAID_REFUNDED: '已取消（已退款）',
+  VOIDED: '已作廢',
+};
+
+function toOrderDto(order) {
+  const serviceFeeCents = order.items
+    .filter((item) => item.feeType === 'SERVICE_FEE')
+    .reduce((sum, item) => sum + item.amountCents, 0);
+  const materialFeeCents = order.items
+    .filter((item) => item.feeType === 'MATERIAL_FEE')
+    .reduce((sum, item) => sum + item.amountCents, 0);
+
+  return {
+    orderId: order.orderNo,
+    orderNo: order.orderNo,
+    status: order.status,
+    statusLabel: ORDER_STATUS_LABELS[order.status] || order.status,
+    customerId: order.customerId,
+    technicianId: order.technicianId || null,
+    csAgentId: order.csAgentId || null,
+    amounts: {
+      serviceFeeCents,
+      materialFeeCents,
+      totalCents: order.totalCents,
+      currency: 'CNY',
+    },
+    items: order.items,
+    address: order.address || '',
+    appointmentAt: order.appointmentAt || null,
+    createdAt: order.createdAt || null,
+    completedAt: order.completedAt || null,
+  };
+}
+
 /** 模擬網路延遲，讓載入狀態真的會出現（否則 UI 的 loading 永遠測不到） */
 function delay(ms = DELAY_MS) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -104,10 +148,45 @@ export async function fetchServiceDetail(serviceId) {
 export async function fetchMyOrders() {
   await delay();
   return {
-    list: ORDERS.map((o) => ({
-      ...o,
-      customer: CUSTOMERS[o.customerId], // 客戶本人可見完整資料
+    list: ORDERS.map((order) => ({
+      ...toOrderDto(order),
+      customer: CUSTOMERS[order.customerId], // 客戶本人可見完整資料
     })),
+  };
+}
+
+/** 訂單列表（與 fetchMyOrders 同義；頁面層統一用這個名字） */
+export const fetchOrders = fetchMyOrders;
+
+/** 目前客戶的個人資料 */
+export async function fetchUserProfile() {
+  await delay(60);
+  const customer = CUSTOMERS['cust-1'];
+  return {
+    userId: customer.userId,
+    nickname: customer.name,
+    avatarUrl: '',
+    phone: customer.phone,
+    role: 'customer',
+    customerServicePhone: '400-800-1234',
+  };
+}
+
+/** 首頁：Banner／公告／快捷入口 */
+export async function fetchHome() {
+  await delay(60);
+  return {
+    announcement: '平台試營運中：澳門（+853）與大陸（+86）手機號皆可下單',
+    swiper: [
+      'https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-2a.png',
+      'https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-3a.png',
+    ],
+    quickEntries: [
+      { key: 'category', title: '分類', icon: 'app' },
+      { key: 'orders', title: '訂單', icon: 'order' },
+      { key: 'cart', title: '購物車', icon: 'cart' },
+      { key: 'favorites', title: '收藏', icon: 'star' },
+    ],
   };
 }
 

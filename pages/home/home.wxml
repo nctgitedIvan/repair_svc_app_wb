@@ -29,6 +29,26 @@
 </view>
 
 <view class="home-page-container">
+  <view class="home-announcement" wx:if="{{announcement}}">
+    <t-icon name="notification" size="32rpx" color="#fa4126" />
+    <text class="home-announcement__text">{{announcement}}</text>
+  </view>
+
+  <view class="home-quick" wx:if="{{quickEntries.length > 0}}">
+    <view
+      class="home-quick__item"
+      wx:for="{{quickEntries}}"
+      wx:key="key"
+      data-key="{{item.key}}"
+      bindtap="onQuickEntryTap"
+    >
+      <view class="home-quick__icon">
+        <t-icon name="{{item.icon}}" size="44rpx" color="#fa4126" />
+      </view>
+      <view class="home-quick__text">{{item.title}}</view>
+    </view>
+  </view>
+
   <view class="home-section" wx:if="{{productItems.length > 0}}">
     <view class="home-section__title">常用零件</view>
     <view class="catalog-grid">
