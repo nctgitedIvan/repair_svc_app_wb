@@ -34,6 +34,7 @@ const { InMemoryProductRepository } = require('./inmemory/InMemoryProductReposit
 const { InMemoryCartRepository } = require('./inmemory/InMemoryCartRepository');
 const { InMemoryFavoriteRepository } = require('./inmemory/InMemoryFavoriteRepository');
 const { InMemoryInquiryRepository } = require('./inmemory/InMemoryInquiryRepository');
+const { InMemoryOrderItemRepository } = require('./inmemory/InMemoryOrderItemRepository');
 const { createCloudDBClient } = require('./clouddb/CloudDBClient');
 const { createCloudDBUnitOfWork } = require('./clouddb/CloudDBUnitOfWork');
 const { createCloudDBIdSequenceRepository } = require('./clouddb/CloudDBIdSequenceRepository');
@@ -49,6 +50,8 @@ const { createCloudDBProductRepository } = require('./clouddb/CloudDBProductRepo
 const { createCloudDBCartRepository } = require('./clouddb/CloudDBCartRepository');
 const { createCloudDBFavoriteRepository } = require('./clouddb/CloudDBFavoriteRepository');
 const { createCloudDBInquiryRepository } = require('./clouddb/CloudDBInquiryRepository');
+const { createCloudDBOrderRepository } = require('./clouddb/CloudDBOrderRepository');
+const { createCloudDBOrderItemRepository } = require('./clouddb/CloudDBOrderItemRepository');
 
 module.exports = {
   SystemClockAdapter,
@@ -70,6 +73,7 @@ module.exports = {
   InMemoryCartRepository,
   InMemoryFavoriteRepository,
   InMemoryInquiryRepository,
+  InMemoryOrderItemRepository,
   createCloudDBClient,
   createCloudDBUnitOfWork,
   createCloudDBIdSequenceRepository,
@@ -85,4 +89,6 @@ module.exports = {
   createCloudDBCartRepository,
   createCloudDBFavoriteRepository,
   createCloudDBInquiryRepository,
+  createCloudDBOrderRepository,
+  createCloudDBOrderItemRepository,
 };

@@ -42,8 +42,8 @@ class InMemoryOrderRepository {
     const existing = this.#rows.get(order.id);
     const row = order.toPersistence();
 
-    // 樂觀鎖：與真實 adapter 行為一致
-    if (existing && existing.version !== order.version) {
+    // 樂觀鎖：存檔的 version 必須是「現存版本 + 1」
+    if (existing && existing.version !== order.version - 1) {
       throw new ConcurrencyConflict('orders', order.version, existing.version);
     }
 

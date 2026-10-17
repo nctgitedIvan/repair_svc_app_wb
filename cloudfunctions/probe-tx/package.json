@@ -7,5 +7,5 @@
   "dependencies": {
     "wx-server-sdk": "latest"
   },
-  "repairSharedHash": "ca11229d9b4c7e13515bac6c596968972a476d76616c0f58c1216536cbf35c06"
+  "repairSharedHash": "18f880fbaa6594d488c1298231f1104e6cb4981d979589ffa8537614aded6801"
 }

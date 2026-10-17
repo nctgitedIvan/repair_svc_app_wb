@@ -26,6 +26,7 @@ const { ProductRepository } = require('./ProductRepository');
 const { CartRepository } = require('./CartRepository');
 const { FavoriteRepository } = require('./FavoriteRepository');
 const { InquiryRepository } = require('./InquiryRepository');
+const { OrderItemRepository } = require('./OrderItemRepository');
 
 module.exports = {
   ClockPort,
@@ -50,4 +51,5 @@ module.exports = {
   CartRepository,
   FavoriteRepository,
   InquiryRepository,
+  OrderItemRepository,
 };
