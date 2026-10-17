@@ -1,0 +1,210 @@
+{
+  "version": 1,
+  "purpose": "P2a：22 個集合與索引的單一真相。setup-db 依本檔冪等建立集合；索引需在雲開發 console 手動建立。",
+  "collections": [
+    {
+      "name": "users",
+      "indexes": [
+        { "name": "openid_unique", "unique": true, "fields": [{ "field": "openid", "order": "asc" }] },
+        { "name": "role_type", "unique": false, "fields": [{ "field": "role_type", "order": "asc" }] }
+      ]
+    },
+    {
+      "name": "customers",
+      "indexes": [
+        { "name": "user_id_unique", "unique": true, "fields": [{ "field": "user_id", "order": "asc" }] }
+      ]
+    },
+    {
+      "name": "cs_agents",
+      "indexes": [
+        { "name": "user_id_unique", "unique": true, "fields": [{ "field": "user_id", "order": "asc" }] },
+        { "name": "employee_no", "unique": false, "fields": [{ "field": "employee_no", "order": "asc" }] }
+      ]
+    },
+    {
+      "name": "technicians",
+      "indexes": [
+        { "name": "user_id_unique", "unique": true, "fields": [{ "field": "user_id", "order": "asc" }] },
+        { "name": "status", "unique": false, "fields": [{ "field": "status", "order": "asc" }] },
+        { "name": "skill_tags", "unique": false, "fields": [{ "field": "skill_tags", "order": "asc" }] }
+      ]
+    },
+    {
+      "name": "categories",
+      "indexes": [
+        { "name": "parent_id", "unique": false, "fields": [{ "field": "parent_id", "order": "asc" }] },
+        { "name": "order", "unique": false, "fields": [{ "field": "order", "order": "asc" }] },
+        { "name": "is_active", "unique": false, "fields": [{ "field": "is_active", "order": "asc" }] }
+      ]
+    },
+    {
+      "name": "services",
+      "indexes": [
+        { "name": "category_id", "unique": false, "fields": [{ "field": "category_id", "order": "asc" }] },
+        { "name": "category", "unique": false, "fields": [{ "field": "category", "order": "asc" }] },
+        { "name": "is_active", "unique": false, "fields": [{ "field": "is_active", "order": "asc" }] }
+      ]
+    },
+    {
+      "name": "products",
+      "indexes": [
+        { "name": "category_id", "unique": false, "fields": [{ "field": "category_id", "order": "asc" }] },
+        { "name": "category", "unique": false, "fields": [{ "field": "category", "order": "asc" }] },
+        { "name": "is_active", "unique": false, "fields": [{ "field": "is_active", "order": "asc" }] },
+        { "name": "stock", "unique": false, "fields": [{ "field": "stock", "order": "asc" }] }
+      ]
+    },
+    {
+      "name": "carts",
+      "indexes": [
+        { "name": "user_id_unique", "unique": true, "fields": [{ "field": "user_id", "order": "asc" }] }
+      ]
+    },
+    {
+      "name": "inquiries",
+      "indexes": [
+        {
+          "name": "customer_created",
+          "unique": false,
+          "fields": [
+            { "field": "customer_id", "order": "asc" },
+            { "field": "created_at", "order": "desc" }
+          ]
+        },
+        {
+          "name": "status_created",
+          "unique": false,
+          "fields": [
+            { "field": "status", "order": "asc" },
+            { "field": "created_at", "order": "desc" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "favorites",
+      "indexes": [
+        {
+          "name": "customer_product_unique",
+          "unique": true,
+          "fields": [
+            { "field": "customer_id", "order": "asc" },
+            { "field": "product_id", "order": "asc" }
+          ]
+        },
+        { "name": "customer_id", "unique": false, "fields": [{ "field": "customer_id", "order": "asc" }] }
+      ]
+    },
+    {
+      "name": "orders",
+      "indexes": [
+        { "name": "order_no_unique", "unique": true, "fields": [{ "field": "order_no", "order": "asc" }] },
+        { "name": "customer_id", "unique": false, "fields": [{ "field": "customer_id", "order": "asc" }] },
+        { "name": "technician_id", "unique": false, "fields": [{ "field": "technician_id", "order": "asc" }] },
+        { "name": "cs_agent_id", "unique": false, "fields": [{ "field": "cs_agent_id", "order": "asc" }] },
+        { "name": "status", "unique": false, "fields": [{ "field": "status", "order": "asc" }] },
+        { "name": "created_at", "unique": false, "fields": [{ "field": "created_at", "order": "desc" }] }
+      ]
+    },
+    {
+      "name": "order_items",
+      "indexes": [
+        { "name": "order_id", "unique": false, "fields": [{ "field": "order_id", "order": "asc" }] },
+        { "name": "item_type", "unique": false, "fields": [{ "field": "item_type", "order": "asc" }] }
+      ]
+    },
+    {
+      "name": "order_status_logs",
+      "indexes": [
+        {
+          "name": "order_created",
+          "unique": false,
+          "fields": [
+            { "field": "order_id", "order": "asc" },
+            { "field": "created_at", "order": "asc" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "payment_records",
+      "indexes": [
+        { "name": "out_trade_no_unique", "unique": true, "fields": [{ "field": "out_trade_no", "order": "asc" }] },
+        { "name": "order_id", "unique": false, "fields": [{ "field": "order_id", "order": "asc" }] },
+        { "name": "transaction_id", "unique": false, "fields": [{ "field": "transaction_id", "order": "asc" }] }
+      ]
+    },
+    {
+      "name": "profit_sharing_records",
+      "indexes": [
+        { "name": "out_order_no_unique", "unique": true, "fields": [{ "field": "out_order_no", "order": "asc" }] },
+        { "name": "order_id", "unique": false, "fields": [{ "field": "order_id", "order": "asc" }] },
+        { "name": "sharing_status", "unique": false, "fields": [{ "field": "sharing_status", "order": "asc" }] }
+      ]
+    },
+    {
+      "name": "profit_sharing_return_records",
+      "indexes": [
+        { "name": "order_id", "unique": false, "fields": [{ "field": "order_id", "order": "asc" }] },
+        { "name": "out_order_no", "unique": false, "fields": [{ "field": "out_order_no", "order": "asc" }] },
+        { "name": "return_status", "unique": false, "fields": [{ "field": "return_status", "order": "asc" }] }
+      ]
+    },
+    {
+      "name": "refund_records",
+      "indexes": [
+        { "name": "out_refund_no_unique", "unique": true, "fields": [{ "field": "out_refund_no", "order": "asc" }] },
+        { "name": "order_id", "unique": false, "fields": [{ "field": "order_id", "order": "asc" }] },
+        { "name": "refund_status", "unique": false, "fields": [{ "field": "refund_status", "order": "asc" }] }
+      ]
+    },
+    {
+      "name": "work_order_tickets",
+      "indexes": [
+        { "name": "order_id_unique", "unique": true, "fields": [{ "field": "order_id", "order": "asc" }] },
+        { "name": "status", "unique": false, "fields": [{ "field": "status", "order": "asc" }] }
+      ]
+    },
+    {
+      "name": "work_order_messages",
+      "indexes": [
+        {
+          "name": "ticket_created",
+          "unique": false,
+          "fields": [
+            { "field": "ticket_id", "order": "asc" },
+            { "field": "created_at", "order": "asc" }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "audit_logs",
+      "indexes": [
+        { "name": "operator_id", "unique": false, "fields": [{ "field": "operator_id", "order": "asc" }] },
+        {
+          "name": "target",
+          "unique": false,
+          "fields": [
+            { "field": "target_type", "order": "asc" },
+            { "field": "target_id", "order": "asc" }
+          ]
+        },
+        { "name": "created_at", "unique": false, "fields": [{ "field": "created_at", "order": "desc" }] }
+      ]
+    },
+    {
+      "name": "system_configs",
+      "indexes": [
+        { "name": "key_unique", "unique": true, "fields": [{ "field": "key", "order": "asc" }] }
+      ]
+    },
+    {
+      "name": "id_sequences",
+      "indexes": [
+        { "name": "key_unique", "unique": true, "fields": [{ "field": "key", "order": "asc" }] }
+      ]
+    }
+  ]
+}

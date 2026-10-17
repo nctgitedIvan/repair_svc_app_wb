@@ -1,0 +1,11 @@
+{
+  "name": "setup-db",
+  "version": "1.0.0",
+  "private": true,
+  "description": "P2 臨時雲函數：冪等建立 22 個集合；同時作為 P0 共享碼驗收。驗收後刪除。",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  },
+  "repairSharedHash": "95fd96919073cd9ac25ab0b53a569fc2626f79b99c3da467d8c4ff1c6eee1ea7"
+}
