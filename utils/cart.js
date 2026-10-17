@@ -37,6 +37,14 @@ const { CartCode, MAX_CART_LINES, MAX_LINE_QUANTITY, BLOCKING_CODES } = require(
  */
 const STORAGE_KEY = 'repair.cart.v2';
 
+/**
+ * 結算資料的 Storage key（T7 的統一入口格式）。
+ *
+ * 購物車、商品立即購買、服務立即預約都寫這一個 key；
+ * 結算頁只讀它，不再有舊電商的第二份格式。
+ */
+const CHECKOUT_KEY = 'repair.checkout.v1';
+
 /** 建立空購物車 */
 function createCart() {
   return { items: [], updatedAt: null };
@@ -200,20 +208,29 @@ function validate(cart, catalog) {
   return { ok: blocking.length === 0, issues, blocking };
 }
 
-/** 結算用的 payload（形狀對齊後端的 checkout 請求） */
+/**
+ * 結算用的 payload（`docs/01` §3.8 的統一契約）。
+ *
+ * ⚠️ `items` 的 `skuId` 來自本機 line 的 `specId`（T6a.3 起存的是 skuId）。
+ *    `source`／`cartLineIds`／`addressId`／`appointmentAt` 是 P7a 的前端 metadata，
+ *    後端只要 §3.8 的三個核心欄位。
+ */
 function toCheckoutPayload(cart, { addressId, appointmentAt } = {}) {
+  const items = (cart.items || []).map((line) => ({
+    itemType: 'product',
+    itemId: line.productId,
+    skuId: line.specId || null,
+    quantity: line.quantity,
+  }));
+
   return {
     source: 'cart',
-    items: (cart.items || []).map((l) => ({
-      itemType: 'product',
-      productId: l.productId,
-      specId: l.specId,
-      quantity: l.quantity,
-      // 帶上加入時價格，讓後端可比對並回報差異
-      expectedPriceCents: l.addedPriceCents,
-    })),
-    addressId,
-    appointmentAt,
+    orderType: 'product',
+    items,
+    expectedTotalCents: totalCents(cart),
+    cartLineIds: (cart.items || []).map((line) => line.lineId),
+    addressId: addressId || null,
+    appointmentAt: appointmentAt || null,
   };
 }
 
@@ -306,6 +323,7 @@ function saveCart(cart) {
 
 module.exports = {
   STORAGE_KEY,
+  CHECKOUT_KEY,
   createCart,
   lineIdOf,
   addItem,

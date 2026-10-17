@@ -59,15 +59,6 @@ function formatCents(cents) {
   return (cents / 100).toFixed(2);
 }
 
-/**
- * 舊結算頁（`pages/order/order-confirm`）的相容橋接用常數。
- *
- * ⚠️ 維修場景**只有一個平台**，沒有電商的多門店概念；
- *    但舊結算頁用它來分組，因此固定給一個值。見 `toLegacyGoodsRequest()`。
- */
-const LEGACY_STORE_ID = '1000';
-const LEGACY_STORE_NAME = '維修服務平台';
-
 /** 商品現況取不到時的顯示 */
 const MISSING_TITLE = '（商品已不存在）';
 
@@ -222,39 +213,10 @@ function reconcileSelection(selectionByLineId, lines) {
   };
 }
 
-/**
- * ⚠️ **相容橋接（T7 必須移除）**
- *
- * 舊結算頁（`pages/order/order-confirm/index.js`）讀的是
- * `wx.getStorageSync('order.goodsRequestList')` 後直接 `JSON.parse`。
- * 若 T4 只寫新格式，那裡會 `JSON.parse(undefined)` **拋錯 → 白屏**。
- *
- * 因此 T4 額外寫一份舊格式。欄位對應 `model/order/orderConfirm.js` 讀取的名字。
- *
- * @param {Array} lines 已勾選的 view model 明細
- */
-function toLegacyGoodsRequest(lines) {
-  return (lines || []).map((line) => ({
-    storeId: LEGACY_STORE_ID,
-    storeName: LEGACY_STORE_NAME,
-    spuId: line.productId,
-    skuId: line.specId || 'default',
-    title: line.title,
-    primaryImage: line.thumb,
-    quantity: line.quantity,
-    // 舊 mock 的價格是「分」的字串
-    price: String(line.priceCents),
-    specInfo: (line.specs || []).map((name) => ({ specValue: name })),
-  }));
-}
-
 module.exports = {
   ISSUE_TEXT,
   ISSUE_SHORT_TEXT,
-  LEGACY_STORE_ID,
-  LEGACY_STORE_NAME,
   formatCents,
   buildCartView,
   reconcileSelection,
-  toLegacyGoodsRequest,
 };

@@ -41,18 +41,6 @@ const { CartCode } = require('../../utils/cartCodes.js');
  * 屆時只需把 `cartRules.loadCart/saveCart` 換成 API 呼叫，本頁的事件流程不變。
  */
 
-/** 新格式的結算資料（T7 的結算頁要讀這個） */
-const CHECKOUT_KEY = 'repair.checkout.v1';
-
-/**
- * ⚠️ **舊格式的結算資料 —— 相容橋接，T7 必須移除。**
- *
- * 現行的 `pages/order/order-confirm/index.js` 讀這個 key 後直接 `JSON.parse`；
- * 不寫的話那裡會 `JSON.parse(undefined)` 拋錯 → **結算頁白屏**。
- * 見 `docs/P7a-2a-T4-計畫.md` §7.3。
- */
-const LEGACY_CHECKOUT_KEY = 'order.goodsRequestList';
-
 /** 商品列表 → `productId` 索引（購物車的每一筆都靠它找現況） */
 function indexProducts(list) {
   const catalog = {};
@@ -391,9 +379,9 @@ Page({
   },
 
   /**
-   * 寫入結算資料（兩個 key，見檔頭的說明）。
+   * 寫入結算資料（T7：只有一份格式，`repair.checkout.v1`）。
    *
-   * @returns {boolean} 是否成功（失敗就不該導頁 —— 否則結算頁會白屏）
+   * @returns {boolean} 是否成功（失敗就不該導頁 —— 否則結算頁沒有資料）
    */
   writeCheckout(selectedLines) {
     const selectedIds = selectedLines.map((line) => line.lineId);
@@ -403,11 +391,9 @@ Page({
 
     try {
       wx.setStorageSync(
-        CHECKOUT_KEY,
+        cartRules.CHECKOUT_KEY,
         JSON.stringify(cartRules.toCheckoutPayload(selectedCart, { addressId: null, appointmentAt: null })),
       );
-      // ⚠️ 相容橋接（T7 移除）
-      wx.setStorageSync(LEGACY_CHECKOUT_KEY, JSON.stringify(cartView.toLegacyGoodsRequest(selectedLines)));
       return true;
     } catch (err) {
       console.warn('[cart] 寫入結算資料失敗', err);

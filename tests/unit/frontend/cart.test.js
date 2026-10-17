@@ -223,22 +223,35 @@ test('金額與數量', async (t) => {
   });
 });
 
-test('結算 payload（形狀對齊後端）', async (t) => {
-  await t.test('帶出 source / items / addressId / appointmentAt', () => {
+test('結算 payload（docs/01 §3.8 契約）', async (t) => {
+  await t.test('帶出 source／orderType／items／expectedTotalCents／cartLineIds', () => {
     let c = cart.addItem(cart.createCart(), product({ quantity: 2 }), NOW).cart;
     const payload = cart.toCheckoutPayload(c, { addressId: 'addr-1', appointmentAt: 123 });
 
     assert.equal(payload.source, 'cart');
+    assert.equal(payload.orderType, 'product');
     assert.equal(payload.addressId, 'addr-1');
     assert.equal(payload.appointmentAt, 123);
-    assert.equal(payload.items.length, 1);
-    assert.equal(payload.items[0].itemType, 'product');
-    assert.equal(payload.items[0].expectedPriceCents, 2500, '帶上加入時價格讓後端可比對');
+    assert.equal(payload.expectedTotalCents, 5000);
+    assert.deepEqual(payload.cartLineIds, ['prd-1']);
+    assert.deepEqual(payload.items, [
+      { itemType: 'product', itemId: 'prd-1', skuId: null, quantity: 2 },
+    ]);
+  });
+
+  await t.test('⚠️ 有規格時 skuId 取 line 的 specId（本機存的是 skuId）', () => {
+    const c = cart.addItem(cart.createCart(), product({ specId: 'sku-big', quantity: 1, priceCents: 4800 }), NOW).cart;
+    const payload = cart.toCheckoutPayload(c);
+    assert.equal(payload.items[0].skuId, 'sku-big');
+    assert.equal(payload.expectedTotalCents, 4800);
+    assert.deepEqual(payload.cartLineIds, ['prd-1:sku-big']);
   });
 
   await t.test('⚠️ 空購物車也能產生 payload（由後端拒絕，前端不自行判斷可否下單）', () => {
     const payload = cart.toCheckoutPayload(cart.createCart(), { addressId: 'a' });
     assert.deepEqual(payload.items, []);
+    assert.deepEqual(payload.cartLineIds, []);
+    assert.equal(payload.expectedTotalCents, 0);
   });
 });
 
