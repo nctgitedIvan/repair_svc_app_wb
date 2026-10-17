@@ -1,0 +1,11 @@
+{
+  "name": "probe-tx",
+  "version": "1.0.0",
+  "private": true,
+  "description": "P2-0 臨時探針：驗證雲開發事務、回滾與 _.inc 原子性。只寫不跑，等有雲環境再上傳。",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  },
+  "repairSharedHash": "213b691f30ab349e68cc76ec269a7f65011717e86bbbe84948cd09c01c42af70"
+}
