@@ -1,0 +1,29 @@
+{
+  "name": "repair-admin-web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "維修服務平台 Web 管理後台（P8 第一階段，Mock Server）",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "mock": "node mock-server/index.js"
+  },
+  "dependencies": {
+    "@ant-design/icons": "^5.4.0",
+    "antd": "^5.21.0",
+    "axios": "^1.7.7",
+    "cors": "^2.8.5",
+    "dayjs": "^1.11.13",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.1",
+    "vite": "^5.4.8"
+  }
+}

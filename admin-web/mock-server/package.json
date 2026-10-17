@@ -1,0 +1,15 @@
+{
+  "name": "repair-admin-mock-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "P8 Web 管理後台的本地 Mock Server（資料對齊 P2 Ports／Schema）",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2"
+  }
+}
