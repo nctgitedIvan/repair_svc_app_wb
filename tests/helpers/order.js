@@ -107,6 +107,7 @@ function makeOrder(overrides = {}) {
     items: rest.items || makeItems(rest),
     address: rest.address || makeAddress(),
     appointmentAt: rest.appointmentAt ?? createdAt + 86_400_000,
+    appointmentInfo: rest.appointmentInfo || null,
     snapshot: rest.snapshot || makeSnapshot(rest),
     createdAt,
   });

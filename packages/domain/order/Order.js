@@ -7,6 +7,7 @@ const { OrderStateMachine } = require('./OrderStateMachine');
 const { OrderItem } = require('./OrderItem');
 const { OrderStatusLog } = require('./OrderStatusLog');
 const { OrderSnapshot } = require('./OrderSnapshot');
+const { AppointmentInfo } = require('./AppointmentInfo');
 const { ProfitSharingTerms } = require('../settlement/ProfitSharingTerms');
 const { Address } = require('../shared/Address');
 const { OrderNo } = require('../shared/OrderNo');
@@ -49,6 +50,7 @@ class Order {
       amounts: props.amounts,
       address: props.address,
       appointmentAt: props.appointmentAt || null,
+      appointmentInfo: props.appointmentInfo || null,
       snapshot: props.snapshot,
       timeline: props.timeline,
       version: props.version,
@@ -78,6 +80,10 @@ class Order {
     invariant(props.orderNo instanceof OrderNo, 'Order.orderNo 必須是 OrderNo');
     invariant(props.address instanceof Address, 'Order.address 必須是 Address');
     invariant(props.snapshot instanceof OrderSnapshot, 'Order.snapshot 必須是 OrderSnapshot');
+    invariant(
+      !props.appointmentInfo || props.appointmentInfo instanceof AppointmentInfo,
+      'Order.appointmentInfo 必須是 AppointmentInfo',
+    );
     assertInteger(props.createdAt, 'Order.createdAt', { min: 0 });
 
     const amounts = priceItems(props.items);
@@ -119,6 +125,7 @@ class Order {
       },
       address: new Address(row.address),
       appointmentAt: row.appointmentAt,
+      appointmentInfo: row.appointmentInfo ? new AppointmentInfo(row.appointmentInfo) : null,
       snapshot: new OrderSnapshot({
         // 持久化形狀是純資料，需重建值物件
         profitSharingTerms: new ProfitSharingTerms(row.snapshot.profitSharingTerms),
@@ -148,6 +155,7 @@ class Order {
   get amounts() { return { ...this.#props.amounts }; }
   get address() { return this.#props.address; }
   get appointmentAt() { return this.#props.appointmentAt; }
+  get appointmentInfo() { return this.#props.appointmentInfo; }
   get snapshot() { return this.#props.snapshot; }
   get timeline() { return [...this.#props.timeline]; }
   get version() { return this.#props.version; }
@@ -252,6 +260,7 @@ class Order {
       totalCents: this.#props.amounts.total.cents,
       currency: this.#props.currency,
       itemCount: this.#props.items.length,
+      appointmentInfo: this.#props.appointmentInfo ? this.#props.appointmentInfo.toJSON() : null,
       version: this.#props.version,
       completedAt: this.#props.completedAt,
       voidedReason: this.#props.voidedReason,
@@ -281,6 +290,7 @@ class Order {
         detailAddress: this.#props.address.detailAddress,
       },
       appointmentAt: this.#props.appointmentAt,
+      appointmentInfo: this.#props.appointmentInfo ? this.#props.appointmentInfo.toJSON() : null,
       snapshot: {
         profitSharingTerms: this.#props.snapshot.profitSharingTerms.toJSON(),
         pricingVersion: this.#props.snapshot.pricingVersion,

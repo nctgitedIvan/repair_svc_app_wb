@@ -58,6 +58,7 @@ function toOrderDto(order) {
     items: order.items,
     address: order.address || '',
     appointmentAt: order.appointmentAt || null,
+    appointmentInfo: order.appointmentInfo || null,
     createdAt: order.createdAt || null,
     completedAt: order.completedAt || null,
   };

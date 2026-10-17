@@ -38,6 +38,47 @@
     </view>
   </view>
 
+  <view class="detail-card" wx:if="{{appointmentInfo}}">
+    <view class="detail-card__title">預約資訊</view>
+
+    <view class="detail-row">
+      <text class="detail-row__label">聯絡人</text>
+      <text class="detail-row__value">{{appointmentInfo.contactName}}</text>
+    </view>
+    <view class="detail-row">
+      <text class="detail-row__label">聯絡手機</text>
+      <text class="detail-row__value">{{appointmentInfo.contactPhone}}</text>
+    </view>
+    <view class="detail-row">
+      <text class="detail-row__label">問題描述</text>
+      <text class="detail-row__value">{{appointmentInfo.description || '—'}}</text>
+    </view>
+
+    <view class="detail-row" wx:if="{{appointmentMediaItems.length > 0}}">
+      <text class="detail-row__label">附件</text>
+      <view class="detail-media">
+        <view
+          class="detail-media__item"
+          wx:for="{{appointmentMediaItems}}"
+          wx:key="key"
+          data-index="{{index}}"
+          bindtap="onPreviewMedia"
+        >
+          <image
+            wx:if="{{item.type === 'image'}}"
+            class="detail-media__img"
+            src="{{item.src}}"
+            mode="aspectFill"
+          />
+          <view wx:else class="detail-media__audio">
+            <t-icon name="microphone" size="32rpx" color="#fa4126" />
+            <text>{{item.label}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
   <view class="detail-total">
     <text class="detail-total__label">合計</text>
     <price price="{{order.amounts.totalCents}}" wr-class="detail-total__num" />

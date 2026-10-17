@@ -32,6 +32,7 @@ const { OrderItem, ItemType, FeeType } = require('./order/OrderItem');
 const { OrderStateMachine } = require('./order/OrderStateMachine');
 const { OrderStatusLog } = require('./order/OrderStatusLog');
 const { OrderSnapshot } = require('./order/OrderSnapshot');
+const { AppointmentInfo, MAX_DESCRIPTION_LENGTH, MAX_MEDIA_COUNT } = require('./order/AppointmentInfo');
 const { priceItems, sumItemsWhere } = require('./order/PricingService');
 
 // ── 優惠券 ──
@@ -97,6 +98,9 @@ module.exports = {
   OrderStateMachine,
   OrderStatusLog,
   OrderSnapshot,
+  AppointmentInfo,
+  MAX_DESCRIPTION_LENGTH,
+  MAX_MEDIA_COUNT,
   priceItems,
   sumItemsWhere,
   // 優惠券

@@ -28,6 +28,7 @@ function toRow(order) {
       detail_address: data.address.detailAddress,
     },
     appointment_at: data.appointmentAt,
+    appointment_info: data.appointmentInfo || null,
     snapshot: {
       profit_sharing_terms: {
         base: data.snapshot.profitSharingTerms.base,
@@ -69,6 +70,7 @@ function toRehydrateInput(row, itemRows, logRows) {
       detailAddress: row.address.detail_address,
     },
     appointmentAt: row.appointment_at,
+    appointmentInfo: row.appointment_info || null,
     snapshot: {
       profitSharingTerms: {
         base: row.snapshot.profit_sharing_terms.base,

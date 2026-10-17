@@ -5,6 +5,7 @@ const { Money, Rounding } = require('@repair/shared-kernel/Money');
 const { Order, MAX_ORDER_ITEMS } = require('@repair/domain/order/Order');
 const { OrderItem, ItemType, FeeType } = require('@repair/domain/order/OrderItem');
 const { OrderSnapshot } = require('@repair/domain/order/OrderSnapshot');
+const { AppointmentInfo } = require('@repair/domain/order/AppointmentInfo');
 const { Address } = require('@repair/domain/shared/Address');
 const { OrderNo } = require('@repair/domain/shared/OrderNo');
 const { ProfitSharingTerms, SharingBase } = require('@repair/domain/settlement/ProfitSharingTerms');
@@ -57,7 +58,7 @@ class CreateOrderUseCase {
     this.clock = clock;
   }
 
-  async execute({ actor, items, address, appointmentAt = null } = {}) {
+  async execute({ actor, items, address, appointmentAt = null, appointmentInfo = null } = {}) {
     const denied = authorize(actor, Permission.ORDER_CREATE.key, {});
     if (denied) return denied;
 
@@ -72,6 +73,15 @@ class CreateOrderUseCase {
     }
     if (!address || typeof address !== 'object') {
       return Result.validation('缺少服務地址');
+    }
+
+    let info = null;
+    if (appointmentInfo) {
+      try {
+        info = new AppointmentInfo(appointmentInfo);
+      } catch (err) {
+        return Result.validation('預約資訊不正確', { message: err.message });
+      }
     }
 
     let customerId = actor.customerId || actor.id;
@@ -101,6 +111,7 @@ class CreateOrderUseCase {
       items: orderItems,
       address: new Address(address),
       appointmentAt,
+      appointmentInfo: info,
       snapshot: new OrderSnapshot({
         profitSharingTerms: new ProfitSharingTerms(snapshotInfo.terms),
         pricingVersion: snapshotInfo.pricingVersion,

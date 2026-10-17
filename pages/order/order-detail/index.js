@@ -21,6 +21,8 @@ Page({
     items: [],
     createdAtText: '',
     appointmentText: '',
+    appointmentInfo: null,
+    appointmentMediaItems: [],
   },
 
   onLoad(query) {
@@ -37,6 +39,11 @@ Page({
     this.setData({ loading: true, error: false });
     try {
       const order = await fetchOrderDetail(this.orderNo);
+      const appointmentInfo = order.appointmentInfo || null;
+      const mediaUrls = appointmentInfo && Array.isArray(appointmentInfo.mediaUrls)
+        ? appointmentInfo.mediaUrls
+        : [];
+
       this.setData({
         loading: false,
         error: false,
@@ -46,7 +53,21 @@ Page({
           feeLabel: FEE_LABEL[item.feeType] || '',
         })),
         createdAtText: formatTime(order.createdAt),
-        appointmentText: formatTime(order.appointmentAt),
+        appointmentText: formatTime(
+          appointmentInfo ? appointmentInfo.appointmentAt : order.appointmentAt,
+        ),
+        appointmentInfo,
+        appointmentMediaItems: mediaUrls.map((url, index) => {
+          if (url.startsWith('audio:')) {
+            const seconds = Number(url.slice(6)) || 0;
+            return {
+              key: `audio-${index}`,
+              type: 'audio',
+              label: seconds > 0 ? `語音 ${seconds}″` : '語音附件',
+            };
+          }
+          return { key: `image-${index}`, type: 'image', src: url };
+        }),
       });
     } catch (err) {
       console.warn('[order-detail] 載入失敗', err);
@@ -57,6 +78,19 @@ Page({
 
   onRetry() {
     this.load();
+  },
+
+  onPreviewMedia(e) {
+    const index = Number(e.currentTarget.dataset.index);
+    const item = this.data.appointmentMediaItems[index];
+    if (!item) return;
+
+    if (item.type === 'image' && item.src) {
+      wx.previewImage({ urls: [item.src], current: item.src });
+      return;
+    }
+
+    Toast({ context: this, selector: '#t-toast', message: '語音附件將於 P5 支援播放', icon: '' });
   },
 });
 

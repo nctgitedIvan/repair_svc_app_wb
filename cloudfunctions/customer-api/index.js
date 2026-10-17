@@ -68,6 +68,7 @@ const routes = {
       items: { type: 'array', required: true },
       address: ADDRESS,
       appointmentAt: { type: 'integer', required: false, min: 0 },
+      appointmentInfo: { type: 'object', required: false },
     },
     UseCase: CreateOrderUseCase,
   },

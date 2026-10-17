@@ -18,6 +18,7 @@ function toOrderDto(order) {
       currency: order.amounts.total.currency,
     },
     appointmentAt: order.appointmentAt,
+    appointmentInfo: order.appointmentInfo ? order.appointmentInfo.toJSON() : null,
     createdAt: order.createdAt,
     version: order.version,
   };

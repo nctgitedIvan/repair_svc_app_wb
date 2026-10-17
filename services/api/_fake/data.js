@@ -427,6 +427,17 @@ const ORDERS = Object.freeze([
     technicianId: 'tech-1',
     csAgentId: 'cs-1',
     appointmentAt: Date.parse('2026-10-20T06:00:00Z'),
+    appointmentInfo: {
+      appointmentAt: Date.parse('2026-10-20T06:00:00Z'),
+      address: '廣東省深圳市寶安區沙井街道中心路28號',
+      contactName: '王小明',
+      contactPhone: '+86 138 1234 5678',
+      description: '冷氣不冷，請師傅攜帶冷媒與檢測工具。',
+      mediaUrls: [
+        'https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-2a.png',
+        'audio:3',
+      ],
+    },
     createdAt: Date.parse('2026-10-16T02:00:00Z'),
     totalCents: 12500,
     address: '廣東省深圳市寶安區沙井街道中心路28號',

@@ -23,6 +23,89 @@
     <t-icon name="chevron-right" size="36rpx" color="#BBBBBB" />
   </view>
 
+  <!-- 預約資訊（T3） -->
+  <view class="checkout-block">
+    <view class="checkout-block__title">預約資訊</view>
+
+    <view class="appointment-row">
+      <view class="appointment-label">預約時間</view>
+      <view class="appointment-pickers">
+        <picker mode="date" value="{{appointmentDate}}" start="{{todayDate}}" bindchange="onAppointmentDateChange">
+          <view class="appointment-picker">{{appointmentDate || '選擇日期'}}</view>
+        </picker>
+        <picker mode="time" value="{{appointmentTime}}" bindchange="onAppointmentTimeChange">
+          <view class="appointment-picker">{{appointmentTime || '選擇時間'}}</view>
+        </picker>
+      </view>
+    </view>
+
+    <view class="appointment-field">
+      <view class="appointment-label">聯絡人姓名</view>
+      <t-input
+        value="{{contactName}}"
+        placeholder="請輸入聯絡人姓名"
+        maxlength="40"
+        bind:change="onContactNameChange"
+      />
+    </view>
+
+    <view class="appointment-field">
+      <view class="appointment-label">聯絡人手機（+853／+86）</view>
+      <t-input
+        value="{{contactPhone}}"
+        placeholder="例如 66123456 或 +853 6612 3456"
+        maxlength="20"
+        bind:change="onContactPhoneChange"
+      />
+    </view>
+
+    <view class="appointment-field">
+      <view class="appointment-label">問題描述（最多 500 字）</view>
+      <t-textarea
+        value="{{description}}"
+        placeholder="請描述問題、現場狀況或特殊需求"
+        maxlength="500"
+        indicator
+        autosize
+        bind:change="onDescriptionChange"
+      />
+    </view>
+
+    <view class="appointment-field">
+      <view class="appointment-label">照片／錄音（選填，最多 9 個）</view>
+      <view class="appointment-media">
+        <view
+          class="appointment-media__item"
+          wx:for="{{mediaItems}}"
+          wx:key="key"
+          data-index="{{index}}"
+          bindtap="onMediaTap"
+        >
+          <image
+            wx:if="{{item.type === 'image'}}"
+            class="appointment-media__img"
+            src="{{item.src}}"
+            mode="aspectFill"
+          />
+          <view wx:else class="appointment-media__audio">
+            <t-icon name="microphone" size="36rpx" color="#fa4126" />
+            <text>{{item.label}}</text>
+          </view>
+          <view class="appointment-media__remove" data-index="{{index}}" catchtap="removeMedia">×</view>
+        </view>
+
+        <view class="appointment-media__add" bindtap="choosePhotos">
+          <t-icon name="image" size="44rpx" color="#999999" />
+          <text>照片</text>
+        </view>
+        <view class="appointment-media__add" bindtap="addSimulatedAudio">
+          <t-icon name="microphone" size="44rpx" color="#999999" />
+          <text>錄音</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
   <!-- 優惠券 -->
   <view class="checkout-block coupon-entry" bindtap="onOpenCoupon">
     <view class="coupon-entry__label">優惠券</view>

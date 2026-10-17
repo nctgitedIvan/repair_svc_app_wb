@@ -7,9 +7,18 @@ import { getAddressPromise } from '../../../services/address/list';
 const checkoutView = require('../../../utils/checkoutView.js');
 const couponView = require('../../../utils/couponView.js');
 const cartRules = require('../../../utils/cart.js');
+const appointmentRules = require('../../../utils/appointment.js');
 
 /** 優惠券日期顯示（只在畫面層格式化） */
 const formatCouponDate = (ms) => (Number.isInteger(ms) ? dayjs(ms).format('YYYY-MM-DD') : '');
+
+/** `Date` → `<picker mode="date">` 需要的 YYYY-MM-DD */
+function formatDateInput(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
 
 /**
  * 結算頁（T7）。
@@ -64,6 +73,15 @@ Page({
     discountText: '0',
     subtotalText: '0',
     totalText: '0',
+    /** 預約資訊（T3） */
+    todayDate: '',
+    appointmentDate: '',
+    appointmentTime: '10:00',
+    contactName: '',
+    contactPhone: '',
+    description: '',
+    mediaUrls: [],
+    mediaItems: [],
   },
 
   payload: null,
@@ -73,6 +91,15 @@ Page({
   selectedCoupon: null,
 
   onLoad() {
+    const today = new Date();
+    const tomorrow = new Date(today.getTime() + 86_400_000);
+
+    this.setData({
+      todayDate: formatDateInput(today),
+      appointmentDate: formatDateInput(tomorrow),
+      appointmentTime: '10:00',
+    });
+
     this.load();
   },
 
@@ -94,6 +121,11 @@ Page({
     }
 
     this.payload = payload;
+
+    // 還原上次填寫的預約表單（重新進入結算頁時不遺失）
+    if (payload.appointmentInfo) {
+      this.restoreAppointmentInfo(payload.appointmentInfo);
+    }
 
     try {
       const [products, services, couponResult] = await Promise.all([
@@ -186,13 +218,167 @@ Page({
     });
   },
 
-  /** 把選券結果寫回結算 payload（expectedTotalCents 為折扣後總額） */
+  /** 把選券結果／預約資訊寫回結算 payload */
   persistPayload() {
     try {
       wx.setStorageSync(checkoutView.CHECKOUT_KEY, this.payload);
     } catch (err) {
-      console.warn('[checkout] 儲存優惠券選擇失敗', err);
+      console.warn('[checkout] 儲存結算資料失敗', err);
     }
+  },
+
+  // ── 預約資訊（T3） ──
+
+  restoreAppointmentInfo(info) {
+    if (!info || !Number.isInteger(info.appointmentAt)) return;
+
+    const mediaUrls = Array.isArray(info.mediaUrls) ? info.mediaUrls : [];
+    this.setData({
+      appointmentDate: dayjs(info.appointmentAt).format('YYYY-MM-DD'),
+      appointmentTime: dayjs(info.appointmentAt).format('HH:mm'),
+      contactName: info.contactName || '',
+      contactPhone: info.contactPhone || '',
+      description: info.description || '',
+      mediaUrls,
+      mediaItems: this.decorateMedia(mediaUrls),
+    });
+  },
+
+  /** 附件 → 畫面資料；`audio:` 前綴代表語音 */
+  decorateMedia(urls) {
+    return (urls || []).map((url, index) => {
+      if (url.startsWith('audio:')) {
+        const seconds = Number(url.slice(6)) || 0;
+        return {
+          key: `audio-${index}-${url}`,
+          type: 'audio',
+          label: seconds > 0 ? `語音 ${seconds}″` : '語音附件',
+          src: '',
+        };
+      }
+      return { key: `image-${index}-${url}`, type: 'image', label: '照片', src: url };
+    });
+  },
+
+  onAppointmentDateChange(e) {
+    this.setData({ appointmentDate: e.detail.value });
+  },
+
+  onAppointmentTimeChange(e) {
+    this.setData({ appointmentTime: e.detail.value });
+  },
+
+  onContactNameChange(e) {
+    this.setData({ contactName: (e.detail && e.detail.value) || '' });
+  },
+
+  onContactPhoneChange(e) {
+    this.setData({ contactPhone: (e.detail && e.detail.value) || '' });
+  },
+
+  onDescriptionChange(e) {
+    this.setData({ description: (e.detail && e.detail.value) || '' });
+  },
+
+  choosePhotos() {
+    const remain = 9 - this.data.mediaUrls.length;
+    if (remain <= 0) {
+      Toast({ context: this, selector: '#t-toast', message: '附件最多 9 個', icon: '' });
+      return;
+    }
+
+    const onSuccess = (paths) => {
+      if (!paths || paths.length === 0) return;
+      const mediaUrls = [...this.data.mediaUrls, ...paths].slice(0, 9);
+      this.setData({ mediaUrls, mediaItems: this.decorateMedia(mediaUrls) });
+    };
+
+    if (wx.chooseMedia) {
+      wx.chooseMedia({
+        count: remain,
+        mediaType: ['image'],
+        sourceType: ['album', 'camera'],
+        sizeType: ['compressed'],
+        success: (res) => {
+          const paths = (res.tempFiles || []).map((file) => file.tempFilePath).filter(Boolean);
+          onSuccess(paths);
+        },
+        fail: () => {},
+      });
+      return;
+    }
+
+    if (wx.chooseImage) {
+      wx.chooseImage({
+        count: remain,
+        sizeType: ['compressed'],
+        sourceType: ['album', 'camera'],
+        success: (res) => onSuccess(res.tempFilePaths || []),
+        fail: () => {},
+      });
+      return;
+    }
+
+    Toast({ context: this, selector: '#t-toast', message: '此版本不支援圖片上傳', icon: '' });
+  },
+
+  /** P7a 的錄音模擬：只存一個 `audio:3` 標記，P5 再換成真實音檔 */
+  addSimulatedAudio() {
+    if (this.data.mediaUrls.length >= 9) {
+      Toast({ context: this, selector: '#t-toast', message: '附件最多 9 個', icon: '' });
+      return;
+    }
+
+    const mediaUrls = [...this.data.mediaUrls, 'audio:3'];
+    this.setData({ mediaUrls, mediaItems: this.decorateMedia(mediaUrls) });
+    Toast({ context: this, selector: '#t-toast', message: '已加入模擬錄音（3 秒）', icon: '' });
+  },
+
+  removeMedia(e) {
+    const index = Number(e.currentTarget.dataset.index);
+    if (!Number.isInteger(index)) return;
+
+    const mediaUrls = this.data.mediaUrls.filter((_, i) => i !== index);
+    this.setData({ mediaUrls, mediaItems: this.decorateMedia(mediaUrls) });
+  },
+
+  onMediaTap(e) {
+    const index = Number(e.currentTarget.dataset.index);
+    const item = this.data.mediaItems[index];
+    if (!item) return;
+
+    if (item.type === 'image' && item.src) {
+      wx.previewImage({ urls: [item.src], current: item.src });
+      return;
+    }
+    Toast({ context: this, selector: '#t-toast', message: '語音附件將於 P5 支援播放', icon: '' });
+  },
+
+  /**
+   * 把表單組成 AppointmentInfo 的純資料。
+   * 回傳 `{ info }` 或 `{ error }`；頁面負責 Toast。
+   */
+  buildAppointmentInfo() {
+    const {
+      address,
+      appointmentDate,
+      appointmentTime,
+      contactName,
+      contactPhone,
+      description,
+      mediaUrls,
+    } = this.data;
+
+    return appointmentRules.buildAppointmentInfo({
+      addressText: address && address.fullAddress,
+      appointmentDate,
+      appointmentTime,
+      contactName,
+      contactPhone,
+      description,
+      mediaUrls,
+      now: Date.now(),
+    });
   },
 
   onOpenCoupon() {
@@ -263,6 +449,10 @@ Page({
         .filter(Boolean)
         .join('');
     const phone = address.phoneNumber || address.phone || '';
+    const contactUpdates = {};
+    if (!this.data.contactName && address.name) contactUpdates.contactName = address.name;
+    if (!this.data.contactPhone && phone) contactUpdates.contactPhone = phone;
+
     this.setData({
       address: {
         id: address.id || address.addressId || '',
@@ -270,6 +460,7 @@ Page({
         phone,
         fullAddress,
       },
+      ...contactUpdates,
     });
   },
 
@@ -305,12 +496,24 @@ Page({
       return;
     }
 
+    const built = this.buildAppointmentInfo();
+    if (built.error) {
+      Toast({ context: this, selector: '#t-toast', message: built.error, icon: '' });
+      return;
+    }
+
+    // 把預約表單寫進 checkout payload（P5 的 CreateOrder 直接讀這個欄位）
+    this.payload.appointmentInfo = built.info;
+    this.payload.appointmentAt = built.info.appointmentAt;
+    this.persistPayload();
+
+    const appointmentText = dayjs(built.info.appointmentAt).format('YYYY-MM-DD HH:mm');
     this.setData({ submitting: true });
     wx.showModal({
       title: '下單成功（模擬）',
-      content: `合計 ¥${this.data.totalText}${
-        view.discountCents > 0 ? `（已抵扣 ¥${this.data.discountText}）` : ''
-      }。P7a 階段尚未串接支付與後端；正式下單與支付在 P5／P6。`,
+      content: `預約時間 ${appointmentText}，聯絡人 ${built.info.contactName}。合計 ¥${
+        this.data.totalText
+      }${view.discountCents > 0 ? `（已抵扣 ¥${this.data.discountText}）` : ''}。P7a 階段尚未串接支付與後端；正式下單與支付在 P5／P6。`,
       showCancel: false,
       success: () => {
         this.clearPurchasedCart();
