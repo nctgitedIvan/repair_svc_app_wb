@@ -191,21 +191,6 @@ function stockOfSku(skus, skuId) {
   return sku && Number.isInteger(sku.stock) ? sku.stock : null;
 }
 
-/**
- * ⚠️ **@deprecated（T6a.3）**：舊的「從扁平規格值取一個 id」。
- *
- * 新模型下購物車要存的是 **skuId**（`findSkuBySelection`），不是規格值。
- * 這裡暫時保留「取第一個已選維度的值」，讓 T6a.3-1 與 T6a.3-3 之間
- * 加入購物車仍可運作；**T6a.3-3 會移除本函式**。
- */
-function selectedSpecIdOf(selectedSku) {
-  if (!selectedSku) return null;
-  const values = Object.keys(selectedSku)
-    .map((key) => selectedSku[key])
-    .filter(Boolean);
-  return values.length === 1 ? values[0] : null;
-}
-
 module.exports = {
   MAX_BUY_QUANTITY,
   primaryImageOf,
@@ -213,5 +198,4 @@ module.exports = {
   toSpecPopupModel,
   findSkuBySelection,
   stockOfSku,
-  selectedSpecIdOf,
 };

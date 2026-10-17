@@ -70,12 +70,12 @@
       </view>
     </view>
 
-    <view class="desc-content">
+    <!-- T6a.3-3：富文本詳情（空值時連標題一起隱藏） -->
+    <view class="desc-content" wx:if="{{detail.detailHtml}}">
       <view class="desc-content__title">
         <span class="desc-content__title--text">詳情介紹</span>
       </view>
-      <!-- ⚠️ 新資料模型只有文字描述；多圖詳情是 P2 的新欄位（T6a §11 Q-5） -->
-      <view class="desc-content__text">{{detail.description}}</view>
+      <rich-text class="desc-content__rich" nodes="{{detail.detailHtml}}" />
     </view>
   </view>
 

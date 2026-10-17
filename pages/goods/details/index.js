@@ -247,6 +247,8 @@ Page({
     }
 
     this.selectedSku = {};
+    // 未選完規格時的上限（buildDetailView 算出的「所有 SKU 最大庫存」）
+    this.baseMaxBuyQuantity = detail.maxBuyQuantity;
     this.setData({
       isSpecsPopupShow: true,
       specList: model.specList,
@@ -267,7 +269,27 @@ Page({
         if (value.isSelected) names.push(value.specValue);
       });
     });
-    this.setData({ selectedAttrStr: names.join('、') });
+
+    // ⚠️ T6a.3-3：選中 SKU 後，數量上限收斂成「該 SKU 的庫存」。
+    // 未選完／組合不存在時還原成開啟彈窗時的基準（所有 SKU 的最大庫存）。
+    const sku = detailView.findSkuBySelection({
+      specs: (this.item && this.item.specs) || [],
+      skus: (this.item && this.item.skus) || [],
+      selectedSku: this.selectedSku,
+    });
+    const skuStock = sku ? detailView.stockOfSku(this.item.skus, sku.skuId) : null;
+    const maxBuyQuantity =
+      skuStock === null
+        ? this.baseMaxBuyQuantity
+        : Math.min(skuStock, detailView.MAX_BUY_QUANTITY);
+    // 已選的數量可能大於新上限（例如 20 → 8），一併夾住
+    const buyNum = Math.max(1, Math.min(this.data.buyNum, maxBuyQuantity));
+
+    this.setData({
+      selectedAttrStr: names.join('、'),
+      'detail.maxBuyQuantity': maxBuyQuantity,
+      buyNum,
+    });
   },
 
   onBuyNumChange(e) {
@@ -276,12 +298,21 @@ Page({
 
   /** 彈窗內按「加入購物車」 */
   onPopupAddCart() {
-    const specId = detailView.selectedSpecIdOf(this.selectedSku);
-    if (this.data.detail.hasSpecs && !specId) {
-      Toast({ context: this, selector: '#t-toast', message: '請先選擇規格', icon: '' });
-      return;
+    const { detail } = this.data;
+    let sku = null;
+    if (detail.hasSpecs) {
+      // T6a.3-3：購物車存的是 **skuId**（不是第一個維度的規格值）
+      sku = detailView.findSkuBySelection({
+        specs: (this.item && this.item.specs) || [],
+        skus: (this.item && this.item.skus) || [],
+        selectedSku: this.selectedSku,
+      });
+      if (!sku) {
+        Toast({ context: this, selector: '#t-toast', message: '請先選擇規格', icon: '' });
+        return;
+      }
     }
-    this.commitAddToCart(specId, this.data.buyNum);
+    this.commitAddToCart(sku ? sku.skuId : null, this.data.buyNum, sku);
   },
 
   /**
@@ -289,17 +320,21 @@ Page({
    *
    * ⚠️ 規則一律交給 `utils/cart.js`（它也會擋下服務、超上限、數量不合法）——
    *    本頁不重複實作。
+   *
+   * ⚠️ T6a.3-3：有規格時 `specId` 存的是 **skuId**（lineId 會是 `prd-1:sku-std`），
+   *    單價用該 SKU 的價格（例：大罐 4800），不是商品層的展示起價。
    */
-  commitAddToCart(specId, quantity) {
+  commitAddToCart(skuId, quantity, sku) {
     const { detail } = this.data;
+    const priceCents = sku && Number.isInteger(sku.priceCents) ? sku.priceCents : detail.priceCents;
     const result = cartRules.addItem(
       cartRules.loadCart(),
       {
         itemType: 'product',
         productId: detail.id,
-        specId: specId || null,
+        specId: skuId || null,
         quantity,
-        priceCents: detail.priceCents,
+        priceCents,
       },
       Date.now(),
     );

@@ -11,7 +11,7 @@
  * ```js
  * {
  *   items: [{
- *     lineId,               // 明細識別碼（後端會產生，本機用 productId:specId）
+ *     lineId,               // 明細識別碼（後端會產生，本機用 productId:skuId）
  *     productId, specId,
  *     quantity,
  *     addedPriceCents,      // ⚠️ 加入當時的價格（§3.7.6 第 3 點）
@@ -31,7 +31,11 @@
 
 const { CartCode, MAX_CART_LINES, MAX_LINE_QUANTITY, BLOCKING_CODES } = require('./cartCodes');
 
-const STORAGE_KEY = 'repair.cart.v1';
+/**
+ * ⚠️ T6a.3-3：v1 → **v2**。舊版把「規格值」當 specId（`prd-1:標準罐`），
+ * 新版存的是 **skuId**（`prd-1:sku-std`）—— 兩者不相容，直接換 key 讓舊資料失效（Q-3）。
+ */
+const STORAGE_KEY = 'repair.cart.v2';
 
 /** 建立空購物車 */
 function createCart() {

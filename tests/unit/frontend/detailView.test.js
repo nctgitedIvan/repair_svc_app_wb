@@ -286,17 +286,6 @@ test('stockOfSku：取 SKU 庫存', async (t) => {
   });
 });
 
-test('selectedSpecIdOf（@deprecated，T6a.3-3 會移除）', async (t) => {
-  await t.test('單維度選了值 → 回該值（過渡期讓加購仍可運作）', () => {
-    assert.equal(detail.selectedSpecIdOf({ size: '大罐' }), '大罐');
-  });
-
-  await t.test('尚未選 → null', () => {
-    assert.equal(detail.selectedSpecIdOf({ size: '' }), null);
-    assert.equal(detail.selectedSpecIdOf(null), null);
-  });
-});
-
 /**
  * 用**真實 fake 資料**驗一次 —— 前面的測試用的是自己造的小資料。
  */
