@@ -28,6 +28,9 @@ export const fetchProductCatalogIndex = (...args) => impl.fetchProductCatalogInd
 export const fetchMyOrders = (...args) => impl.fetchMyOrders(...args);
 export const fetchOrders = (...args) => impl.fetchOrders(...args);
 export const fetchOrderDetail = (...args) => impl.fetchOrderDetail(...args);
+export const payOrder = (...args) => impl.payOrder(...args);
+export const cancelOrder = (...args) => impl.cancelOrder(...args);
+export const requestRefund = (...args) => impl.requestRefund(...args);
 export const fetchTechnicianTasks = (...args) => impl.fetchTechnicianTasks(...args);
 export const fetchTechnicianEarnings = (...args) => impl.fetchTechnicianEarnings(...args);
 export const fetchCsWorkbench = (...args) => impl.fetchCsWorkbench(...args);

@@ -8,11 +8,11 @@
     "t-loading": "tdesign-miniprogram/loading/loading",
     "t-swiper": "tdesign-miniprogram/swiper/swiper",
     "t-swiper-nav": "tdesign-miniprogram/swiper-nav/swiper-nav",
-    "t-notice-bar": "tdesign-miniprogram/notice-bar/notice-bar",
     "t-icon": "tdesign-miniprogram/icon/icon",
     "t-tabs": "tdesign-miniprogram/tabs/tabs",
     "t-tab-panel": "tdesign-miniprogram/tab-panel/tab-panel",
-    "goods-list": "/components/goods-list/index",
+    "t-image": "/components/webp-image/index",
+    "price": "/components/price/index",
     "load-more": "/components/load-more/index",
     "t-toast": "tdesign-miniprogram/toast/toast"
   }

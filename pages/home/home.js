@@ -14,14 +14,14 @@ const PAGE_SIZE = 10;
  * ## 版面（刻意還原 P8 之前的 TDesign 結構）
  *
  * ```
- * 搜尋框 → Banner 輪播 → 公告 → 金剛區（快捷入口）
- *   → Tabs（常用零件／熱門服務）→ goods-list 卡片 → load-more
+ * 搜尋框 → Banner 輪播 → 金剛區（快捷入口）
+ *   → Tabs（常用零件／熱門服務）→ catalog-card 卡片 → load-more
  * ```
  *
  * ## 資料來源（紅線）
  *
  * 全部走 `services/api`：
- * - `fetchHome()`       → Banner／公告／快捷入口
+ * - `fetchHome()`       → Banner／快捷入口
  * - `fetchProducts()`   → 零件卡片（常用零件）
  * - `fetchServices()`   → 服務卡片（熱門服務）
  *
@@ -33,7 +33,6 @@ const PAGE_SIZE = 10;
 Page({
   data: {
     imgSrcs: [],
-    announcement: '',
     quickEntries: [],
     tabList: [
       { text: '常用零件', key: 0 },
@@ -89,10 +88,9 @@ Page({
     this.setData({ pageLoading: true });
 
     fetchHome()
-      .then(({ swiper, announcement, quickEntries }) => {
+      .then(({ swiper, quickEntries }) => {
         this.setData({
           imgSrcs: swiper || [],
-          announcement: announcement || '',
           quickEntries: quickEntries || [],
           pageLoading: false,
         });
@@ -166,7 +164,7 @@ Page({
 
   /** 點卡片 → 詳情頁（參數與分類頁／商品列表頁一致） */
   goodListClickHandle(e) {
-    const index = Number(e.detail && e.detail.index);
+    const index = Number(e.currentTarget.dataset.index);
     const card = this.data.goodsList[index];
     if (!card || !card.id) return;
 
@@ -179,7 +177,7 @@ Page({
 
   /** 卡片加購：與分類頁／商品列表頁同一套規則 */
   goodListAddCartHandle(e) {
-    const index = Number(e.detail && e.detail.index);
+    const index = Number(e.currentTarget.dataset.index);
     const card = this.data.goodsList[index];
     const action = catalogView.addActionFor(card);
     if (!action) return;

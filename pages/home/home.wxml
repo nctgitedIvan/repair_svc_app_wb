@@ -29,15 +29,6 @@
 </view>
 
 <view class="home-page-container">
-  <!-- 公告（fetchHome） -->
-  <t-notice-bar
-    wx:if="{{announcement}}"
-    t-class="home-notice"
-    visible="{{true}}"
-    content="{{announcement}}"
-    prefix-icon="notification"
-  />
-
   <!-- 金剛區（fetchHome.quickEntries） -->
   <view class="home-quick" wx:if="{{quickEntries.length > 0}}">
     <view
@@ -74,12 +65,51 @@
     </t-tabs>
   </view>
 
-  <goods-list
-    wr-class="goods-list-container"
-    goodsList="{{goodsList}}"
-    bind:click="goodListClickHandle"
-    bind:addcart="goodListAddCartHandle"
-  />
+  <!-- P8 catalog-card 自畫卡片（圖片在卡片內、名稱／標籤靠左、價格左／購物車右） -->
+  <view class="catalog-grid" wx:if="{{goodsList.length > 0}}">
+    <view
+      class="catalog-card catalog-card--wide"
+      wx:for="{{goodsList}}"
+      wx:key="id"
+      data-index="{{index}}"
+      bindtap="goodListClickHandle"
+    >
+      <view class="catalog-card__thumb">
+        <t-image
+          wx:if="{{item.thumb}}"
+          t-class="catalog-card__img"
+          src="{{item.thumb}}"
+          mode="aspectFill"
+          lazy-load
+        />
+      </view>
+      <view class="catalog-card__body">
+        <view class="catalog-card__title">{{item.title}}</view>
+        <view class="catalog-card__tags">
+          <view
+            class="catalog-card__tag"
+            wx:for="{{item.tags}}"
+            wx:for-item="tag"
+            wx:for-index="tagIndex"
+            wx:key="*this"
+          >
+            {{tag}}
+          </view>
+        </view>
+        <view class="catalog-card__bottom">
+          <price price="{{item.price}}" wr-class="catalog-card__price" />
+          <t-icon
+            prefix="wr"
+            name="cart"
+            size="40rpx"
+            color="#FA4126"
+            catchtap="goodListAddCartHandle"
+            data-index="{{index}}"
+          />
+        </view>
+      </view>
+    </view>
+  </view>
 
   <view
     class="home-empty"

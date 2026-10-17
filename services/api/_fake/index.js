@@ -70,6 +70,19 @@ function delay(ms = DELAY_MS) {
 /** 目前假裝登入的角色。P7a 要驗收四種角色的介面，可直接改這裡。 */
 let currentRole = 'customer';
 
+/**
+ * 退款申請的記憶體紀錄（P7a）。
+ *
+ * ⚠️ 與其他 fake 資料一樣只活在本次執行期；P7b 會換成
+ * `refund_records` 集合（docs/01 §7.1）。申請成功**不會**改訂單狀態。
+ */
+const REFUND_REQUESTS = [];
+
+/** 依 orderNo／orderId 找訂單（DTO 的 orderId 目前等於 orderNo） */
+function findOrder(orderId) {
+  return ORDERS.find((order) => order.orderNo === orderId) || null;
+}
+
 /** 測試輔助：切換角色以檢視不同介面 */
 export function __setRoleForDemo(role) {
   currentRole = role;
@@ -192,9 +205,63 @@ export async function fetchHome() {
 
 export async function fetchOrderDetail(orderNo) {
   await delay();
-  const order = ORDERS.find((o) => o.orderNo === orderNo);
+  const order = findOrder(orderNo);
   if (!order) throw new Error(`訂單不存在：${orderNo}`);
-  return { ...order, customer: CUSTOMERS[order.customerId] };
+  // 與列表同一份 DTO 形狀，詳情頁不需要再自行轉換
+  return { ...toOrderDto(order), customer: CUSTOMERS[order.customerId] };
+}
+
+/**
+ * 模擬支付（P7a）。
+ *
+ * P6 接上真實支付後，本函數應改為「向後端取得預支付參數」；
+ * 目前只在本機把 `PENDING_PAYMENT` 轉成 `PAID_PENDING_ASSIGN`，
+ * 讓訂單頁的按鈕與狀態流轉可以被端到端驗收。
+ */
+export async function payOrder(orderId) {
+  await delay();
+  const order = findOrder(orderId);
+  if (!order) throw new Error('訂單不存在');
+  if (order.status !== 'PENDING_PAYMENT') throw new Error('訂單狀態不可支付');
+
+  order.status = 'PAID_PENDING_ASSIGN';
+  return { paid: true, order: toOrderDto(order) };
+}
+
+/** 模擬取消未付款訂單（P7a）。 */
+export async function cancelOrder(orderId) {
+  await delay();
+  const order = findOrder(orderId);
+  if (!order) throw new Error('訂單不存在');
+  if (order.status !== 'PENDING_PAYMENT') throw new Error('訂單狀態不可取消');
+
+  order.status = 'CANCELED_UNPAID';
+  return { canceled: true, order: toOrderDto(order) };
+}
+
+/**
+ * 模擬退款申請（P7a）。
+ *
+ * 只寫入記憶體紀錄，不改訂單狀態；真正的退款審批在 P5 的
+ * `RequestRefundUseCase`／`ApproveRefundUseCase`。
+ */
+export async function requestRefund(orderId, amountCents, reason) {
+  await delay();
+  const order = findOrder(orderId);
+  if (!order) throw new Error('訂單不存在');
+  if (!Number.isInteger(amountCents) || amountCents <= 0) throw new Error('退款金額必須是正整數');
+  if (amountCents > order.totalCents) throw new Error('退款金額超過訂單總額');
+
+  const refund = {
+    refundId: `refund-${order.orderNo}-${REFUND_REQUESTS.length + 1}`,
+    orderId: order.orderNo,
+    amountCents,
+    reason: reason || '',
+    status: 'requested',
+    createdAt: Date.now(),
+  };
+  REFUND_REQUESTS.push(refund);
+  return { refund };
 }
 
 /**

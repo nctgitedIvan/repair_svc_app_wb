@@ -41,19 +41,28 @@
       </view>
 
       <view class="order-card__actions">
-        <view class="order-action" data-action="detail" bindtap="onOrderAction">查看詳情</view>
         <view
-          class="order-action order-action--primary"
-          wx:if="{{item.status === 'PENDING_PAYMENT'}}"
-          data-action="pay"
+          class="order-action"
+          data-action="detail"
+          data-order-no="{{item.orderNo}}"
           bindtap="onOrderAction"
         >
-          去支付
+          查看詳情
+        </view>
+        <view
+          class="order-action order-action--primary {{busyOrderId === item.orderId ? 'order-action--disabled' : ''}}"
+          wx:if="{{item.status === 'PENDING_PAYMENT'}}"
+          data-action="pay"
+          data-order-id="{{item.orderId}}"
+          bindtap="onOrderAction"
+        >
+          {{busyOrderId === item.orderId ? '支付中…' : '去支付'}}
         </view>
         <view
           class="order-action"
           wx:if="{{item.status === 'PENDING_PAYMENT'}}"
           data-action="cancel"
+          data-order-id="{{item.orderId}}"
           bindtap="onOrderAction"
         >
           取消訂單
@@ -62,6 +71,7 @@
           class="order-action"
           wx:if="{{item.status === 'COMPLETED'}}"
           data-action="refund"
+          data-order-id="{{item.orderId}}"
           bindtap="onOrderAction"
         >
           申請退款
@@ -76,4 +86,51 @@
     <view class="orders-empty__btn" bindtap="onGotoShop">去逛逛零件</view>
   </view>
 </view>
+
+<!-- 退款申請（彈窗；提交走 services/api.requestRefund） -->
+<t-popup
+  visible="{{refundVisible}}"
+  placement="bottom"
+  bind:visible-change="onRefundVisibleChange"
+>
+  <view class="refund-panel">
+    <view class="refund-panel__title">申請退款</view>
+
+    <view class="refund-panel__field">
+      <view class="refund-panel__label">退款金額（元）</view>
+      <t-input
+        type="digit"
+        value="{{refundAmount}}"
+        placeholder="請輸入退款金額"
+        bordered
+        bind:change="onRefundAmountChange"
+      />
+    </view>
+
+    <view class="refund-panel__field">
+      <view class="refund-panel__label">退款原因（選填）</view>
+      <t-textarea
+        value="{{refundReason}}"
+        placeholder="請說明退款原因"
+        maxlength="200"
+        bordered
+        autosize
+        bind:change="onRefundReasonChange"
+      />
+    </view>
+
+    <view class="refund-panel__actions">
+      <view class="refund-panel__btn">
+        <t-button theme="default" variant="outline" block bind:tap="closeRefund">取消</t-button>
+      </view>
+      <view class="refund-panel__btn">
+        <t-button theme="primary" block loading="{{refundSubmitting}}" bind:tap="submitRefund">
+          提交申請
+        </t-button>
+      </view>
+    </view>
+  </view>
+</t-popup>
+
+<t-dialog id="t-dialog" />
 <t-toast id="t-toast" />
