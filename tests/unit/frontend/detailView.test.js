@@ -310,7 +310,8 @@ test('與真實 fake 資料對齊', async (t) => {
       assert.ok(Number.isInteger(v.priceCents), `${p.productId} 沒有價格`);
       assert.deepEqual(v.images, p.images, `${p.productId} 的圖不對`);
       assert.ok(v.detailHtml, `${p.productId} 沒有 detailHtml`);
-      // ⚠️ 「不該再有舊欄位 thumb」的斷言留到 T6a.3-2（A2 才移除 raw thumb）
+      // ⚠️ T6a.3-2：舊欄位 thumb 已從資料模型移除（§7.4），不該再出現
+      assert.ok(!('thumb' in p), `${p.productId} 仍有舊欄位 thumb`);
     }
   });
 
@@ -323,6 +324,7 @@ test('與真實 fake 資料對齊', async (t) => {
       assert.ok(v.durationMinutes > 0, `${s.serviceId} 缺時長`);
       // T6a-3 補上：§3.7.1 說服務有技能標籤
       assert.ok(v.skillTags.length > 0, `${s.serviceId} 缺技能標籤`);
+      assert.ok(!('thumb' in s), `${s.serviceId} 仍有舊欄位 thumb`);
     }
   });
 

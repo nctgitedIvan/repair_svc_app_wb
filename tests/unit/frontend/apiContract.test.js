@@ -170,13 +170,9 @@ test('⚠️ fake 資料必須讓邊界情況可見（人工驗收 C4/C5 的前�
     }
   });
 
-  // 購物車列、商品列表、商品詳情都要顯示圖片（T4 起用）。
-  // 少一筆 thumb 就會在畫面上出現破圖，而那種錯在測試裡看不到 —— 所以在此擋下。
-  await t.test('每個零件都有非空的 thumb（前端呈現需要）', () => {
-    for (const p of PRODUCTS) {
-      assert.ok(typeof p.thumb === 'string' && p.thumb.length > 0, `${p.productId} 缺少 thumb`);
-    }
-  });
+  // 購物車列、商品列表、商品詳情都要顯示圖片。
+  // ⚠️ T6a.3-2：主圖已改為 `images[0]`（`thumb` 從資料模型移除，§7.4），
+  // 這個斷言原本檢查 `thumb`，現在改檢查 `images`（見下方的 images 斷言）。
 
   // T6a-3：詳情頁的「詳情介紹」與服務的「技能標籤」都要有資料可顯示。
   await t.test('每個零件都有 description（詳情頁的詳情介紹用）', () => {

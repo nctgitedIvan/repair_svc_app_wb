@@ -108,7 +108,6 @@ const SERVICES = Object.freeze([
     images: ['https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-2a.png'],
     skillTags: ['空調', '冷凍空調'],
     isActive: true,
-    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/muy-3a.png',
   },
   {
     serviceId: 'svc-2',
@@ -124,7 +123,6 @@ const SERVICES = Object.freeze([
     images: ['https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-2b.png'],
     skillTags: ['空調', '清洗'],
     isActive: true,
-    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-17a.png',
   },
   {
     serviceId: 'svc-3',
@@ -140,7 +138,6 @@ const SERVICES = Object.freeze([
     images: ['https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-3a.png'],
     skillTags: ['水電', '給排水'],
     isActive: true,
-    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-3a.png',
   },
   {
     serviceId: 'svc-4',
@@ -156,7 +153,6 @@ const SERVICES = Object.freeze([
     images: ['https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-3b.png'],
     skillTags: ['水電', '衛浴'],
     isActive: true,
-    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-09a.png',
   },
   {
     serviceId: 'svc-5',
@@ -172,7 +168,6 @@ const SERVICES = Object.freeze([
     images: ['https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-3c.png'],
     skillTags: ['水電', '燃氣設備'],
     isActive: true,
-    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-08b.png',
   },
   {
     serviceId: 'svc-6',
@@ -188,7 +183,6 @@ const SERVICES = Object.freeze([
     images: ['https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-2c.png'],
     skillTags: ['水電', '室內配線'],
     isActive: true,
-    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-17a.png',
   },
   {
     serviceId: 'svc-7',
@@ -204,7 +198,6 @@ const SERVICES = Object.freeze([
     images: ['https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-3d.png'],
     skillTags: ['水電', '室內配線'],
     isActive: true,
-    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-3a.png',
   },
   {
     serviceId: 'svc-8',
@@ -220,7 +213,6 @@ const SERVICES = Object.freeze([
     images: ['https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-2d.png'],
     skillTags: ['水電', '燈具'],
     isActive: true,
-    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/muy-3a.png',
   },
   {
     serviceId: 'svc-9',
@@ -236,7 +228,6 @@ const SERVICES = Object.freeze([
     images: ['https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-2a1.png'],
     skillTags: ['空調', '冷凍空調'],
     isActive: true,
-    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-09a.png',
   },
   {
     serviceId: 'svc-10',
@@ -252,7 +243,6 @@ const SERVICES = Object.freeze([
     images: ['https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-3a.png'],
     skillTags: ['木工', '組裝'],
     isActive: true,
-    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-08b.png',
   },
   {
     serviceId: 'svc-11',
@@ -268,7 +258,6 @@ const SERVICES = Object.freeze([
     images: ['https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-3b.png'],
     skillTags: ['木工', '家具維修'],
     isActive: true,
-    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/muy-3a.png',
   },
 ]);
 
@@ -315,7 +304,6 @@ const PRODUCTS = Object.freeze([
     priceCents: 2500,
     stock: 20,
     isActive: true,
-    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-09a.png',
     // T6a.3：specs 改為**維度**；skus 是規格組合（priceCents 逐 SKU）
     specs: [{ specId: 'size', title: '規格', values: ['標準罐', '大罐'] }],
     skus: [
@@ -336,7 +324,6 @@ const PRODUCTS = Object.freeze([
     priceCents: 800,
     stock: 3, // ← 刻意很少，驗收「庫存不足」用
     isActive: true,
-    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-3a.png',
     specs: [],
     skus: [],
   },
@@ -353,7 +340,6 @@ const PRODUCTS = Object.freeze([
     priceCents: 450,
     stock: 0, // ← 刻意為 0，驗收「已售完」用
     isActive: true,
-    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/muy-3a.png',
     specs: [],
     skus: [],
   },
@@ -370,7 +356,6 @@ const PRODUCTS = Object.freeze([
     priceCents: 3200,
     stock: 5,
     isActive: false, // ← 刻意下架，驗收「已下架」用（分類頁也不會顯示它）
-    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-17a.png',
     specs: [],
     skus: [],
   },
@@ -387,7 +372,6 @@ const PRODUCTS = Object.freeze([
     priceCents: 200,
     stock: 50,
     isActive: true,
-    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-3a.png',
     specs: [{ specId: 'size', title: '規格', values: ['M12', 'M15'] }],
     skus: [
       { skuId: 'sku-m12', specValues: ['M12'], priceCents: 200, stock: 50, image: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-3b.png' },
@@ -407,7 +391,6 @@ const PRODUCTS = Object.freeze([
     priceCents: 1500,
     stock: 12,
     isActive: true,
-    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-17a.png',
     specs: [{ specId: 'color', title: '色溫', values: ['暖光', '白光'] }],
     skus: [
       { skuId: 'sku-warm', specValues: ['暖光'], priceCents: 1500, stock: 12, image: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/dz-2d.png' },
@@ -427,7 +410,6 @@ const PRODUCTS = Object.freeze([
     priceCents: 600,
     stock: 30,
     isActive: true,
-    thumb: 'https://tdesign.gtimg.com/miniprogram/template/retail/goods/nz-08b.png',
     specs: [],
     skus: [],
   },
