@@ -21,6 +21,8 @@ const { CategoryRepository } = require('./CategoryRepository');
 const { CustomerRepository } = require('./CustomerRepository');
 const { CsAgentRepository } = require('./CsAgentRepository');
 const { TechnicianRepository } = require('./TechnicianRepository');
+const { ServiceRepository } = require('./ServiceRepository');
+const { ProductRepository } = require('./ProductRepository');
 
 module.exports = {
   ClockPort,
@@ -40,4 +42,6 @@ module.exports = {
   CustomerRepository,
   CsAgentRepository,
   TechnicianRepository,
+  ServiceRepository,
+  ProductRepository,
 };

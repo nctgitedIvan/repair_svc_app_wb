@@ -29,6 +29,8 @@ const { InMemoryCategoryRepository } = require('./inmemory/InMemoryCategoryRepos
 const { InMemoryCustomerRepository } = require('./inmemory/InMemoryCustomerRepository');
 const { InMemoryCsAgentRepository } = require('./inmemory/InMemoryCsAgentRepository');
 const { InMemoryTechnicianRepository } = require('./inmemory/InMemoryTechnicianRepository');
+const { InMemoryServiceRepository } = require('./inmemory/InMemoryServiceRepository');
+const { InMemoryProductRepository } = require('./inmemory/InMemoryProductRepository');
 const { createCloudDBClient } = require('./clouddb/CloudDBClient');
 const { createCloudDBUnitOfWork } = require('./clouddb/CloudDBUnitOfWork');
 const { createCloudDBIdSequenceRepository } = require('./clouddb/CloudDBIdSequenceRepository');
@@ -39,6 +41,8 @@ const { createCloudDBUserRepository } = require('./clouddb/CloudDBUserRepository
 const { createCloudDBCustomerRepository } = require('./clouddb/CloudDBCustomerRepository');
 const { createCloudDBCsAgentRepository } = require('./clouddb/CloudDBCsAgentRepository');
 const { createCloudDBTechnicianRepository } = require('./clouddb/CloudDBTechnicianRepository');
+const { createCloudDBServiceRepository } = require('./clouddb/CloudDBServiceRepository');
+const { createCloudDBProductRepository } = require('./clouddb/CloudDBProductRepository');
 
 module.exports = {
   SystemClockAdapter,
@@ -55,6 +59,8 @@ module.exports = {
   InMemoryCustomerRepository,
   InMemoryCsAgentRepository,
   InMemoryTechnicianRepository,
+  InMemoryServiceRepository,
+  InMemoryProductRepository,
   createCloudDBClient,
   createCloudDBUnitOfWork,
   createCloudDBIdSequenceRepository,
@@ -65,4 +71,6 @@ module.exports = {
   createCloudDBCustomerRepository,
   createCloudDBCsAgentRepository,
   createCloudDBTechnicianRepository,
+  createCloudDBServiceRepository,
+  createCloudDBProductRepository,
 };
