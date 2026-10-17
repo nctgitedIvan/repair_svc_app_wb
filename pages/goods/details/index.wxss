@@ -246,7 +246,14 @@ page {
 .goods-detail-page .desc-content {
   margin-top: 20rpx;
   background-color: #fff;
-  padding-bottom: 120rpx;
+  /*
+   * ⚠️ T6a.1-1：120rpx → **160rpx**。
+   * 底部有一條 `position: fixed` 的購買列（`buy-bar`）：
+   * 按鈕 80rpx ＋ `.footer-cont` 的上下 padding 32rpx ＋ 安全區
+   * → 實測約 112～150rpx。原本的 120rpx **在臨界值**，在底部安全區較大的機型上
+   * 可能蓋住最後一段文字，因此放寬到 160rpx。
+   */
+  padding-bottom: 160rpx;
 }
 
 .goods-detail-page .desc-content__title {

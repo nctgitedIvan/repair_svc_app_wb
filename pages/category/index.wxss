@@ -21,8 +21,18 @@ page {
 
 /* ── 網格（右側面板內） ── */
 
+/*
+ * ⚠️ T6a.1-1：底部留白 32rpx → **120rpx**。
+ *
+ * 這頁是 tabBar 頁面，而**自訂 tabBar 會蓋住頁面底部約 112rpx**
+ * （`t-tab-bar-item` 是 `height: 80rpx` ＋ `margin: 16rpx 0`）。
+ * 原本只留 32rpx → 最後一列卡片的下一半被 tabBar 蓋住，捲到底也看不到。
+ *
+ * 對照組：購物車頁有 `.cart-bar__placeholder`（100rpx）＋`.gap`（100rpx）；
+ * 詳情頁有 `.desc-content` 的底部留白。分類頁原本漏了這一塊。
+ */
 .cat-grid {
-  padding: 16rpx 16rpx 32rpx;
+  padding: 16rpx 16rpx 120rpx;
 }
 
 .cat-grid__empty {
