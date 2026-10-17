@@ -1,6 +1,16 @@
 import { fetchUserCenter } from '../../services/usercenter/fetchUsercenter';
 import Toast from 'tdesign-miniprogram/toast/index';
 
+/**
+ * 「我的」的選單。
+ *
+ * ⚠️ **T6a.1-4 新增「我的收藏」與「設置」兩個入口。**
+ *
+ * ⚠️ **這一頁尚未全面改造**（那是 **P7a-2b** 的範圍，見 `docs/P7a-2a-計畫.md`）：
+ *    目前仍留著電商時代的「优惠券」「积分」（簡體、且優惠券依 A7 已下線），
+ *    以及「帮助中心」的佔位 Toast。P7a-2b 會一併整理（改為訂單／地址／工單入口）。
+ *    本批**只新增、不刪除**，避免把兩件事混在一起。
+ */
 const menuData = [
   [
     {
@@ -10,19 +20,25 @@ const menuData = [
       type: 'address',
     },
     {
+      title: '我的收藏',
+      tit: '',
+      url: '',
+      type: 'favorite',
+    },
+    {
+      title: '設置',
+      tit: '',
+      url: '',
+      type: 'setting',
+    },
+  ],
+  [
+    {
       title: '优惠券',
       tit: '',
       url: '',
       type: 'coupon',
     },
-    {
-      title: '积分',
-      tit: '',
-      url: '',
-      type: 'point',
-    },
-  ],
-  [
     {
       title: '帮助中心',
       tit: '',
@@ -147,6 +163,15 @@ Page({
       }
       case 'service': {
         this.openMakePhone();
+        break;
+      }
+      // T6a.1-4
+      case 'favorite': {
+        wx.navigateTo({ url: '/pages/user/favorites/index' });
+        break;
+      }
+      case 'setting': {
+        wx.navigateTo({ url: '/pages/user/settings/index' });
         break;
       }
       case 'help-center': {

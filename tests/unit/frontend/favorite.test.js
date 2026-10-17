@@ -194,6 +194,49 @@ test('normalizeStore：Storage 內容的容錯（單筆壞掉不毀整份）', a
   });
 });
 
+test('withCurrentPrices：收藏清單 ＋ 商品現況（「我的收藏」頁用）', async (t) => {
+  const store = fav.addFavorite(fav.createStore(), {
+    productId: 'prd-1',
+    item: { name: '冷媒 R410', thumb: 'x.png', priceCents: 8000 },
+    now: NOW,
+  }).store;
+
+  await t.test('價格沒變 → priceChanged 為 false、direction 為 null', () => {
+    const rows = fav.withCurrentPrices(store, { 'prd-1': { priceCents: 8000, isActive: true } });
+    assert.equal(rows[0].priceCents, 8000, '顯示收藏當時的價');
+    assert.equal(rows[0].priceChanged, false);
+    assert.equal(rows[0].direction, null);
+  });
+
+  await t.test('⚠️ 漲價 → direction 為 up（文案由頁面決定，這裡只給方向）', () => {
+    const rows = fav.withCurrentPrices(store, { 'prd-1': { priceCents: 10000, isActive: true } });
+    assert.equal(rows[0].priceChanged, true);
+    assert.equal(rows[0].direction, 'up');
+    assert.equal(rows[0].currentPriceCents, 10000);
+  });
+
+  await t.test('降價 → direction 為 down', () => {
+    const rows = fav.withCurrentPrices(store, { 'prd-1': { priceCents: 5000, isActive: true } });
+    assert.equal(rows[0].direction, 'down');
+  });
+
+  await t.test('商品已下架／已不在目錄 → isDelisted／isMissing，且不當成價格變動', () => {
+    const delisted = fav.withCurrentPrices(store, { 'prd-1': { priceCents: 8000, isActive: false } });
+    assert.equal(delisted[0].isDelisted, true);
+    assert.equal(delisted[0].priceChanged, false);
+
+    const missing = fav.withCurrentPrices(store, {});
+    assert.equal(missing[0].isMissing, true);
+    assert.equal(missing[0].currentPriceCents, null);
+    assert.equal(missing[0].priceChanged, false, '取不到現價時不該說「價格已變動」');
+  });
+
+  await t.test('空資料／無 catalog 不爆', () => {
+    assert.deepEqual(fav.withCurrentPrices(fav.createStore()), []);
+    assert.equal(fav.withCurrentPrices(store).length, 1);
+  });
+});
+
 /**
  * ⚠️ 這一組是「提醒測試」：把 P7a 的臨時方案寫成可被看見的事實。
  * P5 接上後端後，這裡的斷言應該改成「customerId 由後端決定」。

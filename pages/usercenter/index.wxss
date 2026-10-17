@@ -144,3 +144,15 @@ page {
 .cell-box .t-cell-padding {
   padding: 24rpx 18rpx 24rpx 32rpx;
 }
+
+/*
+ * ⚠️ T6a.1-4：底部留白。
+ *
+ * 這是 **tabBar 頁面**，自訂 tabBar 會蓋住頁面底部約 112rpx
+ * （`t-tab-bar-item` 是 `height: 80rpx` ＋ `margin: 16rpx 0`）。
+ * 這一頁原本沒有留白 —— 選單不長時看不出來，但 T6a.1-4 新增兩個入口後
+ * 就可能踩到（與分類頁同一個問題，一併補上）。
+ */
+.content-wrapper {
+  padding-bottom: 140rpx;
+}

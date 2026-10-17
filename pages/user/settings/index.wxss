@@ -1,0 +1,35 @@
+/* 設置（T6a.1-4，骨架） */
+
+.settings-page {
+  padding: 20rpx 24rpx;
+}
+
+.settings-card {
+  background-color: #fff;
+  border-radius: 16rpx;
+  overflow: hidden;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 28rpx 24rpx;
+  font-size: 28rpx;
+  line-height: 40rpx;
+}
+
+.settings-row__label {
+  color: #333333;
+}
+
+.settings-row__value {
+  color: #999999;
+}
+
+.settings-tip {
+  margin-top: 40rpx;
+  text-align: center;
+  font-size: 24rpx;
+  color: #bbbbbb;
+}

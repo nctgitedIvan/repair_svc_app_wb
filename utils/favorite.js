@@ -151,6 +151,41 @@ function toggleFavorite(store, { productId, item, now } = {}) {
   return { ...result, favorited: result.ok };
 }
 
+/**
+ * 收藏清單 ＋ **商品現況** → 顯示用的列（T6a.1-4，「我的收藏」頁用）。
+ *
+ * ⚠️ 快照價與現價不同時要講清楚（`docs/01` §7.2 第 9 點的 UX 要求）：
+ *    顯示「收藏時 ¥80（已漲至 ¥100）」，方向由 `direction` 表達 —— **純資料，不含文案**。
+ *
+ * @param {object} store 收藏資料
+ * @param {Record<string, object>} [catalog] productId → 商品現況（`fetchProducts()` 建索引）
+ */
+function withCurrentPrices(store, catalog = {}) {
+  return listFavorites(store).map((entry) => {
+    const snapshotCents = entry.productSnapshot.priceCents;
+    const current = catalog[entry.productId] || null;
+    const currentPriceCents = current && Number.isInteger(current.priceCents) ? current.priceCents : null;
+    const priceChanged = currentPriceCents !== null && currentPriceCents !== snapshotCents;
+
+    return {
+      productId: entry.productId,
+      name: entry.productSnapshot.name,
+      image: entry.productSnapshot.image,
+      /** 收藏當時的價格（清單顯示這個） */
+      priceCents: snapshotCents,
+      currentPriceCents,
+      priceChanged,
+      /** `'up' | 'down' | null` —— 文案由頁面決定，這裡只給方向 */
+      direction: priceChanged ? (currentPriceCents > snapshotCents ? 'up' : 'down') : null,
+      /** 商品已下架 */
+      isDelisted: !!current && current.isActive === false,
+      /** 商品已不在目錄中（下架且被清掉，或 id 失效） */
+      isMissing: !current,
+      createdAt: entry.createdAt,
+    };
+  });
+}
+
 // ── 持久化（有副作用，與純邏輯分開）──
 
 /** 一筆收藏是否存得起來（壞掉的就丟掉，見 `normalizeStore`） */
@@ -241,6 +276,7 @@ module.exports = {
   addFavorite,
   removeFavorite,
   toggleFavorite,
+  withCurrentPrices,
   normalizeStore,
   loadFavorites,
   saveFavorites,

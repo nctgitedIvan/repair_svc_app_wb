@@ -1,0 +1,47 @@
+<!--
+  我的收藏（T6a.1-4）。
+
+  ⚠️ 卡片由本頁渲染（不用共用的 goods-card）—— 與分類頁同一個理由：
+     這一頁要顯示「收藏當時的價 ＋ 現價提示」，欄位與共用卡片不同，
+     與其打進元件內部改樣式，不如自己畫（也不再依賴 addGlobalClass）。
+
+  ⚠️ 價格一律用 price 元件（吃「分」）。
+-->
+<view class="fav-page" wx:if="{{ready && rows.length > 0}}">
+  <view class="fav-item" wx:for="{{rows}}" wx:key="productId" bindtap="onRowTap" data-product-id="{{item.productId}}">
+    <view class="fav-item__thumb">
+      <t-image wx:if="{{item.image}}" t-class="fav-item__img" src="{{item.image}}" mode="aspectFill" lazy-load />
+    </view>
+
+    <view class="fav-item__body">
+      <view class="fav-item__title">{{item.name}}</view>
+
+      <view class="fav-item__state" wx:if="{{item.isMissing}}">此商品已不存在</view>
+      <view class="fav-item__state" wx:elif="{{item.isDelisted}}">此商品已下架</view>
+
+      <view class="fav-item__price">
+        <price price="{{item.priceCents}}" wr-class="fav-item__price-num" />
+        <text class="fav-item__price-label">（收藏時）</text>
+      </view>
+
+      <!-- 現價與收藏時不同 → 講清楚方向（docs/01 §7.2 第 9 點的 UX 要求） -->
+      <view class="fav-item__changed" wx:if="{{item.priceChanged}}">
+        {{item.direction === 'up' ? '已漲至' : '已降至'}}
+        <price price="{{item.currentPriceCents}}" wr-class="fav-item__changed-num" />
+      </view>
+    </view>
+
+    <view class="fav-item__remove" catchtap="onRemove" data-product-id="{{item.productId}}" data-name="{{item.name}}">
+      取消收藏
+    </view>
+  </view>
+</view>
+
+<!-- 空清單 -->
+<view class="fav-empty" wx:if="{{ready && rows.length === 0}}">
+  <view class="fav-empty__text">還沒有收藏任何商品</view>
+  <view class="fav-empty__btn" bindtap="onGotoShop">去逛逛零件</view>
+</view>
+
+<t-toast id="t-toast" />
+<t-dialog id="t-dialog" />

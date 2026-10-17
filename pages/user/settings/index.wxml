@@ -1,0 +1,16 @@
+<!--
+  設置（T6a.1-4）—— 目前只做骨架，見 index.js 的說明。
+
+  刻意不放：清除本機資料（購物車／收藏還在 P7a 的臨時 Storage）、
+  角色與權限設定（屬 P3／P8）。
+-->
+<view class="settings-page">
+  <view class="settings-card">
+    <view class="settings-row">
+      <text class="settings-row__label">版本</text>
+      <text class="settings-row__value">{{version}}</text>
+    </view>
+  </view>
+
+  <view class="settings-tip">設置項目將於後續階段提供</view>
+</view>
