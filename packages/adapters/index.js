@@ -21,6 +21,9 @@ const { InMemoryLoggerAdapter } = require('./logging/InMemoryLoggerAdapter');
 const { InMemoryOrderRepository } = require('./inmemory/InMemoryOrderRepository');
 const { InMemorySettlementAdapter } = require('./inmemory/InMemorySettlementAdapter');
 const { InMemoryUserRepository } = require('./inmemory/InMemoryUserRepository');
+const { createInMemoryUnitOfWork } = require('./inmemory/InMemoryUnitOfWork');
+const { createCloudDBClient } = require('./clouddb/CloudDBClient');
+const { createCloudDBUnitOfWork } = require('./clouddb/CloudDBUnitOfWork');
 
 module.exports = {
   SystemClockAdapter,
@@ -29,4 +32,7 @@ module.exports = {
   InMemoryOrderRepository,
   InMemorySettlementAdapter,
   InMemoryUserRepository,
+  createInMemoryUnitOfWork,
+  createCloudDBClient,
+  createCloudDBUnitOfWork,
 };

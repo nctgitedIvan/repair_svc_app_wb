@@ -42,6 +42,19 @@ const CRYPTO_MEMBER_ALLOWLIST = Object.freeze(['createHash']);
 const CRYPTO_ALLOWED_FILES = Object.freeze(['packages/domain/audit/AuditChain.js']);
 
 /**
+ * 雲資料庫存取點白名單（P2a）。
+ *
+ * `cloud.database()` 與 `db.collection()` 只允許出現在 CloudDBClient。
+ * 其他 adapter 一律透過注入的 client 取得 collection，日後換 DB／加 instrument
+ * 只需要改一個地方。
+ */
+const CLOUD_DB_ALLOWED_FILES = Object.freeze(['packages/adapters/clouddb/CloudDBClient.js']);
+const CLOUD_DB_PATTERNS = Object.freeze([
+  /\bcloud\s*\.\s*database\s*\(/,
+  /\bdb\s*\.\s*collection\s*\(/,
+]);
+
+/**
  * 每個層允許 require 的套件。null = 不限制（邊界層）。
  *
  * 註：`crypto` **不在此處**，它由上面的檔案層級例外單獨處理。
@@ -199,6 +212,43 @@ function checkAdapterRoleBranching() {
 }
 
 /**
+ * 雲資料庫存取點檢查（P2a）。
+ *
+ * 只允許 `packages/adapters/clouddb/CloudDBClient.js` 出現
+ * `cloud.database()` 或 `db.collection()`。其他 adapter 必須透過 client。
+ *
+ * 抽成純函式，讓負向測試可以直接餵入違規內容。
+ *
+ * @param {string} relPath 相對專案根、以 `/` 分隔
+ * @param {string} source
+ * @returns {Array<{file: string, line: number, why: string, text: string}>}
+ */
+function checkCloudDBAccess(relPath, source) {
+  if (CLOUD_DB_ALLOWED_FILES.includes(relPath)) return [];
+  const found = [];
+  source.split('\n').forEach((line, i) => {
+    if (isComment(line)) return;
+    if (CLOUD_DB_PATTERNS.some((re) => re.test(line))) {
+      found.push({
+        file: relPath,
+        line: i + 1,
+        why: 'cloud.database()／db.collection() 只允許出現在 CloudDBClient.js',
+        text: line.trim().slice(0, 90),
+      });
+    }
+  });
+  return found;
+}
+
+function checkCloudDBUsage() {
+  for (const abs of walk(path.join(ROOT, 'packages'))) {
+    const r = rel(abs);
+    if (isTest(r)) continue;
+    violations.push(...checkCloudDBAccess(r, fs.readFileSync(abs, 'utf8')));
+  }
+}
+
+/**
  * crypto 成員白名單檢查（deny-by-default）。
  *
  * 涵蓋兩種用法：
@@ -294,10 +344,11 @@ function run() {
   for (const d of Object.keys(ALLOWED_DEPS)) checkDeps(d);
   checkAdapterInstantiation();
   checkAdapterRoleBranching();
+  checkCloudDBUsage();
   checkCryptoMembers();
 
   if (violations.length === 0) {
-    console.log('✓ 依賴方向檢查通過（domain / ports / 各層依賴 / 組裝點唯一性 / adapters 無角色判斷 / crypto 白名單）');
+    console.log('✓ 依賴方向檢查通過（domain / ports / 各層依賴 / 組裝點唯一性 / adapters 無角色判斷 / 雲資料庫單一入口 / crypto 白名單）');
     return 0;
   }
 
@@ -319,6 +370,8 @@ module.exports = {
   ALLOWED_DEPS,
   CRYPTO_MEMBER_ALLOWLIST,
   CRYPTO_ALLOWED_FILES,
+  CLOUD_DB_ALLOWED_FILES,
   DOMAIN_FORBIDDEN,
   PORTS_FORBIDDEN,
+  checkCloudDBAccess,
 };
