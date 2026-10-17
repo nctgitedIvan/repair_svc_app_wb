@@ -4,6 +4,7 @@
     "t-toast": "tdesign-miniprogram/toast/toast",
     "t-icon": "tdesign-miniprogram/icon/icon",
     "t-image": "/components/webp-image/index",
+    "t-popup": "tdesign-miniprogram/popup/popup",
     "price": "/components/price/index"
   }
 }

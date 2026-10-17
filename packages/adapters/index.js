@@ -34,6 +34,8 @@ const { InMemoryProductRepository } = require('./inmemory/InMemoryProductReposit
 const { InMemoryCartRepository } = require('./inmemory/InMemoryCartRepository');
 const { InMemoryFavoriteRepository } = require('./inmemory/InMemoryFavoriteRepository');
 const { InMemoryInquiryRepository } = require('./inmemory/InMemoryInquiryRepository');
+const { InMemoryCouponRepository } = require('./inmemory/InMemoryCouponRepository');
+const { InMemoryUserCouponRepository } = require('./inmemory/InMemoryUserCouponRepository');
 const { InMemoryOrderItemRepository } = require('./inmemory/InMemoryOrderItemRepository');
 const { InMemoryPaymentRepository } = require('./inmemory/InMemoryPaymentRepository');
 const { InMemoryRefundRepository } = require('./inmemory/InMemoryRefundRepository');
@@ -87,6 +89,8 @@ module.exports = {
   InMemoryCartRepository,
   InMemoryFavoriteRepository,
   InMemoryInquiryRepository,
+  InMemoryCouponRepository,
+  InMemoryUserCouponRepository,
   InMemoryOrderItemRepository,
   InMemoryPaymentRepository,
   InMemoryRefundRepository,

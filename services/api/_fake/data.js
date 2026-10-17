@@ -519,6 +519,91 @@ const ADMIN_OVERVIEW = Object.freeze({
   todayRevenueCents: 45600,
 });
 
+/**
+ * 優惠券（P7a）。
+ *
+ * 形狀對齊 `packages/ports/CouponRepository` 與 `UserCouponRepository`；
+ * P7b 會換成 `coupons`／`user_coupons` 集合。
+ *
+ * 有效期刻意用相對於載入時間的區間，讓「可用／已過期」兩種情況
+ * 在示範資料中同時存在（不是寫死某一天）。
+ */
+const COUPON_NOW = Date.now();
+const COUPON_DAY = 86_400_000;
+
+const COUPONS = Object.freeze([
+  {
+    couponId: 'coupon-new20',
+    name: '新客立減 20 元',
+    amountCents: 2000,
+    minSpendCents: 5000,
+    validFrom: COUPON_NOW - 7 * COUPON_DAY,
+    validTo: COUPON_NOW + 30 * COUPON_DAY,
+    isActive: true,
+    totalQuantity: null,
+    createdAt: COUPON_NOW - 7 * COUPON_DAY,
+  },
+  {
+    couponId: 'coupon-full100',
+    name: '滿 100 減 15',
+    amountCents: 1500,
+    minSpendCents: 10000,
+    validFrom: COUPON_NOW - 3 * COUPON_DAY,
+    validTo: COUPON_NOW + 14 * COUPON_DAY,
+    isActive: true,
+    totalQuantity: null,
+    createdAt: COUPON_NOW - 3 * COUPON_DAY,
+  },
+  {
+    couponId: 'coupon-expired',
+    name: '過期券（示範）',
+    amountCents: 1000,
+    minSpendCents: 0,
+    validFrom: COUPON_NOW - 30 * COUPON_DAY,
+    validTo: COUPON_NOW - 1 * COUPON_DAY,
+    isActive: true,
+    totalQuantity: null,
+    createdAt: COUPON_NOW - 30 * COUPON_DAY,
+  },
+]);
+
+/** 目前客戶（cust-1）手上的券；status 只用 unused／used／expired */
+const USER_COUPONS = Object.freeze([
+  {
+    userCouponId: 'uc-1',
+    couponId: 'coupon-new20',
+    userId: CUSTOMERS['cust-1'].userId,
+    status: 'unused',
+    validFrom: COUPONS[0].validFrom,
+    validTo: COUPONS[0].validTo,
+    receivedAt: COUPON_NOW - 5 * COUPON_DAY,
+    usedAt: null,
+    orderId: null,
+  },
+  {
+    userCouponId: 'uc-2',
+    couponId: 'coupon-full100',
+    userId: CUSTOMERS['cust-1'].userId,
+    status: 'unused',
+    validFrom: COUPONS[1].validFrom,
+    validTo: COUPONS[1].validTo,
+    receivedAt: COUPON_NOW - 2 * COUPON_DAY,
+    usedAt: null,
+    orderId: null,
+  },
+  {
+    userCouponId: 'uc-3',
+    couponId: 'coupon-expired',
+    userId: CUSTOMERS['cust-1'].userId,
+    status: 'unused',
+    validFrom: COUPONS[2].validFrom,
+    validTo: COUPONS[2].validTo,
+    receivedAt: COUPON_NOW - 20 * COUPON_DAY,
+    usedAt: null,
+    orderId: null,
+  },
+]);
+
 module.exports = {
   CUSTOMERS,
   CATEGORIES,
@@ -529,4 +614,6 @@ module.exports = {
   WORK_ORDERS,
   TECHNICIANS,
   ADMIN_OVERVIEW,
+  COUPONS,
+  USER_COUPONS,
 };

@@ -12,6 +12,7 @@ import {
   DollarOutlined,
   AppstoreOutlined,
   SafetyCertificateOutlined,
+  GiftOutlined,
 } from '@ant-design/icons';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { clearSession, getUser } from '../auth';
@@ -27,6 +28,7 @@ const MENU_ITEMS = [
   { key: '/profit-sharing', icon: <DollarOutlined />, label: '分帳管理' },
   { key: '/categories', icon: <AppstoreOutlined />, label: '分類管理' },
   { key: '/technicians', icon: <TeamOutlined />, label: '師傅管理' },
+  { key: '/coupons', icon: <GiftOutlined />, label: '優惠券管理' },
   { key: '/permissions', icon: <SafetyCertificateOutlined />, label: '權限管理' },
 ];
 
@@ -39,6 +41,7 @@ const TITLES = {
   '/profit-sharing': '分帳管理',
   '/categories': '分類管理',
   '/technicians': '師傅管理',
+  '/coupons': '優惠券管理',
   '/permissions': '權限管理',
 };
 

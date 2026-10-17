@@ -287,3 +287,141 @@ page {
   color: #fa4126;
   font-size: 26rpx;
 }
+
+/* ── 優惠券 ── */
+
+.coupon-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.coupon-entry__label {
+  flex: none;
+  font-size: 28rpx;
+  color: #333333;
+}
+
+.coupon-entry__right {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 12rpx;
+}
+
+.coupon-entry__selected {
+  max-width: 340rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 26rpx;
+  color: #333333;
+}
+
+.coupon-entry__placeholder {
+  font-size: 26rpx;
+  color: #999999;
+}
+
+.coupon-entry__discount {
+  font-size: 26rpx;
+  color: #fa4126;
+}
+
+.checkout-row__discount {
+  font-size: 26rpx;
+  color: #fa4126;
+}
+
+.coupon-panel {
+  box-sizing: border-box;
+  max-height: 70vh;
+  padding: 24rpx 24rpx calc(env(safe-area-inset-bottom) + 24rpx);
+  background-color: #ffffff;
+  border-radius: 24rpx 24rpx 0 0;
+}
+
+.coupon-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 16rpx;
+}
+
+.coupon-panel__title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333333;
+}
+
+.coupon-panel__close {
+  font-size: 26rpx;
+  color: #999999;
+}
+
+.coupon-panel__list {
+  max-height: 56vh;
+}
+
+.coupon-card {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 20rpx;
+  margin-bottom: 16rpx;
+  border: 2rpx solid #f0f0f0;
+  border-radius: 16rpx;
+  background-color: #ffffff;
+}
+
+.coupon-card--active {
+  border-color: #fa4126;
+  background-color: #fff7f2;
+}
+
+.coupon-card--disabled {
+  opacity: 0.55;
+}
+
+.coupon-card__amount {
+  flex: none;
+  width: 150rpx;
+  text-align: center;
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #fa4126;
+}
+
+.coupon-card__symbol {
+  font-size: 24rpx;
+}
+
+.coupon-card__body {
+  flex: 1;
+  min-width: 0;
+  margin-left: 20rpx;
+}
+
+.coupon-card__name {
+  font-size: 28rpx;
+  color: #333333;
+  word-break: break-word;
+}
+
+.coupon-card__meta {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  line-height: 32rpx;
+  color: #999999;
+}
+
+.coupon-card__reason {
+  margin-top: 4rpx;
+  font-size: 22rpx;
+  color: #fa4126;
+}
+
+.coupon-card--none {
+  justify-content: space-between;
+}

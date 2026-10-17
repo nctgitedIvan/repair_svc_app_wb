@@ -34,6 +34,10 @@ const { OrderStatusLog } = require('./order/OrderStatusLog');
 const { OrderSnapshot } = require('./order/OrderSnapshot');
 const { priceItems, sumItemsWhere } = require('./order/PricingService');
 
+// ── 優惠券 ──
+const { Coupon } = require('./coupon/Coupon');
+const { UserCoupon, UserCouponStatus, USER_COUPON_STATUSES } = require('./coupon/UserCoupon');
+
 // ── 策略 ──
 const { discloseFor, disclosureStartAt } = require('./order/policies/AddressDisclosurePolicy');
 const { maskFor, maskAlways } = require('./order/policies/ContactMaskingPolicy');
@@ -95,6 +99,11 @@ module.exports = {
   OrderSnapshot,
   priceItems,
   sumItemsWhere,
+  // 優惠券
+  Coupon,
+  UserCoupon,
+  UserCouponStatus,
+  USER_COUPON_STATUSES,
   // 策略
   discloseFor,
   disclosureStartAt,

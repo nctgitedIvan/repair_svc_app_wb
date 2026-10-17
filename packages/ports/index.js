@@ -26,6 +26,8 @@ const { ProductRepository } = require('./ProductRepository');
 const { CartRepository } = require('./CartRepository');
 const { FavoriteRepository } = require('./FavoriteRepository');
 const { InquiryRepository } = require('./InquiryRepository');
+const { CouponRepository } = require('./CouponRepository');
+const { UserCouponRepository } = require('./UserCouponRepository');
 const { OrderItemRepository } = require('./OrderItemRepository');
 const { PaymentRepository } = require('./PaymentRepository');
 const { RefundRepository } = require('./RefundRepository');
@@ -58,6 +60,8 @@ module.exports = {
   CartRepository,
   FavoriteRepository,
   InquiryRepository,
+  CouponRepository,
+  UserCouponRepository,
   OrderItemRepository,
   PaymentRepository,
   RefundRepository,

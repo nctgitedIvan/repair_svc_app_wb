@@ -289,3 +289,70 @@ test('與真實 fake 資料對齊', async (t) => {
     assert.equal(view.totalCents, 14800);
   });
 });
+
+test('優惠券：抵扣與 expectedTotalCents', async (t) => {
+  const NOW = 1_700_000_000_000;
+  const DAY = 86_400_000;
+  const coupon = (over = {}) => ({
+    userCouponId: 'uc-1',
+    couponId: 'coupon-1',
+    name: '折扣券',
+    amountCents: 200,
+    minSpendCents: 500,
+    validFrom: NOW - DAY,
+    validTo: NOW + DAY,
+    status: 'unused',
+    ...over,
+  });
+
+  await t.test('達門檻：小計不變、總額扣掉面額', () => {
+    const view = build(payload([item()], { expectedTotalCents: 600 }), {
+      coupon: coupon(),
+      now: NOW,
+    });
+    assert.equal(view.goodsTotalCents, 800);
+    assert.equal(view.subtotalCents, 800);
+    assert.equal(view.discountCents, 200);
+    assert.equal(view.totalCents, 600);
+    assert.equal(view.coupon.userCouponId, 'uc-1');
+    assert.equal(view.priceChanged, false);
+  });
+
+  await t.test('未達門檻：不抵扣，回報原因', () => {
+    const view = build(payload([item()], { expectedTotalCents: 800 }), {
+      coupon: coupon({ minSpendCents: 10000 }),
+      now: NOW,
+    });
+    assert.equal(view.discountCents, 0);
+    assert.equal(view.totalCents, 800);
+    assert.equal(view.coupon, null);
+    assert.equal(view.couponInvalidReason, 'BELOW_THRESHOLD');
+  });
+
+  await t.test('已過期：不抵扣', () => {
+    const view = build(payload([item()], { expectedTotalCents: 800 }), {
+      coupon: coupon({ validFrom: NOW - 2 * DAY, validTo: NOW - DAY }),
+      now: NOW,
+    });
+    assert.equal(view.discountCents, 0);
+    assert.equal(view.couponInvalidReason, 'COUPON_EXPIRED');
+  });
+
+  await t.test('面額大於小計：折扣封頂，總額不為負', () => {
+    const view = build(payload([item()], { expectedTotalCents: 0 }), {
+      coupon: coupon({ amountCents: 5000, minSpendCents: 0 }),
+      now: NOW,
+    });
+    assert.equal(view.discountCents, 800);
+    assert.equal(view.totalCents, 0);
+  });
+
+  await t.test('priceChanged 以折扣後總額比較', () => {
+    const view = build(payload([item()], { expectedTotalCents: 800 }), {
+      coupon: coupon(),
+      now: NOW,
+    });
+    assert.equal(view.totalCents, 600);
+    assert.equal(view.priceChanged, true, 'expectedTotal 尚未同步時應提示價格已更新');
+  });
+});

@@ -17,6 +17,8 @@ const {
   profitSharingRecords,
   permissionGroups,
   adminAccounts,
+  coupons,
+  userCoupons,
   STATUS_LABELS,
 } = require('./data');
 
@@ -527,6 +529,107 @@ app.patch('/api/categories/:id/status', (req, res) => {
   if (!category) return res.status(404).json({ message: '分類不存在' });
   category.isActive = req.body && req.body.isActive === true;
   return res.json(category);
+});
+
+// ── 優惠券管理（Mock） ──
+
+function issuedCountOf(couponId) {
+  return userCoupons.filter((entry) => entry.couponId === couponId).length;
+}
+
+app.get('/api/coupons', (req, res) => {
+  const list = coupons.map((coupon) => ({
+    ...coupon,
+    issuedCount: issuedCountOf(coupon.couponId),
+  }));
+  return res.json({ list, total: list.length });
+});
+
+/** 發放對象：目前只允許發給客戶（admin／technician 不持有消費券） */
+app.get('/api/coupons/recipients', (req, res) => {
+  const list = users
+    .filter((user) => user.roleType === 'customer')
+    .map((user) => ({ id: user.id, name: user.name }));
+  return res.json({ list, total: list.length });
+});
+
+app.post('/api/coupons', (req, res) => {
+  const body = req.body || {};
+  const name = typeof body.name === 'string' ? body.name.trim() : '';
+  const amountCents = Number(body.amountCents);
+  const minSpendCents = Number(body.minSpendCents === undefined ? 0 : body.minSpendCents);
+  const validFrom = Number(body.validFrom);
+  const validTo = Number(body.validTo);
+
+  if (!name) return res.status(400).json({ message: '優惠券名稱必填' });
+  if (!Number.isInteger(amountCents) || amountCents <= 0) {
+    return res.status(400).json({ message: '面額必須是正整數（分）' });
+  }
+  if (!Number.isInteger(minSpendCents) || minSpendCents < 0) {
+    return res.status(400).json({ message: '滿減門檻必須是非負整數（分）' });
+  }
+  if (!Number.isInteger(validFrom) || !Number.isInteger(validTo) || validTo <= validFrom) {
+    return res.status(400).json({ message: '有效期限不正確' });
+  }
+
+  const coupon = {
+    couponId: nextId('coupon', coupons, 'couponId'),
+    name,
+    amountCents,
+    minSpendCents,
+    validFrom,
+    validTo,
+    isActive: true,
+    totalQuantity: null,
+    createdAt: Date.now(),
+  };
+  coupons.push(coupon);
+  return res.status(201).json(coupon);
+});
+
+app.post('/api/coupons/:id/issue', (req, res) => {
+  const coupon = coupons.find((entry) => entry.couponId === req.params.id);
+  if (!coupon) return res.status(404).json({ message: '優惠券不存在' });
+
+  const target = req.body && req.body.userId;
+  let recipients;
+
+  if (!target || target === 'all') {
+    recipients = users.filter((user) => user.roleType === 'customer');
+  } else {
+    const user = users.find((entry) => entry.id === target && entry.roleType === 'customer');
+    if (!user) return res.status(400).json({ message: '指定的用戶不存在或不是客戶' });
+    recipients = [user];
+  }
+
+  let issued = 0;
+  let skipped = 0;
+  const nowTs = Date.now();
+
+  for (const user of recipients) {
+    const existing = userCoupons.find(
+      (entry) => entry.userId === user.id && entry.couponId === coupon.couponId,
+    );
+    if (existing) {
+      skipped += 1;
+      continue;
+    }
+
+    userCoupons.push({
+      userCouponId: nextId('uc', userCoupons, 'userCouponId'),
+      couponId: coupon.couponId,
+      userId: user.id,
+      status: 'unused',
+      validFrom: coupon.validFrom,
+      validTo: coupon.validTo,
+      receivedAt: nowTs,
+      usedAt: null,
+      orderId: null,
+    });
+    issued += 1;
+  }
+
+  return res.json({ issued, skipped, total: recipients.length });
 });
 
 // ── 權限管理（Mock） ──

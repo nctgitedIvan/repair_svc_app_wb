@@ -13,7 +13,7 @@
 
 import {
   CUSTOMERS, CATEGORIES, SERVICES, PRODUCTS, ORDERS, TECHNICIAN_EARNINGS,
-  WORK_ORDERS, TECHNICIANS, ADMIN_OVERVIEW,
+  WORK_ORDERS, TECHNICIANS, ADMIN_OVERVIEW, COUPONS, USER_COUPONS,
 } from './data';
 
 const DELAY_MS = 120;
@@ -170,6 +170,41 @@ export async function fetchMyOrders() {
 
 /** 訂單列表（與 fetchMyOrders 同義；頁面層統一用這個名字） */
 export const fetchOrders = fetchMyOrders;
+
+/**
+ * 目前客戶手上的優惠券（P7a）。
+ *
+ * 回傳的是「券的定義＋持有狀態」的合併視圖；`status` 會依有效期即時校正，
+ * 但**不會**寫回資料（真正的狀態流轉在後端）。
+ */
+export async function fetchMyCoupons() {
+  await delay(60);
+  const userId = CUSTOMERS['cust-1'].userId;
+  const now = Date.now();
+
+  const list = USER_COUPONS.filter((entry) => entry.userId === userId)
+    .map((entry) => {
+      const coupon = COUPONS.find((item) => item.couponId === entry.couponId);
+      if (!coupon) return null;
+
+      const expired = entry.status === 'unused' && now > entry.validTo;
+      return {
+        userCouponId: entry.userCouponId,
+        couponId: entry.couponId,
+        userId: entry.userId,
+        status: expired ? 'expired' : entry.status,
+        name: coupon.name,
+        amountCents: coupon.amountCents,
+        minSpendCents: coupon.minSpendCents,
+        validFrom: entry.validFrom,
+        validTo: entry.validTo,
+        receivedAt: entry.receivedAt,
+      };
+    })
+    .filter(Boolean);
+
+  return { list, total: list.length };
+}
 
 /** 目前客戶的個人資料 */
 export async function fetchUserProfile() {

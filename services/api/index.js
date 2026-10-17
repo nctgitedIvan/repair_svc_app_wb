@@ -19,6 +19,7 @@ const impl = config.apiMode === 'cloud' ? real : fake;
 export const getMyRole = (...args) => impl.getMyRole(...args);
 export const fetchHome = (...args) => impl.fetchHome(...args);
 export const fetchUserProfile = (...args) => impl.fetchUserProfile(...args);
+export const fetchMyCoupons = (...args) => impl.fetchMyCoupons(...args);
 export const fetchCategories = (...args) => impl.fetchCategories(...args);
 export const fetchServices = (...args) => impl.fetchServices(...args);
 export const fetchServiceDetail = (...args) => impl.fetchServiceDetail(...args);

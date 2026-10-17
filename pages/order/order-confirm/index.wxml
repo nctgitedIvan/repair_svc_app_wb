@@ -23,6 +23,18 @@
     <t-icon name="chevron-right" size="36rpx" color="#BBBBBB" />
   </view>
 
+  <!-- 優惠券 -->
+  <view class="checkout-block coupon-entry" bindtap="onOpenCoupon">
+    <view class="coupon-entry__label">優惠券</view>
+    <view class="coupon-entry__right">
+      <text wx:if="{{selectedCoupon}}" class="coupon-entry__selected">{{selectedCoupon.name}}</text>
+      <text wx:elif="{{usableCouponCount > 0}}" class="coupon-entry__placeholder">請選擇</text>
+      <text wx:else class="coupon-entry__placeholder">無可用優惠券</text>
+      <text wx:if="{{view.discountCents > 0}}" class="coupon-entry__discount">-¥{{discountText}}</text>
+      <t-icon name="chevron-right" size="32rpx" color="#bbbbbb" />
+    </view>
+  </view>
+
   <!-- 明細 -->
   <view class="checkout-block">
     <view class="checkout-block__title">商品明細（{{orderTypeLabel}}）</view>
@@ -63,6 +75,10 @@
     <view class="checkout-row">
       <text>商品總額</text>
       <price price="{{view.goodsTotalCents}}" wr-class="checkout-row__num" />
+    </view>
+    <view class="checkout-row" wx:if="{{view.discountCents > 0}}">
+      <text>優惠券抵扣</text>
+      <text class="checkout-row__discount">-¥{{discountText}}</text>
     </view>
     <view class="checkout-row checkout-row--total">
       <text>合計</text>
@@ -118,5 +134,49 @@
   <view class="checkout-state__tip">請檢查網路後再試一次</view>
   <view class="checkout-state__btn" bindtap="onRetry">重新載入</view>
 </view>
+
+<!-- 優惠券選擇 -->
+<t-popup
+  visible="{{couponVisible}}"
+  placement="bottom"
+  bind:visible-change="onCouponVisibleChange"
+>
+  <view class="coupon-panel">
+    <view class="coupon-panel__head">
+      <text class="coupon-panel__title">選擇優惠券</text>
+      <text class="coupon-panel__close" bindtap="closeCoupon">關閉</text>
+    </view>
+
+    <scroll-view scroll-y class="coupon-panel__list">
+      <view
+        wx:for="{{couponRows}}"
+        wx:key="userCouponId"
+        class="coupon-card {{item.disabled ? 'coupon-card--disabled' : ''}} {{selectedCoupon && selectedCoupon.userCouponId === item.userCouponId ? 'coupon-card--active' : ''}}"
+        data-id="{{item.userCouponId}}"
+        bindtap="onSelectCoupon"
+      >
+        <view class="coupon-card__amount">
+          <text class="coupon-card__symbol">¥</text>{{item.amountText}}
+        </view>
+        <view class="coupon-card__body">
+          <view class="coupon-card__name">{{item.name}}</view>
+          <view class="coupon-card__meta">{{item.thresholdText}} · {{item.validText}}</view>
+          <view class="coupon-card__reason" wx:if="{{item.disabled}}">{{item.reasonText}}</view>
+        </view>
+        <t-icon
+          wx:if="{{selectedCoupon && selectedCoupon.userCouponId === item.userCouponId}}"
+          name="check-circle-filled"
+          size="40rpx"
+          color="#fa4126"
+        />
+      </view>
+
+      <view class="coupon-card coupon-card--none" data-id="none" bindtap="onSelectCoupon">
+        <view class="coupon-card__name">不使用優惠券</view>
+        <t-icon wx:if="{{!selectedCoupon}}" name="check-circle-filled" size="40rpx" color="#fa4126" />
+      </view>
+    </scroll-view>
+  </view>
+</t-popup>
 
 <t-toast id="t-toast" />

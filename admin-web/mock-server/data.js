@@ -420,6 +420,51 @@ const adminAccounts = [
   },
 ];
 
+/**
+ * 優惠券（P8 Mock）。
+ *
+ * 形狀對齊 `packages/ports/CouponRepository`／`UserCouponRepository`；
+ * 正式版由 `admin-api` 寫入 `coupons`／`user_coupons` 集合。
+ */
+const coupons = [
+  {
+    couponId: 'coupon-1',
+    name: '新客立減 20 元',
+    amountCents: 2000,
+    minSpendCents: 5000,
+    validFrom: now - 7 * DAY,
+    validTo: now + 30 * DAY,
+    isActive: true,
+    totalQuantity: null,
+    createdAt: now - 7 * DAY,
+  },
+  {
+    couponId: 'coupon-2',
+    name: '滿 100 減 15',
+    amountCents: 1500,
+    minSpendCents: 10000,
+    validFrom: now - 3 * DAY,
+    validTo: now + 14 * DAY,
+    isActive: true,
+    totalQuantity: null,
+    createdAt: now - 3 * DAY,
+  },
+];
+
+const userCoupons = [
+  {
+    userCouponId: 'uc-1',
+    couponId: 'coupon-1',
+    userId: 'u-cust-1',
+    status: 'unused',
+    validFrom: coupons[0].validFrom,
+    validTo: coupons[0].validTo,
+    receivedAt: now - 5 * DAY,
+    usedAt: null,
+    orderId: null,
+  },
+];
+
 module.exports = {
   STATUS_LABELS,
   adminCredentials,
@@ -435,4 +480,6 @@ module.exports = {
   profitSharingRecords,
   permissionGroups,
   adminAccounts,
+  coupons,
+  userCoupons,
 };

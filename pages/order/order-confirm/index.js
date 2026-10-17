@@ -1,10 +1,15 @@
 import Toast from 'tdesign-miniprogram/toast/index';
-import { fetchProducts, fetchServices } from '../../../services/api/index';
+import dayjs from 'dayjs';
+import { fetchProducts, fetchServices, fetchMyCoupons } from '../../../services/api/index';
 import { fetchDeliveryAddressList } from '../../../services/address/fetchAddress';
 import { getAddressPromise } from '../../../services/address/list';
 
 const checkoutView = require('../../../utils/checkoutView.js');
+const couponView = require('../../../utils/couponView.js');
 const cartRules = require('../../../utils/cart.js');
+
+/** 優惠券日期顯示（只在畫面層格式化） */
+const formatCouponDate = (ms) => (Number.isInteger(ms) ? dayjs(ms).format('YYYY-MM-DD') : '');
 
 /**
  * 結算頁（T7）。
@@ -18,8 +23,9 @@ const cartRules = require('../../../utils/cart.js');
  * ## 金額
  *
  * 一律以**現價**重算（`utils/checkoutView.buildCheckoutView()`，純函式）：
- * 材料費（商品）＋ 服務費（服務）＝ 商品總額／合計。
- * payload 的 `expectedTotalCents` 只用來偵測「價格已更新」。
+ * 材料費（商品）＋ 服務費（服務）＝ 商品總額；再扣除優惠券 = 合計。
+ * 選券／取消券時會同步更新 payload 的 `expectedTotalCents`（折扣後總額），
+ * 因此「價格已更新」偵測比較的是折扣後總額。
  *
  * ## ⚠️ P7a 的限制
  *
@@ -50,9 +56,21 @@ Page({
     /** 地址（預設或使用者選擇） */
     address: null,
     submitting: false,
+    /** 優惠券 */
+    couponRows: [],
+    usableCouponCount: 0,
+    selectedCoupon: null,
+    couponVisible: false,
+    discountText: '0',
+    subtotalText: '0',
+    totalText: '0',
   },
 
   payload: null,
+  products: [],
+  services: [],
+  coupons: [],
+  selectedCoupon: null,
 
   onLoad() {
     this.load();
@@ -78,19 +96,45 @@ Page({
     this.payload = payload;
 
     try {
-      const [products, services] = await Promise.all([fetchProducts(), fetchServices()]);
-      const view = checkoutView.buildCheckoutView({
-        payload,
-        products: products.list,
-        services: services.list,
-      });
+      const [products, services, couponResult] = await Promise.all([
+        fetchProducts(),
+        fetchServices(),
+        fetchMyCoupons(),
+      ]);
 
-      this.setData({
-        ready: true,
-        loading: false,
-        view,
-        orderTypeLabel: ORDER_TYPE_LABEL[view.orderType] || '',
-      });
+      this.products = products.list || [];
+      this.services = services.list || [];
+      this.coupons = couponResult.list || [];
+
+      // 還原上次選取的券（payload.userCouponId 由本頁在選券時寫入）
+      const savedId = this.payload.userCouponId;
+      this.selectedCoupon = savedId
+        ? this.coupons.find((coupon) => coupon.userCouponId === savedId) || null
+        : null;
+
+      let view = this.buildView();
+      let payloadChanged = false;
+
+      // 券已不存在（例如後台回收）→ 清掉
+      if (savedId && !this.selectedCoupon) {
+        this.payload.userCouponId = null;
+        payloadChanged = true;
+      }
+
+      // 券已失效（過期／門檻變更／已使用）→ 清掉，避免卡在不可用的折扣
+      if (this.selectedCoupon && view.couponInvalidReason) {
+        this.selectedCoupon = null;
+        this.payload.userCouponId = null;
+        payloadChanged = true;
+      }
+
+      if (payloadChanged) {
+        this.payload.expectedTotalCents = view.goodsTotalCents;
+        this.persistPayload();
+        view = this.buildView();
+      }
+
+      this.applyView(view);
 
       if (view.errors && view.errors.length > 0) {
         this.setData({ payloadError: true });
@@ -102,6 +146,98 @@ Page({
       console.warn('[checkout] 載入商品／服務現況失敗', err);
       this.setData({ ready: true, loading: false, loadError: true });
     }
+  },
+
+  /** 以目前 payload／selectedCoupon 重算 view（純函式的唯一呼叫點） */
+  buildView() {
+    return checkoutView.buildCheckoutView({
+      payload: this.payload,
+      products: this.products,
+      services: this.services,
+      coupon: this.selectedCoupon,
+      now: Date.now(),
+    });
+  },
+
+  /** 套用 view ＋ 優惠券的顯示欄位 */
+  applyView(view, extra = {}) {
+    const now = Date.now();
+    const couponRows = couponView.decorateList(
+      this.coupons,
+      view.goodsTotalCents,
+      now,
+      formatCouponDate,
+    );
+
+    this.setData({
+      ready: true,
+      loading: false,
+      view,
+      orderTypeLabel: ORDER_TYPE_LABEL[view.orderType] || '',
+      selectedCoupon: view.coupon
+        ? couponView.decorate(view.coupon, view.goodsTotalCents, now, formatCouponDate)
+        : null,
+      couponRows,
+      usableCouponCount: couponRows.filter((row) => row.usable).length,
+      discountText: couponView.formatYuan(view.discountCents),
+      subtotalText: couponView.formatYuan(view.goodsTotalCents),
+      totalText: couponView.formatYuan(view.totalCents),
+      ...extra,
+    });
+  },
+
+  /** 把選券結果寫回結算 payload（expectedTotalCents 為折扣後總額） */
+  persistPayload() {
+    try {
+      wx.setStorageSync(checkoutView.CHECKOUT_KEY, this.payload);
+    } catch (err) {
+      console.warn('[checkout] 儲存優惠券選擇失敗', err);
+    }
+  },
+
+  onOpenCoupon() {
+    if (!this.coupons || this.coupons.length === 0) {
+      Toast({ context: this, selector: '#t-toast', message: '目前沒有可用的優惠券', icon: '' });
+      return;
+    }
+    this.setData({ couponVisible: true });
+  },
+
+  onCouponVisibleChange(e) {
+    if (!e.detail || !e.detail.visible) this.setData({ couponVisible: false });
+  },
+
+  closeCoupon() {
+    this.setData({ couponVisible: false });
+  },
+
+  /** 選擇／取消優惠券（id = 'none' 代表不使用） */
+  onSelectCoupon(e) {
+    const { id } = e.currentTarget.dataset;
+
+    if (id === 'none') {
+      this.selectedCoupon = null;
+    } else {
+      const coupon = this.coupons.find((entry) => entry.userCouponId === id);
+      if (!coupon) return;
+      this.selectedCoupon = coupon;
+    }
+
+    const view = this.buildView();
+    if (this.selectedCoupon && view.couponInvalidReason) {
+      Toast({
+        context: this,
+        selector: '#t-toast',
+        message: couponView.REASON_TEXT[view.couponInvalidReason] || '此優惠券不可用',
+        icon: '',
+      });
+      return;
+    }
+
+    this.payload.userCouponId = this.selectedCoupon ? this.selectedCoupon.userCouponId : null;
+    this.payload.expectedTotalCents = view.totalCents;
+    this.persistPayload();
+    this.applyView(view, { couponVisible: false });
   },
 
   /** 讀取「我的」地址中的預設地址（mock 用 isDefault: 1／true） */
@@ -172,7 +308,9 @@ Page({
     this.setData({ submitting: true });
     wx.showModal({
       title: '下單成功（模擬）',
-      content: 'P7a 階段尚未串接支付與後端；正式下單與支付在 P5／P6。',
+      content: `合計 ¥${this.data.totalText}${
+        view.discountCents > 0 ? `（已抵扣 ¥${this.data.discountText}）` : ''
+      }。P7a 階段尚未串接支付與後端；正式下單與支付在 P5／P6。`,
       showCancel: false,
       success: () => {
         this.clearPurchasedCart();

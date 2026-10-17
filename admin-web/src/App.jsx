@@ -11,6 +11,7 @@ import ProfitSharingPage from './pages/ProfitSharingPage';
 import CategoriesPage from './pages/CategoriesPage';
 import TechniciansPage from './pages/TechniciansPage';
 import PermissionsPage from './pages/PermissionsPage';
+import CouponsPage from './pages/CouponsPage';
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
             <Route path="/profit-sharing" element={<ProfitSharingPage />} />
             <Route path="/categories" element={<CategoriesPage />} />
             <Route path="/technicians" element={<TechniciansPage />} />
+            <Route path="/coupons" element={<CouponsPage />} />
             <Route path="/permissions" element={<PermissionsPage />} />
           </Route>
         </Route>

@@ -25,6 +25,7 @@
 
 const { CHECKOUT_KEY } = require('./cart.js');
 const { ItemType } = require('./catalogView.js');
+const couponView = require('./couponView.js');
 
 /** `docs/01` §3.8 的三種訂單型別 */
 const ORDER_TYPE = Object.freeze({
@@ -145,18 +146,23 @@ function invalidLine({ item, name, image, reason }) {
 /**
  * 把 payload ＋ 商品／服務現況組成結算頁的 view model。
  *
- * @param {{ payload: object, products?: Array, services?: Array }} args
+ * @param {{ payload: object, products?: Array, services?: Array,
+ *           coupon?: object|null, now?: number }} args
+ *        `coupon` 是已選的 UserCoupon＋Coupon 合併視圖（可為 null）；
+ *        `now` 由頁面傳入，讓抵扣規則可被測試重現。
  * @returns {{
  *   ok: boolean, errors: string[], orderType: string,
  *   computedOrderType: string, orderTypeMismatch: boolean,
  *   lines: Array, invalidLines: Array,
  *   materialTotalCents: number, serviceTotalCents: number,
- *   goodsTotalCents: number, totalCents: number,
+ *   goodsTotalCents: number, subtotalCents: number,
+ *   discountCents: number, totalCents: number,
+ *   coupon: object|null, couponInvalidReason: string|null,
  *   expectedTotalCents: number|null, priceChanged: boolean,
  *   hasService: boolean,
  * }}
  */
-function buildCheckoutView({ payload, products, services } = {}) {
+function buildCheckoutView({ payload, products, services, coupon = null, now = Date.now() } = {}) {
   const validation = validatePayload(payload);
   const emptyResult = {
     ok: false,
@@ -169,7 +175,11 @@ function buildCheckoutView({ payload, products, services } = {}) {
     materialTotalCents: 0,
     serviceTotalCents: 0,
     goodsTotalCents: 0,
+    subtotalCents: 0,
+    discountCents: 0,
     totalCents: 0,
+    coupon: null,
+    couponInvalidReason: null,
     expectedTotalCents: null,
     priceChanged: false,
     hasService: false,
@@ -266,6 +276,14 @@ function buildCheckoutView({ payload, products, services } = {}) {
     ? payload.expectedTotalCents
     : null;
 
+  // ── 優惠券 ──
+  // goodsTotalCents 是折扣前小計；抵扣不可超過它，總額不會變負數。
+  const subtotalCents = goodsTotalCents;
+  const couponInvalidReason = coupon ? couponView.unusableReason(coupon, subtotalCents, now) : null;
+  const appliedCoupon = coupon && !couponInvalidReason ? coupon : null;
+  const discountCents = appliedCoupon ? couponView.discountFor(appliedCoupon, subtotalCents, now) : 0;
+  const totalCents = subtotalCents - discountCents;
+
   return {
     ok: invalidLines.length === 0,
     errors: validation.errors,
@@ -277,9 +295,15 @@ function buildCheckoutView({ payload, products, services } = {}) {
     materialTotalCents,
     serviceTotalCents,
     goodsTotalCents,
-    totalCents: goodsTotalCents,
+    subtotalCents,
+    discountCents,
+    totalCents,
+    coupon: appliedCoupon,
+    couponInvalidReason,
     expectedTotalCents,
-    priceChanged: expectedTotalCents !== null && expectedTotalCents !== goodsTotalCents,
+    // expectedTotalCents 代表「使用者確認後應付的總額」；選券時頁面會同步更新它，
+    // 因此這裡比較的是**折扣後**總額，而不是折扣前小計。
+    priceChanged: expectedTotalCents !== null && expectedTotalCents !== totalCents,
     hasService: items.some((item) => item.itemType === ItemType.SERVICE),
   };
 }
