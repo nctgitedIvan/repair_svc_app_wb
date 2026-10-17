@@ -29,11 +29,12 @@ function textMessage(content) {
 }
 
 test('conversationIdOf：同客服＋同商品＝同一條對話', () => {
+  assert.equal(chat.DEFAULT_TARGET_ID, 'cs-1');
   assert.equal(
-    chat.conversationIdOf({ targetId: 'cs-1', itemId: 'prd-1' }),
+    chat.conversationIdOf({ targetId: chat.DEFAULT_TARGET_ID, itemId: 'prd-1' }),
     'chat:cs-1:prd-1',
   );
-  assert.equal(chat.conversationIdOf({ targetId: 'cs-1' }), 'chat:cs-1:general');
+  assert.equal(chat.conversationIdOf({ targetId: chat.DEFAULT_TARGET_ID }), 'chat:cs-1:general');
   assert.equal(chat.conversationIdOf({}), 'chat:cs-1:general');
 });
 
@@ -82,17 +83,25 @@ test('appendMessage：各訊息類型驗證', async (t) => {
     );
   });
 
-  await t.test('語音長度 1–60 秒', () => {
+  await t.test('語音長度 1–60 秒，並保存 audioPath', () => {
     assert.equal(
       chat.appendMessage(store, conversationId, { ...base, type: chat.MessageType.VOICE, durationSeconds: 0 }, NOW)
         .code,
       'INVALID_DURATION',
     );
-    assert.equal(
-      chat.appendMessage(store, conversationId, { ...base, type: chat.MessageType.VOICE, durationSeconds: 3 }, NOW)
-        .ok,
-      true,
+    const voice = chat.appendMessage(
+      store,
+      conversationId,
+      {
+        ...base,
+        type: chat.MessageType.VOICE,
+        durationSeconds: 3,
+        audioPath: 'wxfile://voice.mp3',
+      },
+      NOW,
     );
+    assert.equal(voice.ok, true);
+    assert.equal(voice.message.audioPath, 'wxfile://voice.mp3');
   });
 
   await t.test('商品卡片需要 snapshot', () => {

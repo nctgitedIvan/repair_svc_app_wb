@@ -3,6 +3,26 @@ import dayjs from 'dayjs';
 import { fetchProductDetail, fetchServiceDetail } from '../../services/api/index';
 
 const chat = require('../../utils/chat.js');
+const inquiryRules = require('../../utils/inquiry.js');
+
+/**
+ * 全域單例音訊播放器。
+ *
+ * `wx.createInnerAudioContext()` 每次建立都會佔用一個原生播放器；
+ * 聊天頁反覆進出時若每次 new 一個，會累積到上限（模擬器尤其容易）。
+ * 因此整個 app 只保留一個 context，重複使用。
+ */
+let sharedAudioContext = null;
+
+function getAudioContext() {
+  if (typeof wx === 'undefined' || typeof wx.createInnerAudioContext !== 'function') {
+    return null;
+  }
+  if (!sharedAudioContext) {
+    sharedAudioContext = wx.createInnerAudioContext();
+  }
+  return sharedAudioContext;
+}
 
 /** 模擬客服的自動回覆（P5 接上 WebSocket 後移除） */
 const AUTO_GREETING = '您好，請問有什麼可以幫您？';
@@ -52,6 +72,8 @@ Page({
   replyTimer: null,
   playTimer: null,
   recordTimer: null,
+  /** 播放序號：切換／停止時遞增，避免舊的 onEnded 清掉新播放狀態 */
+  playToken: 0,
   unloaded: false,
 
   onLoad(query) {
@@ -59,9 +81,10 @@ Page({
     const productId = params.productId || '';
     const serviceId = params.serviceId || '';
     const itemId = productId || serviceId || '';
-    const targetId = params.targetId || 'cs-1';
+    const targetId = params.targetId || chat.DEFAULT_TARGET_ID;
 
     this.itemType = productId ? 'product' : serviceId ? 'service' : '';
+    this.inquiryId = params.inquiryId || '';
 
     this.setData({
       targetId,
@@ -72,10 +95,15 @@ Page({
     this.init();
   },
 
+  onHide() {
+    // 離開頁面就停止播放，避免背景音訊繼續
+    this.stopPlayback();
+  },
+
   onUnload() {
     this.unloaded = true;
+    this.stopPlayback();
     if (this.replyTimer) clearTimeout(this.replyTimer);
-    if (this.playTimer) clearTimeout(this.playTimer);
     if (this.recordTimer) clearInterval(this.recordTimer);
   },
 
@@ -107,7 +135,58 @@ Page({
       await this.sendProductCard();
     }
 
-    this.scheduleAutoReply(AUTO_GREETING, itemId ? 900 : 500);
+    // 從「我的詢問」進來時，把原本的詢問與客服回覆補進同一條對話
+    const seededReply = this.seedInquiryHistory();
+
+    // 已經有客服回覆就不再加自動問候
+    if (!seededReply) {
+      this.scheduleAutoReply(AUTO_GREETING, itemId ? 900 : 500);
+    }
+  },
+
+  /**
+   * 把舊詢問的內容與回覆補進聊天歷史。
+   *
+   * 只在對話為空時呼叫；回傳 true 表示已有客服回覆，頁面不再送自動問候。
+   */
+  seedInquiryHistory() {
+    if (!this.inquiryId) return false;
+
+    let inquiries = [];
+    try {
+      inquiries = inquiryRules.listInquiries(inquiryRules.loadInquiries());
+    } catch (err) {
+      console.warn('[chat] 讀取詢問歷史失敗', err);
+      return false;
+    }
+
+    const inquiry = inquiries.find((entry) => entry.inquiryId === this.inquiryId);
+    if (!inquiry) return false;
+
+    if (inquiry.message) {
+      this.appendAndRender({
+        senderId: 'me',
+        senderRole: chat.SenderRole.CUSTOMER,
+        type: chat.MessageType.TEXT,
+        content: inquiry.message,
+      });
+    }
+
+    const replies = Array.isArray(inquiry.replies) ? inquiry.replies : [];
+    for (const reply of replies) {
+      if (!reply || typeof reply.body !== 'string' || reply.body.length === 0) continue;
+      this.appendAndRender({
+        senderId: reply.actorId || this.data.targetId,
+        senderRole:
+          reply.actorRole === chat.SenderRole.CUSTOMER
+            ? chat.SenderRole.CUSTOMER
+            : chat.SenderRole.CS_AGENT,
+        type: chat.MessageType.TEXT,
+        content: reply.body,
+      });
+    }
+
+    return replies.some((reply) => reply && typeof reply.body === 'string' && reply.body.length > 0);
   },
 
   /** 自動送出一張商品卡片（商品／服務共用） */
@@ -306,20 +385,91 @@ Page({
 
   /** 點語音氣泡：模擬播放（無音訊時用 setTimeout 收斂） */
   onVoiceTap(e) {
-    const { id, duration } = e.currentTarget.dataset;
+    const { id, duration, audioPath } = e.currentTarget.dataset;
     if (!id) return;
 
-    if (this.playTimer) clearTimeout(this.playTimer);
+    // 再點一次同一則 → 停止
     if (this.data.playingMessageId === id) {
-      this.setData({ playingMessageId: '' });
+      this.stopPlayback();
       return;
     }
 
+    this.stopPlayback();
     this.setData({ playingMessageId: id });
+
+    // 有真實音訊才播放；模擬器／舊資料沒有 audioPath 時用動畫模擬 3 秒
+    if (audioPath && this.playAudio(audioPath, duration)) return;
+    this.simulatePlayback();
+  },
+
+  /** 用全域單例播放真實音訊；成功回 true */
+  playAudio(src, duration) {
+    const ctx = getAudioContext();
+    if (!ctx) return false;
+
+    const token = (this.playToken || 0) + 1;
+    this.playToken = token;
+
+    try {
+      if (typeof ctx.offEnded === 'function') ctx.offEnded();
+      if (typeof ctx.offError === 'function') ctx.offError();
+
+      ctx.onEnded(() => {
+        if (this.playToken === token) this.finishPlayback();
+      });
+      ctx.onError(() => {
+        if (this.playToken !== token) return;
+        this.finishPlayback();
+        Toast({ context: this, selector: '#t-toast', message: '語音播放失敗', icon: '' });
+      });
+
+      ctx.src = src;
+      ctx.play();
+    } catch (err) {
+      console.warn('[chat] 音訊播放失敗', err);
+      return false;
+    }
+
+    // 保險：部分基礎庫不一定觸發 onEnded
     const seconds = Math.max(1, Number(duration) || 3);
     this.playTimer = setTimeout(() => {
-      if (!this.unloaded) this.setData({ playingMessageId: '' });
-    }, seconds * 1000);
+      if (this.playToken === token) this.finishPlayback();
+    }, (seconds + 1) * 1000);
+    return true;
+  },
+
+  /** 無音訊時的 3 秒動畫模擬 */
+  simulatePlayback() {
+    if (this.playTimer) clearTimeout(this.playTimer);
+    this.playTimer = setTimeout(() => {
+      if (!this.unloaded) this.finishPlayback();
+    }, 3000);
+  },
+
+  finishPlayback() {
+    if (this.playTimer) {
+      clearTimeout(this.playTimer);
+      this.playTimer = null;
+    }
+    if (!this.unloaded) this.setData({ playingMessageId: '' });
+  },
+
+  stopPlayback() {
+    if (this.playTimer) {
+      clearTimeout(this.playTimer);
+      this.playTimer = null;
+    }
+    this.playToken = (this.playToken || 0) + 1;
+
+    const ctx = sharedAudioContext;
+    if (ctx) {
+      try {
+        ctx.stop();
+      } catch (err) {
+        // 尚未播放時 stop 可能拋錯，忽略
+      }
+    }
+    if (!this.unloaded) this.setData({ playingMessageId: '' });
   },
 
   // ── 圖片 ──

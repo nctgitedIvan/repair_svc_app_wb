@@ -1,4 +1,5 @@
 const inquiryRules = require('../../../utils/inquiry.js');
+const chat = require('../../../utils/chat.js');
 
 /**
  * 我的詢問（T6b）。
@@ -33,11 +34,23 @@ Page({
     this.setData({ ready: true, rows });
   },
 
-  /** 點詢問列 → 商品詳情（詢問的鍵是 product_id） */
+  /**
+   * 點詢問列 → 客服聊天（帶同一個 targetId／productId，才會接到同一條歷史）
+   *
+   * ⚠️ targetId 必須與詳情頁的客服入口一致（`chat.DEFAULT_TARGET_ID`）。
+   *    inquiryId 讓聊天頁在對話為空時，把原本的詢問內容與客服回覆補進歷史。
+   */
   onRowTap(e) {
-    const { productId } = e.currentTarget.dataset;
+    const { productId, inquiryId } = e.currentTarget.dataset;
     if (!productId) return;
-    wx.navigateTo({ url: `/pages/goods/details/index?productId=${productId}` });
+
+    const params = [
+      `targetId=${chat.DEFAULT_TARGET_ID}`,
+      `productId=${productId}`,
+    ];
+    if (inquiryId) params.push(`inquiryId=${inquiryId}`);
+
+    wx.navigateTo({ url: `/pages/chat/index?${params.join('&')}` });
   },
 
   /** 空清單 → 去逛逛零件（與收藏頁一致） */

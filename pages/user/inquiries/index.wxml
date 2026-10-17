@@ -11,6 +11,7 @@
     wx:key="inquiryId"
     bindtap="onRowTap"
     data-product-id="{{item.productId}}"
+    data-inquiry-id="{{item.inquiryId}}"
   >
     <view class="inq-item__thumb">
       <t-image

@@ -3,6 +3,7 @@ import { fetchProductDetail, fetchServiceDetail } from '../../../services/api/in
 
 const detailView = require('../../../utils/detailView.js');
 const favorite = require('../../../utils/favorite.js');
+const chat = require('../../../utils/chat.js');
 const cartRules = require('../../../utils/cart.js');
 const { CartCode } = require('../../../utils/cartCodes.js');
 const { ItemType } = require('../../../utils/catalogView.js');
@@ -233,7 +234,7 @@ Page({
       detail.itemType === ItemType.SERVICE
         ? `serviceId=${detail.id}`
         : `productId=${detail.id}`;
-    wx.navigateTo({ url: `/pages/chat/index?targetId=cs-1&${param}` });
+    wx.navigateTo({ url: `/pages/chat/index?targetId=${chat.DEFAULT_TARGET_ID}&${param}` });
   },
 
   /**

@@ -56,6 +56,7 @@
               style="width: {{item.voiceWidth}}"
               data-id="{{item.messageId}}"
               data-duration="{{item.durationSeconds}}"
+              data-audio-path="{{item.audioPath}}"
               catchtap="onVoiceTap"
             >
               <view class="chat-voice__wave {{playingMessageId === item.messageId ? 'chat-voice__wave--playing' : ''}}">

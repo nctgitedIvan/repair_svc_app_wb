@@ -28,6 +28,7 @@
  *   type,                         // text / image / voice / product
  *   content,                      // 文字內容（其他類型可為空）
  *   imagePath,                    // 本機暫存路徑（P5 換成雲端 fileID）
+ *   audioPath,                    // 語音暫存路徑（P7a 模擬錄音時為空）
  *   durationSeconds,              // 語音長度
  *   productSnapshot,              // { itemType, itemId, title, image, priceCents }
  *   quoted,                       // { messageId, type, senderRole, summary, imagePath? }
@@ -45,6 +46,14 @@
 const STORAGE_KEY = 'repair.chats.v1';
 const SCHEMA_VERSION = 1;
 const MAX_MESSAGES_PER_CONVERSATION = 200;
+
+/**
+ * 預設客服 targetId（P7a 的 mock 客服）。
+ *
+ * ⚠️ 詳情頁、詢問頁、聊天頁**必須共用這個值**，否則 conversationId
+ *    會不同，歷史記錄就接不起來。
+ */
+const DEFAULT_TARGET_ID = 'cs-1';
 
 const MessageType = Object.freeze({
   TEXT: 'text',
@@ -136,7 +145,7 @@ function isValidStoredMessage(message) {
 
 /** 對話識別碼：同一個客服＋同一個商品＝同一條對話 */
 function conversationIdOf({ targetId, itemId } = {}) {
-  const target = typeof targetId === 'string' && targetId ? targetId : 'cs-1';
+  const target = typeof targetId === 'string' && targetId ? targetId : DEFAULT_TARGET_ID;
   const item = typeof itemId === 'string' && itemId ? itemId : 'general';
   return `chat:${target}:${item}`;
 }
@@ -193,6 +202,7 @@ function appendMessage(store, conversationId, message, now) {
     type: message.type,
     content: typeof message.content === 'string' ? message.content : '',
     imagePath: typeof message.imagePath === 'string' ? message.imagePath : '',
+    audioPath: typeof message.audioPath === 'string' ? message.audioPath : '',
     durationSeconds: Number.isInteger(message.durationSeconds) ? message.durationSeconds : 0,
     productSnapshot: message.productSnapshot ? clone(message.productSnapshot) : null,
     quoted: message.quoted ? clone(message.quoted) : null,
@@ -273,6 +283,7 @@ module.exports = {
   STORAGE_KEY,
   SCHEMA_VERSION,
   MAX_MESSAGES_PER_CONVERSATION,
+  DEFAULT_TARGET_ID,
   MessageType,
   SenderRole,
   MESSAGE_TYPES,
