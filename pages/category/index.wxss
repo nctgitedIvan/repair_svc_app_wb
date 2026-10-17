@@ -1,3 +1,5 @@
+@import '../../style/catalog-card.wxss';
+
 /*
  * 分類頁。
  *

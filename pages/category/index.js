@@ -129,7 +129,7 @@ Page({
     const param =
       card.itemType === catalogView.ItemType.SERVICE
         ? `serviceId=${card.id}`
-        : `productId=${card.id}&spuId=${card.id}`;
+        : `productId=${card.id}`;
     wx.navigateTo({ url: `/pages/goods/details/index?${param}` });
   },
 

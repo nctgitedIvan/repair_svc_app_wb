@@ -5,13 +5,18 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 
 const {
+  adminCredentials,
+  sha256,
   users,
-  customers,
   technicians,
+  categories,
   services,
   products,
   orders,
   refunds,
+  profitSharingRecords,
+  permissionGroups,
+  adminAccounts,
   STATUS_LABELS,
 } = require('./data');
 
@@ -19,9 +24,45 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 const JWT_SECRET = process.env.JWT_SECRET || 'repair-admin-mock-secret';
 const TOKEN_TTL = '2h';
+const MAX_LOGIN_FAILURES = 5;
+const LOCK_MS = 30 * 60 * 1000;
 
 app.use(cors());
 app.use(express.json({ limit: '5mb' }));
+
+/** 模擬 AuditLog：記錄所有寫入操作（不含密碼） */
+const auditLogs = [];
+
+function sanitizeBody(body) {
+  if (!body || typeof body !== 'object') return null;
+  const cloned = { ...body };
+  if ('password' in cloned) cloned.password = '***';
+  if (cloned.dataUrl) cloned.dataUrl = `[data-url ${String(cloned.dataUrl).length} chars]`;
+  return cloned;
+}
+
+app.use('/api', (req, res, next) => {
+  if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return next();
+
+  const startedAt = Date.now();
+  res.on('finish', () => {
+    const entry = {
+      at: startedAt,
+      method: req.method,
+      path: req.originalUrl,
+      statusCode: res.statusCode,
+      userId: req.user ? req.user.sub : null,
+      role: req.user ? req.user.role : null,
+      body: sanitizeBody(req.body),
+    };
+    auditLogs.push(entry);
+    if (auditLogs.length > 500) auditLogs.shift();
+    console.log(
+      `[audit] ${entry.method} ${entry.path} ${entry.statusCode} user=${entry.userId || 'anonymous'}`,
+    );
+  });
+  return next();
+});
 
 function publicUser(user) {
   return {
@@ -81,22 +122,60 @@ app.get('/api/health', (req, res) => {
 
 app.post('/api/auth/login', (req, res) => {
   const { username, password } = req.body || {};
-  const user = users.find(
-    (entry) => entry.username === username && entry.password === password && entry.roleType === 'admin',
-  );
-  if (!user) return res.status(401).json({ message: '帳號或密碼錯誤' });
-  if (user.status !== 'active') return res.status(403).json({ message: '帳號已停用' });
+  const credential = adminCredentials.find((entry) => entry.username === username);
+  const now = Date.now();
 
-  return res.json({ token: signToken(user), user: publicUser(user) });
+  if (credential && credential.lockedUntil && credential.lockedUntil > now) {
+    return res.status(429).json({
+      message: '登入失敗次數過多，帳號已暫時鎖定 30 分鐘',
+      lockedUntil: credential.lockedUntil,
+    });
+  }
+
+  // 鎖定已過期 → 重置
+  if (credential && credential.lockedUntil && credential.lockedUntil <= now) {
+    credential.lockedUntil = null;
+    credential.failedAttempts = 0;
+  }
+
+  if (!credential || credential.passwordHash !== sha256(password)) {
+    if (credential) {
+      credential.failedAttempts += 1;
+      if (credential.failedAttempts >= MAX_LOGIN_FAILURES) {
+        credential.failedAttempts = 0;
+        credential.lockedUntil = now + LOCK_MS;
+        return res.status(429).json({
+          message: '登入失敗次數過多，帳號已暫時鎖定 30 分鐘',
+          lockedUntil: credential.lockedUntil,
+        });
+      }
+    }
+    return res.status(401).json({ message: '帳號或密碼錯誤' });
+  }
+
+  if (credential.status !== 'active') {
+    return res.status(403).json({ message: '帳號已停用' });
+  }
+
+  credential.failedAttempts = 0;
+  credential.lockedUntil = null;
+  credential.lastLoginAt = now;
+
+  return res.json({ token: signToken(credential), user: publicUser(credential) });
 });
 
 // ── 以下都需要登入 ──
 app.use('/api', authRequired);
 
 app.get('/api/auth/me', (req, res) => {
-  const user = users.find((entry) => entry.id === req.user.sub);
+  const user = adminCredentials.find((entry) => entry.id === req.user.sub);
   if (!user) return res.status(401).json({ message: '使用者不存在' });
   return res.json({ user: publicUser(user) });
+});
+
+/** 模擬 AuditLog 查詢（只回最近的寫入操作） */
+app.get('/api/audit-logs', (req, res) => {
+  res.json({ list: auditLogs.slice(-100).reverse(), total: auditLogs.length });
 });
 
 // ── Dashboard ──
@@ -317,6 +396,142 @@ app.get('/api/technicians/:id/earnings', (req, res) => {
     totalCents: records.reduce((sum, record) => sum + record.technicianShareCents, 0),
     records,
   });
+});
+
+// ── 退款審批 ──
+function refundView(refund) {
+  const order = orders.find((entry) => entry.orderId === refund.orderId);
+  return {
+    ...refund,
+    orderNo: order ? order.orderNo : null,
+    customerName: order ? order.customerName : null,
+    technicianName: order ? order.technicianName : null,
+  };
+}
+
+app.get('/api/refunds', (req, res) => {
+  res.json({ list: refunds.map(refundView), total: refunds.length });
+});
+
+app.post('/api/refunds/:id/approve', (req, res) => {
+  const refund = refunds.find((entry) => entry.refundId === req.params.id);
+  if (!refund) return res.status(404).json({ message: '退款不存在' });
+  if (refund.status !== 'requested') {
+    return res.status(409).json({ message: `退款狀態「${refund.status}」不可批准` });
+  }
+  refund.status = 'refunded';
+  refund.processedAt = Date.now();
+  return res.json(refundView(refund));
+});
+
+app.post('/api/refunds/:id/reject', (req, res) => {
+  const refund = refunds.find((entry) => entry.refundId === req.params.id);
+  if (!refund) return res.status(404).json({ message: '退款不存在' });
+  if (refund.status !== 'requested') {
+    return res.status(409).json({ message: `退款狀態「${refund.status}」不可拒絕` });
+  }
+  refund.status = 'rejected';
+  refund.processedAt = Date.now();
+  refund.rejectReason = (req.body && req.body.reason) || null;
+  return res.json(refundView(refund));
+});
+
+// ── 分帳 ──
+app.get('/api/profit-sharing', (req, res) => {
+  res.json({ list: profitSharingRecords, total: profitSharingRecords.length });
+});
+
+app.post('/api/profit-sharing/execute', (req, res) => {
+  const { orderId } = req.body || {};
+  const order = orders.find((entry) => entry.orderId === orderId);
+  if (!order) return res.status(404).json({ message: '訂單不存在' });
+  if (order.status !== 'COMPLETED') {
+    return res.status(409).json({ message: '只有已完成的訂單可以執行分帳' });
+  }
+  if (profitSharingRecords.some((record) => record.orderId === orderId)) {
+    return res.status(409).json({ message: '此訂單已執行過分帳' });
+  }
+
+  const technicianShareCents = Math.round(order.amounts.serviceFeeCents * 0.8);
+  const record = {
+    sharingId: `sharing-${order.orderNo}`,
+    orderId,
+    orderNo: order.orderNo,
+    technicianId: order.technicianId,
+    technicianName: order.technicianName,
+    amountCents: technicianShareCents,
+    currency: 'CNY',
+    status: 'success',
+    createdAt: Date.now(),
+  };
+  profitSharingRecords.unshift(record);
+  return res.status(201).json(record);
+});
+
+// ── 分類管理 ──
+
+app.get('/api/categories', (req, res) => {
+  res.json({ list: categories, total: categories.length });
+});
+
+app.post('/api/categories', (req, res) => {
+  const body = req.body || {};
+  if (!body.name) return res.status(400).json({ message: '分類名稱為必填' });
+  const category = {
+    categoryId: `cat-${Date.now()}`,
+    name: body.name,
+    parentId: body.parentId || null,
+    order: Number.isInteger(body.order) ? body.order : categories.length + 1,
+    isActive: body.isActive !== false,
+  };
+  categories.push(category);
+  return res.status(201).json(category);
+});
+
+app.put('/api/categories/:id', (req, res) => {
+  const category = categories.find((entry) => entry.categoryId === req.params.id);
+  if (!category) return res.status(404).json({ message: '分類不存在' });
+  const body = req.body || {};
+  category.name = body.name !== undefined ? body.name : category.name;
+  category.parentId = body.parentId !== undefined ? body.parentId || null : category.parentId;
+  category.order = Number.isInteger(body.order) ? body.order : category.order;
+  category.isActive = body.isActive !== undefined ? body.isActive !== false : category.isActive;
+  return res.json(category);
+});
+
+app.patch('/api/categories/:id/status', (req, res) => {
+  const category = categories.find((entry) => entry.categoryId === req.params.id);
+  if (!category) return res.status(404).json({ message: '分類不存在' });
+  category.isActive = req.body && req.body.isActive === true;
+  return res.json(category);
+});
+
+// ── 權限管理（Mock） ──
+app.get('/api/permission-groups', (req, res) => {
+  res.json({ groups: permissionGroups });
+});
+
+app.get('/api/admin-accounts', (req, res) => {
+  res.json({ list: adminAccounts, total: adminAccounts.length });
+});
+
+app.patch('/api/admin-accounts/:id/permissions', (req, res) => {
+  const account = adminAccounts.find((entry) => entry.id === req.params.id);
+  if (!account) return res.status(404).json({ message: '管理員不存在' });
+
+  const groups = req.body && req.body.permissionGroups;
+  if (!Array.isArray(groups) || groups.length === 0) {
+    return res.status(400).json({ message: '至少要選擇一個權限組' });
+  }
+  const unknown = groups.filter((group) => !permissionGroups[group]);
+  if (unknown.length > 0) {
+    return res.status(400).json({ message: `未知的權限組：${unknown.join(', ')}` });
+  }
+
+  account.permissionGroups = groups;
+  const credential = adminCredentials.find((entry) => entry.id === account.id);
+  if (credential) credential.permissions = groups;
+  return res.json(account);
 });
 
 app.use((err, req, res, next) => {

@@ -8,6 +8,10 @@ import {
   TeamOutlined,
   LogoutOutlined,
   UserOutlined,
+  RollbackOutlined,
+  DollarOutlined,
+  AppstoreOutlined,
+  SafetyCertificateOutlined,
 } from '@ant-design/icons';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { clearSession, getUser } from '../auth';
@@ -19,7 +23,11 @@ const MENU_ITEMS = [
   { key: '/products', icon: <ShoppingOutlined />, label: '商品管理' },
   { key: '/services', icon: <ToolOutlined />, label: '服務管理' },
   { key: '/orders', icon: <ProfileOutlined />, label: '訂單管理' },
+  { key: '/refunds', icon: <RollbackOutlined />, label: '退款審批' },
+  { key: '/profit-sharing', icon: <DollarOutlined />, label: '分帳管理' },
+  { key: '/categories', icon: <AppstoreOutlined />, label: '分類管理' },
   { key: '/technicians', icon: <TeamOutlined />, label: '師傅管理' },
+  { key: '/permissions', icon: <SafetyCertificateOutlined />, label: '權限管理' },
 ];
 
 const TITLES = {
@@ -27,7 +35,11 @@ const TITLES = {
   '/products': '商品管理',
   '/services': '服務管理',
   '/orders': '訂單管理',
+  '/refunds': '退款審批',
+  '/profit-sharing': '分帳管理',
+  '/categories': '分類管理',
   '/technicians': '師傅管理',
+  '/permissions': '權限管理',
 };
 
 export default function AdminLayout() {

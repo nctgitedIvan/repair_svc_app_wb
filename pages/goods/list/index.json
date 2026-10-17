@@ -5,7 +5,9 @@
     "t-search": "tdesign-miniprogram/search/search",
     "t-empty": "tdesign-miniprogram/empty/empty",
     "t-toast": "tdesign-miniprogram/toast/toast",
-    "goods-list": "/components/goods-list/index",
+    "t-image": "/components/webp-image/index",
+    "t-icon": "tdesign-miniprogram/icon/icon",
+    "price": "/components/price/index",
     "filter": "/components/filter/index",
     "filter-popup": "/components/filter-popup/index",
     "load-more": "/components/load-more/index"

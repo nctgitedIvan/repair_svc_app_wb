@@ -83,13 +83,41 @@
     <view class="empty-clear" bindtap="onClearFilters">清除篩選</view>
   </view>
 
-  <view class="category-goods-list" wx:if="{{goodsList.length}}">
-    <goods-list
-      wr-class="wr-goods-list"
-      goodsList="{{goodsList}}"
-      bind:click="gotoGoodsDetail"
-      bind:addcart="handleAddCart"
-    />
+  <view class="catalog-grid" wx:if="{{goodsList.length}}">
+    <view
+      class="catalog-card catalog-card--wide"
+      wx:for="{{goodsList}}"
+      wx:key="id"
+      data-index="{{index}}"
+      bindtap="gotoGoodsDetail"
+    >
+      <view class="catalog-card__thumb">
+        <t-image
+          wx:if="{{item.thumb}}"
+          t-class="catalog-card__img"
+          src="{{item.thumb}}"
+          mode="aspectFill"
+          lazy-load
+        />
+      </view>
+      <view class="catalog-card__body">
+        <view class="catalog-card__title">{{item.title}}</view>
+        <view class="catalog-card__tags">
+          <view class="catalog-card__tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</view>
+        </view>
+        <view class="catalog-card__bottom">
+          <price price="{{item.price}}" wr-class="catalog-card__price" />
+          <t-icon
+            prefix="wr"
+            name="cart"
+            size="40rpx"
+            color="#FA4126"
+            catchtap="handleAddCart"
+            data-index="{{index}}"
+          />
+        </view>
+      </view>
+    </view>
   </view>
 
   <!-- T5-2：載入更多（本機分頁，pageSize=10） -->

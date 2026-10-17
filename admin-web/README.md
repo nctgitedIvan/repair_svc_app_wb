@@ -47,6 +47,18 @@ npm run dev
 | 服務管理 | 列表、新增／編輯、上下架、價格、時長、技能標籤、圖片上傳模擬 |
 | 訂單管理 | 全部訂單、詳情 Drawer（明細／金額／地址）、**客服手動指派師傅** |
 | 師傅管理 | 列表、入駐審核、收益 Drawer |
+| 退款審批 | 退款列表、批准／拒絕（Mock） |
+| 分帳管理 | 已完成訂單的師傅分潤（80%）、分帳紀錄 |
+| 分類管理 | 兩層分類 CRUD、啟用／停用 |
+| 權限管理 | RBAC 權限組、管理員權限組調整（Mock） |
+
+## 安全（Mock 階段）
+
+- 帳密登入：`admin / admin`（`admin_credentials` 記憶體資料）
+- **連續 5 次失敗鎖定 30 分鐘**（429）
+- JWT payload 含 `permissions`（`["admin.full"]`）
+- 所有 `POST/PUT/PATCH/DELETE` 寫入操作會印到 console，並可用 `GET /api/audit-logs` 查看
+- 正式版規範見 `docs/01-目標架構.md` §4.9（HttpOnly Cookie、scrypt、CSRF、2FA 預留）
 
 ## Mock API（節錄）
 
@@ -65,6 +77,15 @@ npm run dev
 | GET | `/api/technicians` | 師傅列表 |
 | POST | `/api/technicians/:id/approve` | 通過入駐審核 |
 | GET | `/api/technicians/:id/earnings` | 收益明細 |
+| GET | `/api/refunds` | 退款列表 |
+| POST | `/api/refunds/:id/approve`、`/reject` | 退款審批 |
+| GET | `/api/profit-sharing` | 分帳紀錄 |
+| POST | `/api/profit-sharing/execute` | 執行分帳（Mock） |
+| GET/POST/PUT | `/api/categories`、`/api/categories/:id` | 分類管理 |
+| PATCH | `/api/categories/:id/status` | 分類啟用／停用 |
+| GET | `/api/permission-groups`、`/api/admin-accounts` | 權限資料 |
+| PATCH | `/api/admin-accounts/:id/permissions` | 調整管理員權限組 |
+| GET | `/api/audit-logs` | 最近的寫入稽核 |
 
 ## 資料對齊
 

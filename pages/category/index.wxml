@@ -32,17 +32,17 @@
         卡片內容沿用 §3.7.0(A) 的共用呈現原則。
       -->
       <view class="cat-grid__list">
-        <view class="cat-card" wx:for="{{items}}" wx:key="id" bindtap="onItemTap" data-index="{{index}}">
-          <view class="cat-card__thumb">
-            <t-image wx:if="{{item.thumb}}" t-class="cat-card__img" src="{{item.thumb}}" mode="aspectFill" lazy-load />
+        <view class="catalog-card catalog-card--compact" wx:for="{{items}}" wx:key="id" bindtap="onItemTap" data-index="{{index}}">
+          <view class="catalog-card__thumb">
+            <t-image wx:if="{{item.thumb}}" t-class="catalog-card__img" src="{{item.thumb}}" mode="aspectFill" lazy-load />
           </view>
-          <view class="cat-card__body">
-            <view class="cat-card__title">{{item.title}}</view>
-            <view class="cat-card__tags">
-              <view class="cat-card__tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</view>
+          <view class="catalog-card__body">
+            <view class="catalog-card__title">{{item.title}}</view>
+            <view class="catalog-card__tags">
+              <view class="catalog-card__tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</view>
             </view>
-            <view class="cat-card__bottom">
-              <price price="{{item.price}}" wr-class="cat-card__price" />
+            <view class="catalog-card__bottom">
+              <price price="{{item.price}}" wr-class="catalog-card__price" />
               <!-- catchtap：點購物車不要連帶觸發整張卡片的點擊 -->
               <t-icon
                 prefix="wr"

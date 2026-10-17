@@ -1,5 +1,7 @@
 'use strict';
 
+const crypto = require('crypto');
+
 /**
  * Mock 資料 —— 形狀刻意對齊 P2 的 Ports／Schema：
  * - services / products：docs/01 §7.4（camelCase，images、specs、skus）
@@ -9,6 +11,31 @@
  *
  * ⚠️ 全部是記憶體資料；重啟 server 會回到初始狀態。
  */
+
+function sha256(text) {
+  return crypto.createHash('sha256').update(String(text)).digest('hex');
+}
+
+/**
+ * admin_credentials —— 後台管理員帳密（Mock）。
+ *
+ * 正式版由 `admin-api` 的 users／權限組決定；密碼應使用 scrypt／bcrypt，
+ * 且 refresh token 放 HttpOnly Cookie（見 docs/01 §4.9）。
+ */
+const adminCredentials = [
+  {
+    id: 'admin-1',
+    username: 'admin',
+    passwordHash: sha256('admin'),
+    name: '超級管理員',
+    roleType: 'admin',
+    status: 'active',
+    permissions: ['admin.full'],
+    failedAttempts: 0,
+    lockedUntil: null,
+    lastLoginAt: null,
+  },
+];
 
 const STATUS_LABELS = {
   PENDING_PAYMENT: '待付款',
@@ -354,8 +381,49 @@ const refunds = [
   },
 ];
 
+const profitSharingRecords = [
+  {
+    sharingId: 'sharing-order-3',
+    orderId: 'order-3',
+    orderNo: 'R20261016000003',
+    technicianId: 'tech-1',
+    technicianName: '王師傅',
+    amountCents: 6400,
+    currency: 'CNY',
+    status: 'success',
+    createdAt: now - 24 * 3_600_000,
+  },
+];
+
+/**
+ * 權限組（與 packages/domain/access/PermissionGroupMatrix.js 對齊的簡化版）。
+ * 後台「權限管理」頁只用來顯示與 Mock 調整。
+ */
+const permissionGroups = {
+  'admin.full': [
+    'orders.read_all', 'orders.assign', 'refunds.approve_large', 'settlement.execute',
+    'catalog.manage', 'technicians.manage', 'users.manage_role', 'audit.read',
+  ],
+  'admin.finance': ['orders.read_all', 'refunds.approve_small', 'refunds.approve_large', 'settlement.execute', 'audit.read'],
+  'admin.operations': ['orders.read_all', 'orders.assign', 'catalog.manage', 'technicians.manage', 'settlement.execute'],
+  'admin.support': ['orders.read_all', 'orders.assign', 'refunds.approve_small'],
+};
+
+const adminAccounts = [
+  {
+    id: 'admin-1',
+    username: 'admin',
+    name: '超級管理員',
+    status: 'active',
+    permissionGroups: ['admin.full'],
+    lastLoginAt: null,
+  },
+];
+
 module.exports = {
   STATUS_LABELS,
+  adminCredentials,
+  sha256,
   users,
   customers,
   technicians,
@@ -364,4 +432,7 @@ module.exports = {
   products,
   orders,
   refunds,
+  profitSharingRecords,
+  permissionGroups,
+  adminAccounts,
 };

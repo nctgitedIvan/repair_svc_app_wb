@@ -1,8 +1,18 @@
+@import '../../../style/catalog-card.wxss';
+
 page {
   background-color: #fff;
 }
 
-/* ── T5-2：搜尋 ── */
+.catalog-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  padding: 20rpx 24rpx 40rpx;
+  background-color: #f5f5f5;
+}
+
+/* T5-2：搜尋 */
 .search-wrap {
   padding: 20rpx 24rpx 8rpx;
   background-color: #fff;

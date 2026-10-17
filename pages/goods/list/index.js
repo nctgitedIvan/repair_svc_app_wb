@@ -196,7 +196,7 @@ Page({
 
   /** 點卡片 → 詳情頁（商品／服務共用同一頁） */
   gotoGoodsDetail(e) {
-    const { index } = e.detail || {};
+    const index = Number(e.currentTarget.dataset.index);
     const card = this.data.goodsList[index];
     this.navigateToDetail(card);
   },
@@ -222,7 +222,7 @@ Page({
    * | 零件、無規格 | 直接寫入本機購物車 |
    */
   handleAddCart(e) {
-    const { index } = e.detail || {};
+    const index = Number(e.currentTarget.dataset.index);
     const card = this.data.goodsList[index];
     const action = catalogView.addActionFor(card);
     if (!action) return;
