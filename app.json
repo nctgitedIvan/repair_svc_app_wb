@@ -4,6 +4,7 @@
     "pages/services/index",
     "pages/orders/index",
     "pages/usercenter/index",
+    "pages/chat/index",
     "pages/admin/overview/index",
     "pages/category/index",
     "pages/cart/index"

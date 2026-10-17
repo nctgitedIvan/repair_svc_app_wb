@@ -3,7 +3,6 @@ import { fetchProductDetail, fetchServiceDetail } from '../../../services/api/in
 
 const detailView = require('../../../utils/detailView.js');
 const favorite = require('../../../utils/favorite.js');
-const inquiryRules = require('../../../utils/inquiry.js');
 const cartRules = require('../../../utils/cart.js');
 const { CartCode } = require('../../../utils/cartCodes.js');
 const { ItemType } = require('../../../utils/catalogView.js');
@@ -100,8 +99,6 @@ Page({
     skuList: [],
     buyNum: 1,
     selectedAttrStr: '',
-    // ── 詢問彈窗（T6b） ──
-    isInquiryPopupShow: false,
     /** 規格彈窗的按鈕文字（T7：加入購物車／立即購買） */
     specConfirmText: '加入購物車',
   },
@@ -181,7 +178,7 @@ Page({
       return;
     }
     if (key === 'cs') {
-      this.openInquiry();
+      this.openChat();
       return;
     }
     // 保留支援舊的 url 型入口（其他頁面日後若複用這個元件）
@@ -220,56 +217,23 @@ Page({
     Toast({ context: this, selector: '#t-toast', message: favorited ? '已加入收藏' : '已取消收藏', icon: '' });
   },
 
-  // ── 客服詢問（T6b） ──
+  // ── 客服聊天（P7a-2b） ──
 
   /**
-   * 開啟詢問彈窗。
+   * 進入客服聊天。
    *
-   * ⚠️ `inquiries` 的鍵是 `product_id`（docs/01 §7.2 第 8 點）——
-   *    服務的詢問不在 P7a 範圍（schema 需擴充 item_type/item_id），先給明確提示。
+   * 商品帶 `productId`、服務帶 `serviceId`；聊天頁會在對話為空時
+   * 自動送出一張商品／服務卡片（Storage 模擬，P5 換 WebSocket）。
    */
-  openInquiry() {
+  openChat() {
     const { detail } = this.data;
-    if (!detail.id) return;
-    if (detail.itemType !== ItemType.PRODUCT) {
-      Toast({ context: this, selector: '#t-toast', message: '服務詢問建置中（P5）', icon: '' });
-      return;
-    }
-    this.setData({ isInquiryPopupShow: true });
-  },
+    if (!detail || !detail.id) return;
 
-  onInquiryClose() {
-    this.setData({ isInquiryPopupShow: false });
-  },
-
-  /** 寫入本機 Storage（P7a）；P5 接上後改由後端 CreateInquiry 處理 */
-  onInquirySubmit(e) {
-    const { detail } = this.data;
-    const { message } = e.detail || {};
-
-    const result = inquiryRules.addInquiry(inquiryRules.loadInquiries(), {
-      productId: detail.id,
-      item: this.item,
-      message,
-      now: Date.now(),
-    });
-
-    if (!result.ok) {
-      const text =
-        result.code === inquiryRules.InquiryCode.LIMIT_EXCEEDED
-          ? '詢問數量已達上限'
-          : '送出失敗，請稍後再試';
-      Toast({ context: this, selector: '#t-toast', message: text, icon: '' });
-      return;
-    }
-
-    if (!inquiryRules.saveInquiries(result.store)) {
-      Toast({ context: this, selector: '#t-toast', message: '儲存失敗，請稍後再試', icon: '' });
-      return;
-    }
-
-    this.setData({ isInquiryPopupShow: false });
-    Toast({ context: this, selector: '#t-toast', message: '已送出詢問', icon: '' });
+    const param =
+      detail.itemType === ItemType.SERVICE
+        ? `serviceId=${detail.id}`
+        : `productId=${detail.id}`;
+    wx.navigateTo({ url: `/pages/chat/index?targetId=cs-1&${param}` });
   },
 
   /**

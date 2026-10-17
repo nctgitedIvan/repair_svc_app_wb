@@ -1,0 +1,190 @@
+<view class="chat-page">
+  <scroll-view
+    class="chat-list"
+    scroll-y
+    scroll-into-view="{{scrollIntoView}}"
+    scroll-with-animation
+    show-scrollbar="{{false}}"
+  >
+    <view class="chat-list__inner">
+      <view
+        wx:for="{{messages}}"
+        wx:key="messageId"
+        id="msg-{{item.messageId}}"
+        class="chat-row {{item.isSelf ? 'chat-row--self' : ''}}"
+      >
+        <view class="chat-avatar {{item.isSelf ? 'chat-avatar--self' : 'chat-avatar--cs'}}">
+          <t-icon name="{{item.isSelf ? 'user' : 'service'}}" size="36rpx" color="#ffffff" />
+        </view>
+
+        <view class="chat-main">
+          <view class="chat-time">{{item.timeText}}</view>
+
+          <view
+            class="chat-bubble chat-bubble--{{item.isSelf ? 'self' : 'cs'}} chat-bubble--{{item.type}}"
+            data-id="{{item.messageId}}"
+            bindlongpress="onMessageLongPress"
+          >
+            <!-- 引用 -->
+            <view wx:if="{{item.quoted}}" class="chat-quote">
+              <view class="chat-quote__body">
+                <text class="chat-quote__summary">{{item.quoted.summary}}</text>
+              </view>
+              <image
+                wx:if="{{item.quoteImagePath}}"
+                class="chat-quote__img"
+                src="{{item.quoteImagePath}}"
+                mode="aspectFill"
+              />
+            </view>
+
+            <!-- 文字 -->
+            <view wx:if="{{item.type === 'text'}}" class="chat-text">{{item.content}}</view>
+
+            <!-- 圖片 -->
+            <image
+              wx:elif="{{item.type === 'image'}}"
+              class="chat-image"
+              src="{{item.imagePath}}"
+              mode="widthFix"
+            />
+
+            <!-- 語音 -->
+            <view
+              wx:elif="{{item.type === 'voice'}}"
+              class="chat-voice"
+              style="width: {{item.voiceWidth}}"
+              data-id="{{item.messageId}}"
+              data-duration="{{item.durationSeconds}}"
+              catchtap="onVoiceTap"
+            >
+              <view class="chat-voice__wave {{playingMessageId === item.messageId ? 'chat-voice__wave--playing' : ''}}">
+                <view class="chat-voice__bar"></view>
+                <view class="chat-voice__bar"></view>
+                <view class="chat-voice__bar"></view>
+              </view>
+              <text class="chat-voice__duration">{{item.durationSeconds}}"</text>
+            </view>
+
+            <!-- 商品卡片 -->
+            <view
+              wx:elif="{{item.type === 'product'}}"
+              class="chat-product"
+              data-item-type="{{item.productSnapshot.itemType}}"
+              data-item-id="{{item.productSnapshot.itemId}}"
+              catchtap="onProductTap"
+            >
+              <image
+                wx:if="{{item.productSnapshot.image}}"
+                class="chat-product__img"
+                src="{{item.productSnapshot.image}}"
+                mode="aspectFill"
+              />
+              <view class="chat-product__body">
+                <view class="chat-product__title">{{item.productSnapshot.title}}</view>
+                <view class="chat-product__bottom">
+                  <price price="{{item.productSnapshot.priceCents}}" wr-class="chat-product__price" />
+                  <text class="chat-product__hint">查看詳情</text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view class="chat-input-bar">
+    <!-- 引用氣泡 -->
+    <view wx:if="{{quote}}" class="chat-quote-bar">
+      <image
+        wx:if="{{quote.imagePath}}"
+        class="chat-quote-bar__img"
+        src="{{quote.imagePath}}"
+        mode="aspectFill"
+      />
+      <view class="chat-quote-bar__body">
+        <text class="chat-quote-bar__label">引用</text>
+        <text class="chat-quote-bar__text">{{quote.summary}}</text>
+      </view>
+      <t-icon name="close" size="32rpx" color="#999999" catchtap="onCancelQuote" />
+    </view>
+
+    <view class="chat-input-row">
+      <view class="chat-icon-btn" bindtap="toggleVoiceMode">
+        <t-icon name="{{isVoiceMode ? 'keyboard' : 'sound'}}" size="48rpx" color="#333333" />
+      </view>
+
+      <view
+        wx:if="{{isVoiceMode}}"
+        class="chat-hold-btn"
+        catchtouchstart="onVoiceStart"
+        catchtouchend="onVoiceEnd"
+        catchtouchcancel="onVoiceCancel"
+      >
+        按住 說話
+      </view>
+
+      <view wx:else class="chat-input-wrap">
+        <t-input
+          t-class="chat-input"
+          borderless
+          value="{{inputValue}}"
+          placeholder="輸入訊息…"
+          confirm-type="send"
+          adjust-position="{{true}}"
+          cursor-spacing="20"
+          focus="{{inputFocus}}"
+          bind:change="onInputChange"
+          bind:focus="onInputFocus"
+          bind:blur="onInputBlur"
+          bind:confirm="onSend"
+        />
+      </view>
+
+      <view class="chat-icon-btn" data-panel="emoji" bindtap="togglePanel">
+        <t-icon name="smile" size="48rpx" color="#333333" />
+      </view>
+      <view class="chat-icon-btn" data-panel="more" bindtap="togglePanel">
+        <t-icon name="add-circle" size="48rpx" color="#333333" />
+      </view>
+      <view wx:if="{{!isVoiceMode}}" class="chat-send-btn" bindtap="onSend">發送</view>
+    </view>
+
+    <!-- Emoji 面板 -->
+    <view wx:if="{{panel === 'emoji'}}" class="chat-panel">
+      <view
+        wx:for="{{emojis}}"
+        wx:key="*this"
+        class="chat-emoji"
+        data-emoji="{{item}}"
+        bindtap="onEmojiTap"
+      >
+        {{item}}
+      </view>
+    </view>
+
+    <!-- 更多面板 -->
+    <view wx:if="{{panel === 'more'}}" class="chat-panel chat-panel--more">
+      <view class="chat-more-item" bindtap="chooseImage">
+        <t-icon name="image" size="52rpx" color="#666666" />
+        <text class="chat-more-item__text">圖片</text>
+      </view>
+      <view class="chat-more-item" bindtap="chooseImage">
+        <t-icon name="camera" size="52rpx" color="#666666" />
+        <text class="chat-more-item__text">拍攝</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 錄音遮罩 -->
+  <view class="voice-overlay" wx:if="{{voiceRecording}}" catchtouchmove="onVoiceCancel">
+    <view class="voice-overlay__box">
+      <t-icon name="microphone" size="80rpx" color="#ffffff" />
+      <view class="voice-overlay__time">{{recordingSeconds}}"</view>
+      <view class="voice-overlay__tip">按住說話 · 鬆開發送</view>
+    </view>
+  </view>
+</view>
+
+<t-toast id="t-toast" />

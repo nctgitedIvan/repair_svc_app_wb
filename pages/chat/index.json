@@ -1,0 +1,9 @@
+{
+  "navigationBarTitleText": "客服",
+  "usingComponents": {
+    "t-icon": "tdesign-miniprogram/icon/icon",
+    "t-input": "tdesign-miniprogram/input/input",
+    "t-toast": "tdesign-miniprogram/toast/toast",
+    "price": "/components/price/index"
+  }
+}
