@@ -2,7 +2,9 @@
   "navigationBarTitleText": "分類",
   "usingComponents": {
     "goods-category": "./components/goods-category/index",
-    "goods-list": "/components/goods-list/index",
+    "t-image": "/components/webp-image/index",
+    "t-icon": "tdesign-miniprogram/icon/icon",
+    "price": "/components/price/index",
     "t-toast": "tdesign-miniprogram/toast/toast"
   }
 }

@@ -110,24 +110,27 @@ Page({
     this.setData({ items, activeKey, subActiveKey, currentName: child.name });
   },
 
+  /** 從 `data-index` 取回卡片（T6a.1-2：卡片由本頁渲染，不再依賴元件的 payload） */
+  cardAt(e) {
+    const index = Number(e.currentTarget.dataset.index);
+    return Number.isInteger(index) ? this.data.items[index] : null;
+  },
+
   /**
-   * 點卡片。
+   * 點卡片 → 詳情頁。
    *
-   * ⚠️ **過渡期**（與 T4 的購物車跳轉同一情況）：
-   * - 零件 → 商品詳情（`productId`；**T6** 會把該頁的參數契約正式定為 `productId`）
-   * - 服務 → 服務詳情頁**還不存在**（P7a-2b），**不導向錯誤的頁面**，只提示
+   * 服務與商品現在**共用同一個詳情頁**（T6a），因此只是參數不同：
+   * 商品帶 `productId`（＋過渡期的 `spuId`）、服務帶 `serviceId`。
    */
   onItemTap(e) {
-    const card = e.detail && e.detail.goods;
+    const card = this.cardAt(e);
     if (!card || !card.id) return;
 
-    if (card.itemType === catalogView.ItemType.SERVICE) {
-      Toast({ context: this, selector: '#t-toast', message: '服務詳情建置中', icon: '' });
-      return;
-    }
-    wx.navigateTo({
-      url: `/pages/goods/details/index?productId=${card.id}&spuId=${card.id}`,
-    });
+    const param =
+      card.itemType === catalogView.ItemType.SERVICE
+        ? `serviceId=${card.id}`
+        : `productId=${card.id}&spuId=${card.id}`;
+    wx.navigateTo({ url: `/pages/goods/details/index?${param}` });
   },
 
   /**
@@ -146,7 +149,7 @@ Page({
    *    （見 `docs/P7a-2a-T3.6.1-診斷報告.md` §1.1），導過去只會看到 ¥0.00 的空白頁。
    */
   onAddCart(e) {
-    const card = e.detail && e.detail.goods;
+    const card = this.cardAt(e);
     const action = catalogView.addActionFor(card);
     if (!action) return;
 

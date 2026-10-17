@@ -43,56 +43,102 @@ page {
 }
 
 /*
- * ⚠️ 卡片尺寸覆寫（**這一頁最可能需要依實際畫面微調的地方**）
+ * ⚠️ T6a.1-2：卡片改為**本頁自己畫**（不再用共用的 goods-list／goods-card）。
  *
- * 原因：共用的 `components/goods-card` 是為**全寬**列表設計的
- * （`.goods-card__main` 寫死 342rpx、縮圖 340rpx），
- * 而本頁右側面板只有 750 - 180(側邊欄) = **570rpx** —— 直接沿用會變成**一列**，
- * 與 §3.7.9「右側兩列網格」不符。
+ * 舊做法是用頁面樣式「打進共用元件內部」（靠 goods-card 的 `addGlobalClass`）
+ * 把 342rpx 的卡片壓成 264rpx —— 那個機制**無法在 CI 驗證**；
+ * 若只生效一半（例如 `__main` 生效而 `__thumb` 沒生效），
+ * 340rpx 的圖就會塞在 264rpx 的框裡 → **圖片向右溢出**（使用者回報的症狀）。
  *
- * 手法：`goods-card` 有 `addGlobalClass: true`（頁面樣式可影響它），
- * 因此由頁面覆寫尺寸。選擇器用 `goods-list` 的 `wr-class`（外部類，可靠）
- * 當祖先，再打進卡片的內部類。
+ * 現在所有尺寸都在本頁，沒有任何跨元件的樣式依賴。
  *
- * 264rpx × 2 = 528rpx，在 570rpx 內留 42rpx 間距（goods-list 是 space-between）。
+ * 版面（沿用共用卡片的視覺語言，但每一格的高度固定、不會跑版）：
+ *
+ *   ┌────────────────┐
+ *   │   圖片 262×262  │
+ *   ├────────────────┤
+ *   │ 商品名稱        │  ← 最多兩行、固定高度
+ *   │ [標籤]          │
+ *   │ ¥80      🛒     │  ← 價格靠左、購物車靠右
+ *   └────────────────┘
  */
-.cat-grid__list .goods-card__main {
-  width: 264rpx;
-}
-.cat-grid__list .goods-card__thumb {
-  width: 264rpx;
-  height: 264rpx;
-}
-.cat-grid__list .goods-card__body {
-  padding: 12rpx 16rpx 14rpx;
-}
-.cat-grid__list .goods-card__title {
-  font-size: 24rpx;
-  line-height: 32rpx;
-  height: 64rpx;
-}
-.cat-grid__list .goods-card__tag {
-  font-size: 18rpx;
-  line-height: 26rpx;
-  padding: 0 6rpx;
-}
-.cat-grid__list .spec-for-price {
-  font-size: 30rpx;
-}
-.cat-grid__list .spec-for-symbol {
-  font-size: 22rpx;
+
+.cat-grid__list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
 }
 
-/*
- * 卡片上的「加入購物車」圖示：**T3.6.1 起恢復顯示並接上行為**。
- *
- * （T3.6 曾用 CSS 隱藏它，因為當時不含加購功能；現在由頁面的 onAddCart 分流：
- *   無規格零件 → 直接寫入購物車／有規格 → Toast 提示／服務 → Toast 提示。
- *   規則在 utils/catalogView.addActionFor()，有測試。）
- *
- * ⚠️ 圖示是 `goods-card` **無條件渲染**的，無法依「這一張是服務還是零件」隱藏 ——
- *    所以服務卡片上也會有這個圖示，點擊時由頁面擋下並提示。
- */
+.cat-card {
+  /* 右側面板 570rpx − `.cat-grid` 左右 padding 32rpx = 538rpx；
+     2 × 262rpx = 524rpx，剩 14rpx 作為間距（space-between） */
+  width: 262rpx;
+  box-sizing: border-box;
+  background-color: #fff;
+  border-radius: 16rpx;
+  margin-bottom: 20rpx;
+  overflow: hidden;
+}
+
+.cat-card__thumb {
+  width: 100%;
+  height: 262rpx;
+  background-color: #f5f5f5;
+}
+
+.cat-card__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.cat-card__body {
+  padding: 12rpx 16rpx 16rpx;
+}
+
+.cat-card__title {
+  /* ⚠️ 固定高度 ＋ 最多兩行：名稱長短不一時，卡片高度才不會跳動 */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  word-break: break-word;
+  height: 64rpx;
+  font-size: 24rpx;
+  line-height: 32rpx;
+  color: #333333;
+}
+
+.cat-card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  /* 沒有標籤時仍佔位，讓每一格的底部價格列對齊 */
+  min-height: 30rpx;
+  margin-top: 8rpx;
+}
+
+.cat-card__tag {
+  font-size: 18rpx;
+  line-height: 28rpx;
+  color: #fa4126;
+  border: 1rpx solid #fa4126;
+  border-radius: 16rpx;
+  padding: 0 8rpx;
+  margin-right: 8rpx;
+}
+
+.cat-card__bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8rpx;
+}
+
+/* 價格用既有 price 元件（吃「分」）；樣式透過它的外部類 wr-class 指定 */
+.cat-card__price {
+  font-size: 30rpx;
+  font-weight: 700;
+}
 
 /* ── 載入失敗 ── */
 

@@ -18,15 +18,44 @@
   >
     <view class="cat-grid">
       <!--
-        共用卡片元件（goods-list + goods-card），服務與零件用同一個元件渲染。
-        卡片尺寸由本頁 index.wxss 覆寫（右側面板比全寬列表窄，見該檔說明）。
+        ⚠️ T6a.1-2：**本頁自己畫卡片**，不再用共用的 goods-list／goods-card。
+
+        原因（T6a.1 診斷報告 §3.2／§4.2）：
+        1. 共用卡片是為**全寬**列表設計的（__main 342rpx、縮圖 340rpx），
+           塞進右側 538rpx 的面板要靠頁面樣式「打進元件內部」
+           （addGlobalClass），而那個機制**無法在 CI 驗證**
+           —— 若只生效一半，圖片會向右溢出（使用者實際看到的症狀）
+        2. 需求要「標籤與名稱**不同行**、名稱最多兩行、價格靠左購物車靠右、
+           整格固定不跑版」，共用卡片的 column 排版做不到
+
+        服務與零件**仍然共用同一張卡片**（只有標籤文字不同），
+        卡片內容沿用 §3.7.0(A) 的共用呈現原則。
       -->
-      <goods-list
-        wr-class="cat-grid__list"
-        goodsList="{{items}}"
-        bind:click="onItemTap"
-        bind:addcart="onAddCart"
-      />
+      <view class="cat-grid__list">
+        <view class="cat-card" wx:for="{{items}}" wx:key="id" bindtap="onItemTap" data-index="{{index}}">
+          <view class="cat-card__thumb">
+            <t-image wx:if="{{item.thumb}}" t-class="cat-card__img" src="{{item.thumb}}" mode="aspectFill" lazy-load />
+          </view>
+          <view class="cat-card__body">
+            <view class="cat-card__title">{{item.title}}</view>
+            <view class="cat-card__tags">
+              <view class="cat-card__tag" wx:for="{{item.tags}}" wx:for-item="tag" wx:key="*this">{{tag}}</view>
+            </view>
+            <view class="cat-card__bottom">
+              <price price="{{item.price}}" wr-class="cat-card__price" />
+              <!-- catchtap：點購物車不要連帶觸發整張卡片的點擊 -->
+              <t-icon
+                prefix="wr"
+                name="cart"
+                size="40rpx"
+                color="#FA4126"
+                catchtap="onAddCart"
+                data-index="{{index}}"
+              />
+            </view>
+          </view>
+        </view>
+      </view>
       <view class="cat-grid__empty" wx:if="{{items.length === 0}}">{{currentName}} 目前沒有可預約的項目</view>
     </view>
   </goods-category>
