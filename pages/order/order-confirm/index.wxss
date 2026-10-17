@@ -1,221 +1,289 @@
-.order-sure {
-  box-sizing: border-box;
-  background: #f6f6f6;
-  padding: 24rpx 0 calc(env(safe-area-inset-bottom) + 136rpx);
+/* 結算頁（T7） */
+
+page {
+  background-color: #f6f6f6;
+}
+
+.checkout-page {
   min-height: 100vh;
-}
-
-.order-sure .wx-pay-cover {
-  position: fixed;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  z-index: 10;
-  background: #fff;
-  height: 112rpx;
-  padding-bottom: env(safe-area-inset-bottom);
-}
-.order-sure .wx-pay-cover .wx-pay {
-  width: 100%;
-  height: 100rpx;
+  padding: 24rpx 24rpx calc(env(safe-area-inset-bottom) + 160rpx);
   box-sizing: border-box;
-  padding: 0rpx 32rpx;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.order-sure .wx-pay-cover .wx-pay .price {
-  color: #fa4126;
-  font-weight: bold;
-  font-size: 63rpx;
-  line-height: 88rpx;
 }
 
-.order-sure .wx-pay-cover .wx-pay .submit-btn {
-  height: 80rpx;
-  width: 240rpx;
-  border-radius: 40rpx;
-  background-color: #fa4126;
-  color: #ffffff;
-  line-height: 80rpx;
-  font-weight: bold;
-  font-size: 28rpx;
-  text-align: center;
-}
-.order-sure .wx-pay-cover .wx-pay .btn-gray {
-  background: #cccccc;
-}
-
-.order-wrapper .store-wrapper {
-  width: 100%;
-  height: 96rpx;
-  box-sizing: border-box;
-  padding: 0 32rpx;
+/* ── 地址 ── */
+.address-card {
   display: flex;
   align-items: center;
-  font-size: 28rpx;
-  line-height: 40rpx;
-  color: #333333;
-  background-color: #ffffff;
+  background-color: #fff;
+  border-radius: 16rpx;
+  padding: 28rpx 24rpx;
 }
-.order-wrapper .store-wrapper .store-logo {
-  margin-right: 16rpx;
+
+.address-card__icon {
+  flex: none;
+  margin-right: 20rpx;
 }
-.order-wrapper .goods-wrapper {
-  width: 100%;
-  box-sizing: border-box;
-  padding: 16rpx 32rpx;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  font-size: 24rpx;
-  line-height: 32rpx;
-  color: #999999;
-  background-color: #ffffff;
-}
-.goods-wrapper .goods-image {
-  width: 176rpx;
-  height: 176rpx;
-  border-radius: 8rpx;
-  overflow: hidden;
-  margin-right: 16rpx;
-}
-.goods-wrapper .goods-content {
+
+.address-card__body {
   flex: 1;
+  min-width: 0;
 }
 
-.goods-wrapper .goods-content .goods-title {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: 28rpx;
-  line-height: 40rpx;
-  margin-bottom: 12rpx;
-  color: #333333;
-  margin-right: 16rpx;
-}
-
-.goods-wrapper .goods-right {
-  min-width: 128rpx;
+.address-card__title {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
+  align-items: baseline;
 }
 
-.goods-right .goods-price {
+.address-card__name {
+  font-size: 30rpx;
+  font-weight: 600;
   color: #333333;
-  font-size: 32rpx;
-  line-height: 48rpx;
-  font-weight: bold;
+}
+
+.address-card__phone {
+  margin-left: 16rpx;
+  font-size: 26rpx;
+  color: #666666;
+}
+
+.address-card__text {
+  margin-top: 8rpx;
+  font-size: 26rpx;
+  line-height: 38rpx;
+  color: #333333;
+  word-break: break-all;
+}
+
+.address-card__empty {
+  font-size: 28rpx;
+  color: #999999;
+}
+
+/* ── 區塊 ── */
+.checkout-block {
+  margin-top: 20rpx;
+  background-color: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+}
+
+.checkout-block__title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333333;
   margin-bottom: 16rpx;
 }
 
-.goods-right .goods-num {
+/* ── 明細 ── */
+.checkout-line {
+  display: flex;
+  align-items: flex-start;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f2f2f2;
+}
+
+.checkout-line:last-child {
+  border-bottom: none;
+}
+
+.checkout-line--invalid {
+  background-color: #fff7f6;
+}
+
+.checkout-line__thumb {
+  flex: none;
+  width: 140rpx;
+  height: 140rpx;
+  border-radius: 12rpx;
+  overflow: hidden;
+  background-color: #f5f5f5;
+}
+
+.checkout-line__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.checkout-line__body {
+  flex: 1;
+  min-width: 0;
+  margin-left: 20rpx;
+}
+
+.checkout-line__name {
+  font-size: 28rpx;
+  color: #333333;
+  line-height: 40rpx;
+  word-break: break-all;
+}
+
+.checkout-line__spec {
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  color: #999999;
+  line-height: 34rpx;
+  word-break: break-all;
+}
+
+.checkout-line__invalid-text {
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: #fa4126;
+}
+
+.checkout-line__right {
+  flex: none;
+  margin-left: 16rpx;
   text-align: right;
 }
 
-.order-sure .pay-detail {
-  background-color: #ffffff;
-  padding: 16rpx 32rpx;
-  width: 100%;
-  box-sizing: border-box;
+.checkout-line__price {
+  font-size: 28rpx;
+  color: #333333;
 }
 
-.order-sure .pay-detail .pay-item {
-  width: 100%;
-  height: 72rpx;
+.checkout-line__qty {
+  margin-top: 6rpx;
+  font-size: 24rpx;
+  color: #999999;
+}
+
+/* ── 金額 ── */
+.checkout-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  min-height: 64rpx;
+  font-size: 26rpx;
+  color: #666666;
+}
+
+.checkout-row__num {
+  font-size: 26rpx;
+  color: #333333;
+}
+
+.checkout-row--total {
+  margin-top: 8rpx;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #f2f2f2;
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #333333;
+}
+
+.checkout-row__total {
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #fa4126;
+}
+
+/* ── 預約時間佔位 ── */
+.checkout-note {
+  display: flex;
+  align-items: center;
+  margin-top: 20rpx;
+  padding: 20rpx 24rpx;
+  background-color: #fff;
+  border-radius: 16rpx;
+}
+
+.checkout-note__text {
+  margin-left: 12rpx;
+  font-size: 26rpx;
+  color: #999999;
+}
+
+/* ── 提示 ── */
+.checkout-warning {
+  margin-top: 20rpx;
+  padding: 20rpx 24rpx;
+  border-radius: 12rpx;
+  background-color: #fff3e0;
+  color: #fa8c16;
+  font-size: 24rpx;
+  line-height: 34rpx;
+}
+
+/* ── 底部提交列 ── */
+.checkout-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 26rpx;
-  line-height: 36rpx;
-  color: #666666;
+  padding: 16rpx 24rpx calc(16rpx + env(safe-area-inset-bottom));
+  background-color: #fff;
 }
-.order-sure .pay-detail .pay-item .pay-item__right {
-  color: #333333;
-  font-size: 24rpx;
+
+.checkout-footer__total {
   display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  max-width: 400rpx;
+  align-items: baseline;
+  font-size: 26rpx;
+  color: #333333;
 }
-.order-sure .pay-detail .pay-item .pay-item__right .pay-remark {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  max-width: 400rpx;
-  text-overflow: ellipsis;
-  overflow: hidden;
-}
-.order-sure .pay-detail .pay-item .font-bold {
-  font-weight: bold;
-}
-.order-sure .pay-detail .pay-item .primary {
+
+.checkout-footer__price {
+  margin-left: 8rpx;
+  font-size: 40rpx;
+  font-weight: 600;
   color: #fa4126;
 }
 
-.add-notes .add-notes__content {
-  --td-textarea-background-color: #f5f5f5;
-}
-
-.add-notes .t-textarea__placeholder {
-  color: #aeb3b7;
-}
-
-.add-notes .add-notes__textarea__font {
-  font-size: 26rpx;
-}
-.add-notes .add-notes__textarea {
-  margin-top: 32rpx;
-}
-
-.order-sure .add-notes .dialog__message {
-  border-radius: 8rpx;
-}
-
-.order-sure .add-notes .dialog__button-cancel::after {
-  border-right: 0;
-}
-
-.order-sure .amount-wrapper {
-  width: 100%;
-  box-sizing: border-box;
-  background-color: #ffffff;
-  padding: 0rpx 32rpx;
-  height: 96rpx;
-}
-
-.order-sure .pay-amount {
-  width: 100%;
-  height: 96rpx;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
+.checkout-footer__btn {
+  flex: none;
+  min-width: 240rpx;
+  height: 80rpx;
+  line-height: 80rpx;
+  padding: 0 32rpx;
+  border-radius: 40rpx;
+  text-align: center;
+  background-color: #fa4126;
+  color: #ffffff;
   font-size: 28rpx;
-  color: #333333;
-  position: relative;
-}
-.order-sure .pay-amount::after {
-  position: absolute;
-  content: ' ';
-  top: 0;
-  left: 0;
-  width: 200%;
-  height: 200%;
-  transform: scale(0.5);
-  transform-origin: 0 0;
-  border-top: 2rpx solid #f5f5f5;
-}
-.order-sure .pay-amount .order-num {
-  color: #999999;
-  padding-right: 8rpx;
 }
 
-.order-sure .pay-amount .total-price {
-  font-size: 36rpx;
+.checkout-footer__btn--disabled {
+  background-color: #dddddd;
+  color: #ffffff;
+}
+
+/* ── 狀態畫面 ── */
+.checkout-state {
+  min-height: 100vh;
+  padding: 160rpx 60rpx;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 26rpx;
+  color: #999999;
+}
+
+.checkout-state__text {
+  font-size: 30rpx;
+  color: #333333;
+}
+
+.checkout-state__tip {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #999999;
+  text-align: center;
+  line-height: 36rpx;
+}
+
+.checkout-state__btn {
+  margin-top: 48rpx;
+  padding: 0 64rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  border-radius: 36rpx;
+  border: 2rpx solid #fa4126;
   color: #fa4126;
-  font-weight: bold;
-  padding-left: 8rpx;
+  font-size: 26rpx;
 }

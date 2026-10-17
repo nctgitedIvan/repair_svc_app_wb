@@ -1,151 +1,122 @@
-<wxs module="order" src="./order.wxs" />
+<!--
+  結算頁（T7）。
 
-<wxs module="handleInvoice" src="./handleInvoice.wxs" />
-<wxs module="getNotes" src="./getNotes.wxs" />
-<view class="order-sure" wx:if="{{!loading}}">
-  <address-card addressData="{{userAddress}}" bind:addclick="onGotoAddress" bind:addressclick="onGotoAddress" />
-  <view
-    class="order-wrapper"
-    wx:for="{{settleDetailData.storeGoodsList}}"
-    wx:for-item="stores"
-    wx:for-index="storeIndex"
-    wx:key="storeIndex"
-  >
-    <view class="store-wrapper">
-      <t-icon prefix="wr" size="40rpx" color="#333333" name="store" class="store-logo" />
-      {{stores.storeName}}
+  ⚠️ 只讀 repair.checkout.v1；T4 的舊格式與相容橋接已移除。
+  ⚠️ P7a 沒有後端：提交只做模擬成功；訂單列表屬 P7a-2。
+-->
+<view class="checkout-page" wx:if="{{ready && !missingPayload && !loadError && !payloadError}}">
+  <!-- 服務地址：預設地址自動填入；沒有就顯示「請選擇地址」 -->
+  <view class="address-card" bindtap="onGotoAddress">
+    <t-icon name="location" size="40rpx" color="#333333" class="address-card__icon" />
+    <view class="address-card__body">
+      <block wx:if="{{address}}">
+        <view class="address-card__title">
+          <text class="address-card__name">{{address.name}}</text>
+          <text class="address-card__phone">{{address.phone}}</text>
+        </view>
+        <view class="address-card__text">{{address.fullAddress}}</view>
+      </block>
+      <block wx:else>
+        <view class="address-card__empty">請選擇地址</view>
+      </block>
+    </view>
+    <t-icon name="chevron-right" size="36rpx" color="#BBBBBB" />
+  </view>
+
+  <!-- 明細 -->
+  <view class="checkout-block">
+    <view class="checkout-block__title">商品明細（{{orderTypeLabel}}）</view>
+    <view
+      class="checkout-line {{line.invalid ? 'checkout-line--invalid' : ''}}"
+      wx:for="{{view.lines}}"
+      wx:key="index"
+    >
+      <view class="checkout-line__thumb">
+        <t-image wx:if="{{line.image}}" t-class="checkout-line__img" src="{{line.image}}" mode="aspectFill" lazy-load />
+      </view>
+      <view class="checkout-line__body">
+        <view class="checkout-line__name">{{line.name}}</view>
+        <view class="checkout-line__spec" wx:if="{{line.specText}}">{{line.specText}}</view>
+        <view class="checkout-line__invalid-text" wx:if="{{line.invalid}}">{{line.reasonText}}</view>
+      </view>
+      <view class="checkout-line__right">
+        <price
+          wx:if="{{!line.invalid}}"
+          price="{{line.unitPriceCents}}"
+          wr-class="checkout-line__price"
+        />
+        <view class="checkout-line__qty">x{{line.quantity}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 金額 -->
+  <view class="checkout-block">
+    <view class="checkout-row">
+      <text>服務費</text>
+      <price price="{{view.serviceTotalCents}}" wr-class="checkout-row__num" />
+    </view>
+    <view class="checkout-row">
+      <text>材料費</text>
+      <price price="{{view.materialTotalCents}}" wr-class="checkout-row__num" />
+    </view>
+    <view class="checkout-row">
+      <text>商品總額</text>
+      <price price="{{view.goodsTotalCents}}" wr-class="checkout-row__num" />
+    </view>
+    <view class="checkout-row checkout-row--total">
+      <text>合計</text>
+      <price price="{{view.totalCents}}" wr-class="checkout-row__total" />
+    </view>
+  </view>
+
+  <!-- 服務／混合單的預約時間佔位 -->
+  <view class="checkout-note" wx:if="{{view.hasService}}">
+    <t-icon name="time" size="32rpx" color="#999999" />
+    <text class="checkout-note__text">預約時間：待選擇（P7a-2b）</text>
+  </view>
+
+  <!-- 價格變動／型別重新判定 -->
+  <view class="checkout-warning" wx:if="{{view.priceChanged}}">價格已更新，請確認後再提交</view>
+  <view class="checkout-warning" wx:if="{{view.orderTypeMismatch}}">訂單型別已依明細重新判定</view>
+
+  <!-- 底部提交列 -->
+  <view class="checkout-footer">
+    <view class="checkout-footer__total">
+      <text>合計</text>
+      <price price="{{view.totalCents}}" wr-class="checkout-footer__price" />
     </view>
     <view
-      wx:if="{{orderCardList[storeIndex].goodsList.length > 0}}"
-      wx:for="{{orderCardList[storeIndex].goodsList}}"
-      wx:for-item="goods"
-      wx:for-index="gIndex"
-      wx:key="id"
-      class="goods-wrapper"
+      class="checkout-footer__btn {{!view.ok || submitting ? 'checkout-footer__btn--disabled' : ''}}"
+      bindtap="onSubmit"
     >
-      <t-image src="{{goods.thumb}}" t-class="goods-image" mode="aspectFill" />
-      <view class="goods-content">
-        <view class="goods-title">{{goods.title}}</view>
-        <view>{{goods.specs}}</view>
-      </view>
-      <view class="goods-right">
-        <price wr-class="goods-price" price="{{goods.price}}" fill="{{true}}" decimalSmaller />
-        <view class="goods-num">x{{goods.num}}</view>
-      </view>
+      {{submitting ? '提交中…' : '提交訂單'}}
     </view>
   </view>
-  <view class="pay-detail">
-    <view class="pay-item">
-      <text>商品总额</text>
-      <price
-        fill
-        decimalSmaller
-        wr-class="pay-item__right font-bold"
-        price="{{settleDetailData.totalSalePrice || '0'}}"
-      />
-    </view>
-    <view class="pay-item">
-      <text>运费</text>
-      <view class="pay-item__right font-bold">
-        <block wx:if="{{settleDetailData.totalDeliveryFee && settleDetailData.totalDeliveryFee != 0}}">
-          +
-          <price fill decimalSmaller price="{{settleDetailData.totalDeliveryFee}}" />
-        </block>
-        <text wx:else>免运费</text>
-      </view>
-    </view>
-    <view class="pay-item">
-      <text>活动优惠</text>
-      <view class="pay-item__right primary font-bold">
-        -
-        <price fill price="{{settleDetailData.totalPromotionAmount || 0}}" />
-      </view>
-    </view>
-    <view class="pay-item">
-      <text>优惠券</text>
-      <view
-        class="pay-item__right"
-        data-storeid="{{settleDetailData.storeGoodsList[0].storeId}}"
-        catchtap="onOpenCoupons"
-      >
-        <block wx:if="{{submitCouponList.length}}">
-          <block wx:if="{{settleDetailData.totalCouponAmount && settleDetailData.totalCouponAmount !== '0'}}">
-            -<price fill decimalSmaller price="{{settleDetailData.totalCouponAmount}}" />
-          </block>
-          <block wx:else>选择优惠券</block>
-        </block>
-        <text wx:else>无可用</text>
-        <t-icon name="chevron-right" size="32rpx" color="#BBBBBB" />
-      </view>
-    </view>
-    <view class="pay-item" wx:if="{{settleDetailData.invoiceSupport}}">
-      <text>发票</text>
-      <view class="pay-item__right" catchtap="onReceipt">
-        <text>{{handleInvoice(invoiceData)}}</text>
-        <t-icon name="chevron-right" size="32rpx" color="#BBBBBB" />
-      </view>
-    </view>
-    <view class="pay-item">
-      <text>订单备注</text>
-      <view class="pay-item__right" data-storenoteindex="{{0}}" catchtap="onNotes">
-        <text class="pay-remark"
-          >{{getNotes(storeInfoList, 0) ? getNotes(storeInfoList, 0) :'选填，建议先和商家沟通确认'}}</text
-        >
-        <t-icon name="chevron-right" size="32rpx" color="#BBBBBB" />
-      </view>
-    </view>
-  </view>
-  <view class="amount-wrapper">
-    <view class="pay-amount">
-      <text class="order-num">共{{settleDetailData.totalGoodsCount}}件</text>
-      <text>小计</text>
-      <price class="total-price" price="{{settleDetailData.totalPayAmount}}" fill="{{false}}" decimalSmaller />
-    </view>
-  </view>
-  <view class="wx-pay-cover">
-    <view class="wx-pay">
-      <price decimalSmaller fill class="price" price="{{settleDetailData.totalPayAmount || '0'}}" />
-      <view class="submit-btn {{ settleDetailData.settleType === 1 ? '':'btn-gray'}}" bindtap="submitOrder">
-        提交订单
-      </view>
-    </view>
-  </view>
-  <t-dialog
-    t-class="add-notes"
-    title="填写备注信息"
-    visible="{{dialogShow}}"
-    confirm-btn="确认"
-    cancel-btn="取消"
-    t-class-content="add-notes__content"
-    t-class-confirm="dialog__button-confirm"
-    t-class-cancel="dialog__button-cancel"
-    bindconfirm="onNoteConfirm"
-    bindcancel="onNoteCancel"
-  >
-    <t-textarea
-      slot="content"
-      focus="{{dialogShow}}"
-      class="notes"
-      t-class="add-notes__textarea"
-      value="{{storeInfoList[storeNoteIndex] && storeInfoList[storeNoteIndex].remark}}"
-      placeholder="备注信息"
-      t-class-textarea="add-notes__textarea__font"
-      bindfocus="onFocus"
-      bindblur="onBlur"
-      bindchange="onInput"
-      maxlength="{{50}}"
-    />
-  </t-dialog>
-  <t-popup visible="{{popupShow}}" placement="bottom" bind:visible-change="onPopupChange">
-    <no-goods slot="content" bind:change="onSureCommit" settleDetailData="{{settleDetailData}}" />
-  </t-popup>
-  <select-coupons
-    bind:sure="onCoupons"
-    storeId="{{currentStoreId}}"
-    orderSureCouponList="{{couponList}}"
-    promotionGoodsList="{{promotionGoodsList}}"
-    couponsShow="{{couponsShow}}"
-  />
 </view>
+
+<!-- 載入中 -->
+<view class="checkout-state" wx:if="{{loading}}">載入中…</view>
+
+<!-- 沒有結算資料 -->
+<view class="checkout-state" wx:if="{{missingPayload && !loading}}">
+  <view class="checkout-state__text">沒有結算資料</view>
+  <view class="checkout-state__tip">請回到購物車或商品詳情重新選擇</view>
+  <view class="checkout-state__btn" bindtap="onBack">返回</view>
+</view>
+
+<!-- 結算資料格式錯誤 -->
+<view class="checkout-state" wx:if="{{payloadError && !loading}}">
+  <view class="checkout-state__text">結算資料不完整</view>
+  <view class="checkout-state__tip">請回到上一頁重新選擇商品</view>
+  <view class="checkout-state__btn" bindtap="onBack">返回</view>
+</view>
+
+<!-- 現況載入失敗 -->
+<view class="checkout-state" wx:if="{{loadError && !loading}}">
+  <view class="checkout-state__text">結算資料載入失敗</view>
+  <view class="checkout-state__tip">請檢查網路後再試一次</view>
+  <view class="checkout-state__btn" bindtap="onRetry">重新載入</view>
+</view>
+
 <t-toast id="t-toast" />
-<t-dialog id="t-dialog" />
