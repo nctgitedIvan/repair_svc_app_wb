@@ -261,3 +261,196 @@ test('與真實 fake 資料對齊（分類頁的驗收前提）', async (t) => {
     assert.deepEqual(list.map((i) => i.name), ['水管疏通', '排水管接頭']);
   });
 });
+
+// ── T5：商品列表的純函式 ──
+
+test('mergeCatalog：商品列表的預設順序（T5）', async (t) => {
+  await t.test('⚠️ 零件在上、服務在下，各自依 order（與分類頁相反）', () => {
+    const services = [svc({ serviceId: 's1', order: 2 }), svc({ serviceId: 's2', order: 1 })];
+    const products = [prd({ productId: 'p1', order: 2 }), prd({ productId: 'p2', order: 1 })];
+
+    const list = view.mergeCatalog({ services, products });
+    assert.deepEqual(list.map((i) => i.productId || i.serviceId), ['p2', 'p1', 's2', 's1']);
+    assert.deepEqual(list.map((i) => i.itemType), ['product', 'product', 'service', 'service']);
+  });
+
+  await t.test('下架的項目不出現', () => {
+    const list = view.mergeCatalog({
+      services: [svc({ serviceId: 's1' }), svc({ serviceId: 's2', isActive: false })],
+      products: [prd({ productId: 'p1' }), prd({ productId: 'p2', isActive: false })],
+    });
+    assert.deepEqual(list.map((i) => i.productId || i.serviceId), ['p1', 's1']);
+  });
+
+  await t.test('空輸入不爆', () => {
+    assert.deepEqual(view.mergeCatalog(), []);
+    assert.deepEqual(view.mergeCatalog({}), []);
+  });
+
+  await t.test('真實 fake 資料：上架的零件＋服務，下架的 prd-4 不在', () => {
+    const list = view.mergeCatalog({ services: SERVICES, products: PRODUCTS });
+    const expected =
+      PRODUCTS.filter((p) => p.isActive !== false).length + SERVICES.filter((s) => s.isActive !== false).length;
+
+    assert.equal(list.length, expected);
+    assert.ok(!list.some((i) => i.productId === 'prd-4'), '下架商品不該出現在列表');
+    assert.equal(list[0].itemType, 'product', '第一筆是零件');
+  });
+});
+
+test('filterCatalogItems：關鍵字／分類／價格（T5）', async (t) => {
+  const items = [
+    { ...prd({ productId: 'p1', name: '冷媒 R410', nameEn: 'Refrigerant R410', category: '空調', priceCents: 2500 }), itemType: 'product' },
+    { ...prd({ productId: 'p2', name: '排水管接頭', description: '通用型 PVC 接頭', category: '水', priceCents: 800 }), itemType: 'product' },
+    { ...svc({ serviceId: 's1', name: '冷氣清洗', category: '空調', priceCents: 6000 }), itemType: 'service' },
+  ];
+
+  await t.test('關鍵字比對名稱（中文）', () => {
+    assert.deepEqual(view.filterCatalogItems(items, { keyword: '冷氣' }).map((i) => i.productId || i.serviceId), ['s1']);
+  });
+
+  await t.test('關鍵字比對英文名，且不分大小寫、會 trim', () => {
+    assert.deepEqual(view.filterCatalogItems(items, { keyword: '  refrigerant ' }).map((i) => i.productId), ['p1']);
+    assert.deepEqual(view.filterCatalogItems(items, { keyword: 'REFRIGERANT' }).map((i) => i.productId), ['p1']);
+  });
+
+  await t.test('關鍵字比對描述', () => {
+    assert.deepEqual(view.filterCatalogItems(items, { keyword: 'PVC' }).map((i) => i.productId), ['p2']);
+  });
+
+  await t.test('分類比對的是一級分類名稱', () => {
+    assert.deepEqual(
+      view.filterCatalogItems(items, { category: '空調' }).map((i) => i.productId || i.serviceId),
+      ['p1', 's1'],
+    );
+  });
+
+  await t.test('價格區間含邊界', () => {
+    assert.deepEqual(
+      view.filterCatalogItems(items, { minPriceCents: 800, maxPriceCents: 2500 }).map((i) => i.productId || i.serviceId),
+      ['p1', 'p2'],
+    );
+    assert.deepEqual(view.filterCatalogItems(items, { minPriceCents: 2501 }).map((i) => i.productId || i.serviceId), ['s1']);
+  });
+
+  await t.test('沒有條件時回傳同長度的新陣列', () => {
+    const result = view.filterCatalogItems(items, {});
+    assert.equal(result.length, items.length);
+    assert.notEqual(result, items, '不應回傳同一個陣列參考');
+  });
+
+  await t.test('沒有價格的項目在有價格區間時被排除', () => {
+    const noPrice = { ...prd({ productId: 'p3', name: '無價商品' }), priceCents: undefined, itemType: 'product' };
+    assert.deepEqual(
+      view.filterCatalogItems([...items, noPrice], { minPriceCents: 0 }).map((i) => i.productId || i.serviceId),
+      ['p1', 'p2', 's1'],
+    );
+  });
+});
+
+test('sortCatalogItems：綜合／價格升降（T5）', async (t) => {
+  const items = [
+    { name: 'a', priceCents: 200 },
+    { name: 'b', priceCents: 100 },
+    { name: 'c', priceCents: 200 },
+    { name: 'd', priceCents: 300 },
+  ];
+
+  await t.test('asc／desc', () => {
+    assert.deepEqual(view.sortCatalogItems(items, 'asc').map((i) => i.name), ['b', 'a', 'c', 'd']);
+    assert.deepEqual(view.sortCatalogItems(items, 'desc').map((i) => i.name), ['d', 'a', 'c', 'b']);
+  });
+
+  await t.test('同價保持原順序（穩定排序）', () => {
+    assert.deepEqual(view.sortCatalogItems(items, 'asc').filter((i) => i.priceCents === 200).map((i) => i.name), ['a', 'c']);
+  });
+
+  await t.test('綜合（空字串／未知值）維持原順序，且回傳新陣列', () => {
+    const result = view.sortCatalogItems(items, '');
+    assert.deepEqual(result.map((i) => i.name), ['a', 'b', 'c', 'd']);
+    assert.notEqual(result, items);
+    assert.deepEqual(view.sortCatalogItems(items, 'unknown').map((i) => i.name), ['a', 'b', 'c', 'd']);
+  });
+
+  await t.test('沒有價格的項目不論升冪或降冪都排在最後', () => {
+    const withMissing = [...items, { name: 'x' }];
+    assert.equal(view.sortCatalogItems(withMissing, 'asc').slice(-1)[0].name, 'x');
+    assert.equal(view.sortCatalogItems(withMissing, 'desc').slice(-1)[0].name, 'x');
+  });
+});
+
+test('paginateItems：本機分頁（T5）', async (t) => {
+  const items = Array.from({ length: 25 }, (_, i) => ({ id: i }));
+
+  await t.test('第 1 頁與第 2 頁', () => {
+    const first = view.paginateItems(items, { page: 1, pageSize: 10 });
+    assert.equal(first.list.length, 10);
+    assert.equal(first.total, 25);
+    assert.equal(first.hasMore, true);
+    assert.equal(first.list[0].id, 0);
+
+    const second = view.paginateItems(items, { page: 2, pageSize: 10 });
+    assert.equal(second.list.length, 10);
+    assert.equal(second.list[0].id, 10);
+  });
+
+  await t.test('最後一頁 hasMore = false', () => {
+    const last = view.paginateItems(items, { page: 3, pageSize: 10 });
+    assert.equal(last.list.length, 5);
+    assert.equal(last.hasMore, false);
+  });
+
+  await t.test('超出範圍回空陣列（不爆）', () => {
+    const beyond = view.paginateItems(items, { page: 4, pageSize: 10 });
+    assert.deepEqual(beyond.list, []);
+    assert.equal(beyond.hasMore, false);
+  });
+
+  await t.test('不合法參數給預設值', () => {
+    const result = view.paginateItems(items, { page: 0, pageSize: 0 });
+    assert.equal(result.page, 1);
+    assert.equal(result.pageSize, 10);
+  });
+
+  await t.test('空清單', () => {
+    assert.deepEqual(view.paginateItems([]), { list: [], total: 0, page: 1, pageSize: 10, hasMore: false });
+    assert.deepEqual(view.paginateItems(null).list, []);
+  });
+});
+
+test('isSoldOutItem／toCardModel：售完規則（T5）', async (t) => {
+  await t.test('服務永遠不是售完', () => {
+    assert.equal(view.isSoldOutItem(svc({ itemType: 'service' })), false);
+    assert.equal(view.isSoldOutItem({ ...svc({ itemType: 'service' }), stock: 0, skus: [] }), false);
+  });
+
+  await t.test('無規格商品：stock ≤ 0 才是售完', () => {
+    assert.equal(view.isSoldOutItem({ itemType: 'product', stock: 0, specs: [], skus: [] }), true);
+    assert.equal(view.isSoldOutItem({ itemType: 'product', stock: 2, specs: [], skus: [] }), false);
+  });
+
+  await t.test('有 SKU 的商品：所有 SKU 都沒貨才是售完', () => {
+    const skus = [{ skuId: 'a', stock: 0 }, { skuId: 'b', stock: 0 }];
+    assert.equal(view.isSoldOutItem({ itemType: 'product', skus, specs: [{}] }), true);
+
+    const oneLeft = [{ skuId: 'a', stock: 0 }, { skuId: 'b', stock: 1 }];
+    assert.equal(view.isSoldOutItem({ itemType: 'product', skus: oneLeft, specs: [{}] }), false);
+  });
+
+  await t.test('卡片 model 帶 isSoldOut 與「已售完」標籤', () => {
+    const soldOut = view.toCardModel({ ...prd({ productId: 'p1', stock: 0, specs: [], skus: [] }), itemType: 'product' });
+    assert.equal(soldOut.isSoldOut, true);
+    assert.deepEqual(soldOut.tags, ['零件', '已售完']);
+
+    const normal = view.toCardModel({ ...prd({ productId: 'p2', stock: 1, specs: [], skus: [] }), itemType: 'product' });
+    assert.equal(normal.isSoldOut, false);
+    assert.deepEqual(normal.tags, ['零件']);
+  });
+
+  await t.test('拿真實 fake 資料驗一次：prd-3 售完、prd-1 有 SKU 且未售完', () => {
+    const prd3 = PRODUCTS.find((p) => p.productId === 'prd-3');
+    const prd1 = PRODUCTS.find((p) => p.productId === 'prd-1');
+    assert.equal(view.isSoldOutItem({ ...prd3, itemType: 'product' }), true);
+    assert.equal(view.isSoldOutItem({ ...prd1, itemType: 'product' }), false);
+  });
+});
