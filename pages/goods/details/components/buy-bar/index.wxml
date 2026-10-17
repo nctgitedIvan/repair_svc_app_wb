@@ -19,20 +19,26 @@
 				<text wx:if="{{shopCartNum > 0 && item.showCartNum}}" class="tag-cart-num">
 					{{shopCartNum > 99 ? '99+' : shopCartNum}}
 				</text>
-				<t-icon prefix="wr" name="{{item.iconName}}" size="40rpx" />
+				<!-- ⚠️ T6a.1-3：顏色由頁面給（收藏＝灰／橙黃，見 jumpArray 的 iconColor） -->
+				<t-icon prefix="wr" name="{{item.iconName}}" size="40rpx" color="{{item.iconColor}}" />
 				<view class="operate-text">{{item.title}}</view>
 			</view>
 		</view>
 	</view>
 	<!--
-		⚠️ T6a-4：移除「立即购买」（商品詳情不得有立即下單，P7a2a-C2）。
-		同時把「加入购物车」改為繁體。
-		⚠️ T6a-5 會在這個區塊加上「服務不顯示按鈕」的分支（服務屬 P7a-2b）。
+		⚠️ T6a.1-3：**恢復「立即購買」**（使用者 2026-10-17 決策 Q-1 選 (b)）。
+
+		`docs/P7a-2a-計畫.md` 的驗收標準 P7a2a-C2 已同步改寫為：
+		「商品詳情有加入購物車與立即購買。立即購買 = 跳過購物車直接結算。」
+		→ 點擊目前給佔位 Toast（真正結算是 **T7** 的範圍）。
 	-->
 	<block wx:if="{{buttonType === 1}}">
 		<view class="flex buy-buttons">
-			<view class="bar-buy {{soldout || !isStock ? 'bar-buyNow-disabled' : ''}}" bindtap="toAddCart">
+			<view class="bar-separately {{soldout || !isStock ? 'bar-addCart-disabled' : ''}}" bindtap="toAddCart">
 				加入購物車
+			</view>
+			<view class="bar-buy {{soldout || !isStock ? 'bar-buyNow-disabled' : ''}}" bindtap="toBuyNow">
+				立即購買
 			</view>
 		</view>
 	</block>

@@ -60,6 +60,18 @@ Component({
       this.triggerEvent('toAddCart');
     },
 
+    /**
+     * T6a.1-3 恢復。
+     *
+     * 語意（使用者 2026-10-17 決策）：**跳過購物車、直接進結算**。
+     * 真正的結算流程是 **T7** 的範圍，因此頁面目前只給佔位提示。
+     */
+    toBuyNow() {
+      const { isStock } = this.properties;
+      if (!isStock) return;
+      this.triggerEvent('toBuyNow');
+    },
+
     toBuyNow(e) {
       const { isStock } = this.properties;
       if (!isStock) return;

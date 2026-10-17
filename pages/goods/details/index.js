@@ -44,11 +44,28 @@ const { ItemType } = require('../../../utils/catalogView.js');
  * 「立即預約」與「加購零件」屬 **P7a-2b**（依賴 T7 的結算頁），本頁先不提供。
  */
 
-/** 左下角入口。⚠️ 傳 action key，不是 url（見 buy-bar 的說明） */
+/** 收藏星星的兩種狀態（iconfont 本來就有空心／實心兩顆，見 style/iconfont.wxss） */
+const FAVORITE_ICON = {
+  off: { name: 'star', color: '#BBBBBB' }, // 空心、灰
+  on: { name: 'star_filled', color: '#FFA500' }, // 實心、橙黃
+};
+
+/**
+ * 左下角入口。⚠️ 傳 action key，不是 url（見 buy-bar 的說明）
+ *
+ * T6a.1-3：收藏的**圖示與顏色由這裡決定**（資料驅動），
+ * buy-bar 只負責照著畫 —— 這樣通用元件不必知道「收藏」是什麼。
+ */
 function buildJumpArray({ isFavorite, canFavorite }) {
-  const list = [{ key: 'cs', title: '客服', iconName: 'service' }];
+  const list = [{ key: 'cs', title: '客服', iconName: 'service', iconColor: '' }];
   if (canFavorite) {
-    list.push({ key: 'favorite', title: isFavorite ? '已收藏' : '收藏', iconName: 'star' });
+    const icon = isFavorite ? FAVORITE_ICON.on : FAVORITE_ICON.off;
+    list.push({
+      key: 'favorite',
+      title: isFavorite ? '已收藏' : '收藏',
+      iconName: icon.name,
+      iconColor: icon.color,
+    });
   }
   return list;
 }
@@ -194,6 +211,18 @@ Page({
       jumpArray: buildJumpArray({ isFavorite: favorited, canFavorite: true }),
     });
     Toast({ context: this, selector: '#t-toast', message: favorited ? '已加入收藏' : '已取消收藏', icon: '' });
+  },
+
+  /**
+   * 「立即購買」＝ **跳過購物車、直接進結算**（使用者 2026-10-17 的決策）。
+   *
+   * ⚠️ 真正的結算流程是 **T7** 的範圍（現在的 `/pages/order/order-confirm`
+   *    還是舊電商頁），所以這裡先給佔位提示，不導向壞掉的頁面。
+   */
+  onBuyNow() {
+    const { detail } = this.data;
+    if (!detail.id || !detail.canAddToCart) return;
+    Toast({ context: this, selector: '#t-toast', message: '立即購買功能建置中（T7 完成）', icon: '' });
   },
 
   // ── 加入購物車 ──

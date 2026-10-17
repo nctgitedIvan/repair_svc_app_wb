@@ -86,6 +86,7 @@
       is-stock="{{isStock}}"
       button-type="{{buttonType}}"
       bind:toAddCart="onAddToCart"
+      bind:toBuyNow="onBuyNow"
       bind:toNav="onBuyBarNav"
       class="goods-details-card"
     />
