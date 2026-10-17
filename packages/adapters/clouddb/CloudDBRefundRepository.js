@@ -10,6 +10,17 @@ function createCloudDBRefundRepository({ client } = {}) {
   const collection = () => client.collection('refund_records');
 
   return {
+    async findById(refundId) {
+      assertString(refundId, 'refundId');
+      try {
+        const snapshot = await collection().doc(refundId).get();
+        return snapshot && snapshot.data ? fromRow({ ...snapshot.data, _id: refundId }) : null;
+      } catch (err) {
+        if (isNotFound(err)) return null;
+        throw err;
+      }
+    },
+
     async findByOutRefundNo(outRefundNo) {
       assertString(outRefundNo, 'outRefundNo');
       const result = await collection().where({ out_refund_no: outRefundNo }).limit(1).get();
@@ -43,6 +54,12 @@ function assertString(value, name) {
   if (typeof value !== 'string' || value.length === 0) {
     throw new TypeError(`${name} 必須是非空字串`);
   }
+}
+function isNotFound(err) {
+  const text = `${(err && err.errCode) || ''} ${(err && err.code) || ''} ${
+    (err && err.message) || ''
+  }`.toLowerCase();
+  return text.includes('not exist') || text.includes('not found') || text.includes('does not exist');
 }
 
 module.exports = { createCloudDBRefundRepository };

@@ -27,12 +27,13 @@ const OrderRepository = Object.freeze({
     /**
      * 儲存聚合。
      *
-     * **樂觀鎖**：以 `order.version` 為條件。版本不符時必須拋
-     * `ConcurrencyConflict`，**不得靜默覆寫** —— 那會讓兩個並行操作互相蓋掉。
+     * **樂觀鎖**：優先使用 `options.expectedVersion`（呼叫端載入時的版本）。
+     * 未提供時才退回「現存版本必須等於 order.version - 1」。
+     * 版本不符時必須拋 `ConcurrencyConflict`，**不得靜默覆寫**。
      *
      * @returns {Promise<void>}
      */
-    save: '(order: Order, options?: { tx?: UnitOfWorkTransaction }): Promise<void>',
+    save: '(order: Order, options?: { tx?: UnitOfWorkTransaction, expectedVersion?: number }): Promise<void>',
 
     /** 供 AutoExpireUnpaidOrders 定時任務使用 */
     findExpiredUnpaid: '(beforeTimestamp: number, limit: number): Promise<Order[]>',

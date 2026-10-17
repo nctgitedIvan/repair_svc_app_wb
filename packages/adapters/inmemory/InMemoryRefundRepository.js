@@ -5,6 +5,12 @@ class InMemoryRefundRepository {
   #refunds = new Map();
   #byOutRefundNo = new Map();
 
+  async findById(refundId) {
+    assertString(refundId, 'refundId');
+    const refund = this.#refunds.get(refundId);
+    return refund ? clone(refund) : null;
+  }
+
   async findByOutRefundNo(outRefundNo) {
     assertString(outRefundNo, 'outRefundNo');
     const refundId = this.#byOutRefundNo.get(outRefundNo);

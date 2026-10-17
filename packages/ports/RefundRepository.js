@@ -6,7 +6,7 @@
  * ```js
  * {
  *   refundId, orderId, outRefundNo, amountCents, currency,
- *   status, reason, requestedAt, processedAt, createdAt,
+ *   status, reason, requestedBy, requestedAt, processedAt, createdAt,
  * }
  * ```
  *
@@ -16,8 +16,9 @@
  */
 const RefundRepository = Object.freeze({
   name: 'RefundRepository',
-  methods: Object.freeze(['findByOutRefundNo', 'listByOrderId', 'save']),
+  methods: Object.freeze(['findById', 'findByOutRefundNo', 'listByOrderId', 'save']),
   contract: Object.freeze({
+    findById: '(refundId: string): Promise<RefundRecord|null>',
     findByOutRefundNo: '(outRefundNo: string): Promise<RefundRecord|null>',
     listByOrderId: '(orderId: string): Promise<RefundRecord[]>',
     save: '(refund: RefundRecord): Promise<void>',

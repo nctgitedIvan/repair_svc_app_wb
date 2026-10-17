@@ -67,8 +67,10 @@ function discloseFor({ viewer, order, now, config = {} }) {
   // ① 客服／管理員 → 完整
   if (viewer.role === 'cs_agent' || viewer.role === 'admin') return full();
 
-  // ② 客戶本人 → 完整
-  if (viewer.role === 'customer' && viewer.id === order.customerId) return full();
+  // ② 客戶本人 → 完整（actor.id 是 userId；actor.customerId 是 customers 的 id）
+  if (viewer.role === 'customer' && (viewer.customerId || viewer.id) === order.customerId) {
+    return full();
+  }
 
   // ③ 師傅：必須是「被指派給自己」的訂單
   if (viewer.role !== 'technician' || !viewer.technicianId || order.technicianId !== viewer.technicianId) {

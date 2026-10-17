@@ -40,6 +40,9 @@ const { InMemoryRefundRepository } = require('./inmemory/InMemoryRefundRepositor
 const { InMemoryProfitSharingRepository } = require('./inmemory/InMemoryProfitSharingRepository');
 const { InMemoryWorkOrderRepository } = require('./inmemory/InMemoryWorkOrderRepository');
 const { InMemoryWorkOrderMessageRepository } = require('./inmemory/InMemoryWorkOrderMessageRepository');
+const { InMemoryOrderQueryAdapter } = require('./inmemory/InMemoryOrderQueryAdapter');
+const { MockPaymentGateway } = require('./inmemory/MockPaymentGateway');
+const { SequenceIdGeneratorAdapter } = require('./inmemory/SequenceIdGeneratorAdapter');
 const { createCloudDBClient } = require('./clouddb/CloudDBClient');
 const { createCloudDBUnitOfWork } = require('./clouddb/CloudDBUnitOfWork');
 const { createCloudDBIdSequenceRepository } = require('./clouddb/CloudDBIdSequenceRepository');
@@ -62,6 +65,7 @@ const { createCloudDBRefundRepository } = require('./clouddb/CloudDBRefundReposi
 const { createCloudDBProfitSharingRepository } = require('./clouddb/CloudDBProfitSharingRepository');
 const { createCloudDBWorkOrderRepository } = require('./clouddb/CloudDBWorkOrderRepository');
 const { createCloudDBWorkOrderMessageRepository } = require('./clouddb/CloudDBWorkOrderMessageRepository');
+const { createCloudDBOrderQueryAdapter } = require('./clouddb/CloudDBOrderQueryAdapter');
 
 module.exports = {
   SystemClockAdapter,
@@ -89,6 +93,9 @@ module.exports = {
   InMemoryProfitSharingRepository,
   InMemoryWorkOrderRepository,
   InMemoryWorkOrderMessageRepository,
+  InMemoryOrderQueryAdapter,
+  MockPaymentGateway,
+  SequenceIdGeneratorAdapter,
   createCloudDBClient,
   createCloudDBUnitOfWork,
   createCloudDBIdSequenceRepository,
@@ -111,4 +118,5 @@ module.exports = {
   createCloudDBProfitSharingRepository,
   createCloudDBWorkOrderRepository,
   createCloudDBWorkOrderMessageRepository,
+  createCloudDBOrderQueryAdapter,
 };

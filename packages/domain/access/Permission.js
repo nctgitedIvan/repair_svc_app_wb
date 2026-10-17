@@ -27,6 +27,8 @@ const p = (key, constraints) => Object.freeze({ key, constraints: Object.freeze(
 const Permission = Object.freeze({
   // ── 訂單 ──
   ORDER_CREATE: p('orders.create', []),
+  /** 客戶支付自己的待付款訂單（P5） */
+  ORDER_PAY: p('orders.pay', ['OwnershipConstraint', 'StateConstraint']),
   ORDER_READ: p('orders.read', ['OwnershipConstraint']),
   ORDER_READ_ALL: p('orders.read_all', []),
   ORDER_ASSIGN: p('orders.assign', ['RegionConstraint', 'StateConstraint']),
@@ -55,6 +57,8 @@ const Permission = Object.freeze({
   // ── 結算 ──
   SETTLEMENT_READ_OWN: p('settlement.read_own', ['OwnershipConstraint']),
   SETTLEMENT_READ_ALL: p('settlement.read_all', []),
+  /** 實際執行分帳（P5／P6；目前用 MockPaymentGateway） */
+  SETTLEMENT_EXECUTE: p('settlement.execute', []),
   PROFIT_TERMS_READ: p('profit_terms.read', []),
   PROFIT_TERMS_MANAGE: p('profit_terms.manage', ['ApprovalPolicy']),
 

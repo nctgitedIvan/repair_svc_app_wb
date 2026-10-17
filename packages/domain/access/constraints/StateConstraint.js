@@ -30,6 +30,7 @@ const TARGET_RULES = Object.freeze({
   }),
 
   customer: Object.freeze({
+    'orders.pay': ['PAID_PENDING_ASSIGN'],
     'orders.cancel': ['CANCELED_UNPAID'],
     'orders.confirm_completion': ['COMPLETED'],
     'orders.raise_dispute': ['DISPUTED'],

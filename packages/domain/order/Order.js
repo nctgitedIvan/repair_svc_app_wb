@@ -13,6 +13,14 @@ const { OrderNo } = require('../shared/OrderNo');
 const { priceItems } = require('./PricingService');
 
 /**
+ * 單筆訂單的明細上限。
+ *
+ * 為什麼是 50：雲開發事務最多 100 次單記錄操作，而 `save()` 需要
+ * 1 次訂單 + N 次明細 + M 次歷程。留一半給歷程與其他寫入，明細上限取 50。
+ */
+const MAX_ORDER_ITEMS = 50;
+
+/**
  * Order —— 訂單聚合根。
  *
  * 設計要點：
@@ -60,6 +68,11 @@ class Order {
     assertNonEmptyString(props.orderId, 'Order.orderId');
     assertArray(props.items, 'Order.items');
     invariant(props.items.length > 0, '訂單至少要有一個明細');
+    invariant(
+      props.items.length <= MAX_ORDER_ITEMS,
+      `訂單明細不得超過 ${MAX_ORDER_ITEMS} 筆（雲開發事務操作數上限）`,
+      { itemCount: props.items.length, max: MAX_ORDER_ITEMS },
+    );
     invariant(props.orderNo instanceof OrderNo, 'Order.orderNo 必須是 OrderNo');
     invariant(props.address instanceof Address, 'Order.address 必須是 Address');
     invariant(props.snapshot instanceof OrderSnapshot, 'Order.snapshot 必須是 OrderSnapshot');
@@ -300,4 +313,4 @@ class Order {
   }
 }
 
-module.exports = { Order };
+module.exports = { Order, MAX_ORDER_ITEMS };

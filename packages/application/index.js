@@ -8,5 +8,29 @@
  */
 
 const { ComputeProfitShareUseCase } = require('./settlement/ComputeProfitShareUseCase');
+const { AuthenticateUseCase } = require('./identity/AuthenticateUseCase');
+const { authorize } = require('./access/authorize');
+const { CreateOrderUseCase } = require('./order/CreateOrderUseCase');
+const { PayOrderUseCase } = require('./order/PayOrderUseCase');
+const { AssignOrderUseCase } = require('./order/AssignOrderUseCase');
+const { AcceptOrderUseCase } = require('./order/AcceptOrderUseCase');
+const { CompleteOrderUseCase } = require('./order/CompleteOrderUseCase');
+const { ApproveCompletionUseCase } = require('./order/ApproveCompletionUseCase');
+const { RequestRefundUseCase } = require('./order/RequestRefundUseCase');
+const { ApproveRefundUseCase } = require('./order/ApproveRefundUseCase');
+const { ExecuteProfitSharingUseCase } = require('./order/ExecuteProfitSharingUseCase');
 
-module.exports = { ComputeProfitShareUseCase };
+module.exports = {
+  ComputeProfitShareUseCase,
+  AuthenticateUseCase,
+  authorize,
+  CreateOrderUseCase,
+  PayOrderUseCase,
+  AssignOrderUseCase,
+  AcceptOrderUseCase,
+  CompleteOrderUseCase,
+  ApproveCompletionUseCase,
+  RequestRefundUseCase,
+  ApproveRefundUseCase,
+  ExecuteProfitSharingUseCase,
+};

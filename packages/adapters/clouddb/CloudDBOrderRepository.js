@@ -62,7 +62,7 @@ function createCloudDBOrderRepository({ client, uow } = {}) {
       return row ? hydrateRow(row) : null;
     },
 
-    async save(order) {
+    async save(order, { expectedVersion } = {}) {
       if (!order || typeof order.id !== 'string') {
         throw new TypeError('OrderRepository.save(order) 需要 Order 聚合');
       }
@@ -81,13 +81,14 @@ function createCloudDBOrderRepository({ client, uow } = {}) {
           if (!isNotFound(err)) throw err;
         }
 
-        // 樂觀鎖：存檔的 version 必須是「現存版本 + 1」
-        if (existing && existing.version !== order.version - 1) {
-          throw new ConcurrencyConflict(
-            'orders',
-            order.version,
-            existing.version,
-          );
+        // 樂觀鎖：優先比對呼叫端載入時的版本
+        if (existing) {
+          const expected = Number.isInteger(expectedVersion)
+            ? expectedVersion
+            : order.version - 1;
+          if (existing.version !== expected) {
+            throw new ConcurrencyConflict('orders', expected, existing.version);
+          }
         }
 
         await ref.set({ data: toRow(order) });

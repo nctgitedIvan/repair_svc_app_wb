@@ -31,7 +31,9 @@ const OwnershipConstraint = Object.freeze({
     switch (actor.role) {
       case 'customer': {
         const ownerId = order.customerId;
-        if (!ownerId || ownerId !== actor.id) {
+        // actor.id 是 userId；actor.customerId 是 customers 集合的 id（若已解析）
+        const actorOwnerId = actor.customerId || actor.id;
+        if (!ownerId || ownerId !== actorOwnerId) {
           return Decision.deny(Reason.NOT_OWNER, { orderId: order.orderId || order.id });
         }
         return Decision.allow();

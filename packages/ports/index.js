@@ -32,6 +32,8 @@ const { RefundRepository } = require('./RefundRepository');
 const { ProfitSharingRepository } = require('./ProfitSharingRepository');
 const { WorkOrderRepository } = require('./WorkOrderRepository');
 const { WorkOrderMessageRepository } = require('./WorkOrderMessageRepository');
+const { OrderQueryPort } = require('./OrderQueryPort');
+const { PaymentGateway } = require('./PaymentGateway');
 
 module.exports = {
   ClockPort,
@@ -62,4 +64,6 @@ module.exports = {
   ProfitSharingRepository,
   WorkOrderRepository,
   WorkOrderMessageRepository,
+  OrderQueryPort,
+  PaymentGateway,
 };
