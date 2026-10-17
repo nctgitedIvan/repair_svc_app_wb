@@ -272,9 +272,9 @@ T7  結算頁（M6）                                         → tag → commit
 | **T4** 購物車頁改造 | ✅ **完成** | `22ba148`（T4-1）+ `66a4c9d`（T4-2）+ `9b0be5e`（T4-3/4/5） |
 | **T5** 商品列表 | ✅ **完成** | `7a9dd36`（計畫）+ `ce56966`（T5-1）+ `2d6f574`（T5-2）+ `efc742b`（T5-3）+ T5-4 |
 | T6 商品詳情 | ✅ **完成**（T6a／T6a.1／T6a.2／T6a.3／T6b） | 見 §13.6／§13.9 |
-| T7 結算頁 | ⬜ 下一步 | — |
+| T7 結算頁 | ✅ **完成** | `907c776`（計畫）+ `dfdb37a`（T7-1）+ `7791bd3`（T7-2）+ `524513a`（T7-3）+ `c5a62f5`（T7-4）+ T7-5 |
 
-**測試數：918 → 966（T4）→ 994（T3.6）→ 1065（T6a）→ 1084（T6a.3）→ 1118（T5）→ 1153（T6b）。**
+**測試數：918 → 966（T4）→ 994（T3.6）→ 1065（T6a）→ 1084（T6a.3）→ 1118（T5）→ 1153（T6b）→ 1178（T7）。**
 
 ### 12.2 T4 的細部計畫
 
@@ -303,17 +303,14 @@ T7  結算頁（M6）                                         → tag → commit
 ⚠️ **已知的暫時不一致**：tabBar 寫「分類」，但點進去仍是舊的服務頁骨架
 （頁面 navBar 標題也還是「服務」）。內容改造排在 **P7a-2b**，與分類頁一起做。
 
-### 12.5 ⚠️ 留給 T7 的必辦事項
+### 12.5 ✅ T7 已清掉 T4 的相容橋接（2026-10-17）
 
-`pages/cart/index.js` 目前額外寫了一份**舊格式**的結算資料（`order.goodsRequestList`），
-否則現行結算頁會 `JSON.parse(undefined)` 拋錯 → 白屏。
-
-**T7 改寫結算頁後必須：**
-1. 移除 `pages/cart/index.js` 的 `LEGACY_CHECKOUT_KEY` 與 `writeCheckout()` 裡的舊格式寫入
-   （已標 `TODO(T7): 移除`）
-2. 移除 `utils/cartView.js` 的 `toLegacyGoodsRequest()` 與 `LEGACY_STORE_ID`／`LEGACY_STORE_NAME`
-3. 一併刪除 `tests/unit/frontend/cartView.test.js` 的「toLegacyGoodsRequest」那一組測試
-4. 結算頁改讀 `repair.checkout.v1`
+| # | 原必辦事項 | 狀態 |
+|---|---|---|
+| 1 | 移除 `pages/cart/index.js` 的 `LEGACY_CHECKOUT_KEY` 與舊格式寫入 | ✅ `dfdb37a` |
+| 2 | 移除 `utils/cartView.js` 的 `toLegacyGoodsRequest()`／`LEGACY_STORE_ID`／`LEGACY_STORE_NAME` | ✅ `dfdb37a` |
+| 3 | 刪除 `cartView.test.js` 的舊橋接測試組 | ✅ `dfdb37a` |
+| 4 | 結算頁改讀 `repair.checkout.v1` | ✅ `524513a` |
 
 ### 12.6.1 T3.6（分類頁，計畫外追加）
 
@@ -347,7 +344,7 @@ TDesign 的原始分類頁（`goods-category`：左一級側邊欄＋右二級 t
 
 | 項目 | 狀態 |
 |---|---|
-| 自動化 A1–A8（`npm run verify`、新測試、未動 packages…） | ✅ 全過（**1153** 測試） |
+| 自動化 A1–A8（`npm run verify`、新測試、未動 packages…） | ✅ 全過（**1178** 測試） |
 | 負向測試 N1–N4 | ✅ 見 `docs/P7a-2a-T4-計畫.md` §11.2 的說明 |
 | **人工驗收 C1–C13** | ⏸ **待使用者在開發者工具執行**（計畫 §11.3 有可貼的 Storage 種子資料） |
 ---
@@ -449,7 +446,8 @@ T5（商品列表）                              ✅ 完成（T5-1～T5-4）
   → 使用者人工驗收 T5 C1–C12
 T6b（客服詢問 + 我的詢問）                   ✅ 完成（T6b-1～T6b-4）
   → 使用者人工驗收 T6b C1–C9
-T7（結算）                                   ⬅ 下一個
+T7（結算）                                   ✅ 完成（T7-1～T7-5）
+  → 使用者人工驗收 T7 C0–C10
 ```
 
 ### 13.9 T6b 執行結果（2026-10-17）
@@ -472,3 +470,14 @@ T7（結算）                                   ⬅ 下一個
 | 主要改動 | `utils/catalogView.js` 新增 `mergeCatalog`／`filterCatalogItems`／`sortCatalogItems`／`paginateItems`／`isSoldOutItem`；`AddAction.SOLD_OUT`；列表頁改接新 API，支援搜尋／分類／排序／價格區間／載入更多；分類頁 M8 有規格導向詳情 |
 | 驗證 | `npm run verify` 全綠；測試 **1118** |
 | 人工驗收 | C1–C12 待使用者執行 |
+
+### 13.10 T7 執行結果（2026-10-17）
+
+| 項目 | 內容 |
+|---|---|
+| 計畫 | `docs/P7a-2a-T7-計畫.md`（`907c776`） |
+| 實作 | `dfdb37a`（移除橋接）＋ `7791bd3`（結算純函式）＋ `524513a`（結算頁）＋ `c5a62f5`（詳情頁入口）＋ T7-5（文件） |
+| 主要改動 | `cart.toCheckoutPayload` 改 §3.8；新增 `utils/checkoutView.js`；結算頁重寫（預設地址／明細／材料費／服務費／模擬提交）；詳情頁立即購買／預約接結算 |
+| 驗證 | `npm run verify` 全綠；測試 **1178** |
+| 人工驗收 | C0–C10 待使用者執行 |
+| 限制 | 沒有支付／訂單後端（模擬成功）；訂單 tab 仍是 P7a-1 骨架；地址只讀取 mock 的預設地址；混合單入口屬 P7a-2b |

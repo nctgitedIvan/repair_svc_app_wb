@@ -13,7 +13,7 @@ const cartRules = require('../../../utils/cart.js');
  *
  * 只讀 **`repair.checkout.v1`**（`utils/cart.js` 的 `CHECKOUT_KEY`）——
  * 購物車、商品立即購買、服務立即預約都先轉成 `docs/01` §3.8 的統一契約。
- * T4 的舊格式（`order.goodsRequestList`）與相容橋接已於 T7 移除。
+ * T4 的舊格式與相容橋接已於 T7 移除。
  *
  * ## 金額
  *
