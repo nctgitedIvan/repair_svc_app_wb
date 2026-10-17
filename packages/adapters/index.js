@@ -31,6 +31,9 @@ const { InMemoryCsAgentRepository } = require('./inmemory/InMemoryCsAgentReposit
 const { InMemoryTechnicianRepository } = require('./inmemory/InMemoryTechnicianRepository');
 const { InMemoryServiceRepository } = require('./inmemory/InMemoryServiceRepository');
 const { InMemoryProductRepository } = require('./inmemory/InMemoryProductRepository');
+const { InMemoryCartRepository } = require('./inmemory/InMemoryCartRepository');
+const { InMemoryFavoriteRepository } = require('./inmemory/InMemoryFavoriteRepository');
+const { InMemoryInquiryRepository } = require('./inmemory/InMemoryInquiryRepository');
 const { createCloudDBClient } = require('./clouddb/CloudDBClient');
 const { createCloudDBUnitOfWork } = require('./clouddb/CloudDBUnitOfWork');
 const { createCloudDBIdSequenceRepository } = require('./clouddb/CloudDBIdSequenceRepository');
@@ -43,6 +46,9 @@ const { createCloudDBCsAgentRepository } = require('./clouddb/CloudDBCsAgentRepo
 const { createCloudDBTechnicianRepository } = require('./clouddb/CloudDBTechnicianRepository');
 const { createCloudDBServiceRepository } = require('./clouddb/CloudDBServiceRepository');
 const { createCloudDBProductRepository } = require('./clouddb/CloudDBProductRepository');
+const { createCloudDBCartRepository } = require('./clouddb/CloudDBCartRepository');
+const { createCloudDBFavoriteRepository } = require('./clouddb/CloudDBFavoriteRepository');
+const { createCloudDBInquiryRepository } = require('./clouddb/CloudDBInquiryRepository');
 
 module.exports = {
   SystemClockAdapter,
@@ -61,6 +67,9 @@ module.exports = {
   InMemoryTechnicianRepository,
   InMemoryServiceRepository,
   InMemoryProductRepository,
+  InMemoryCartRepository,
+  InMemoryFavoriteRepository,
+  InMemoryInquiryRepository,
   createCloudDBClient,
   createCloudDBUnitOfWork,
   createCloudDBIdSequenceRepository,
@@ -73,4 +82,7 @@ module.exports = {
   createCloudDBTechnicianRepository,
   createCloudDBServiceRepository,
   createCloudDBProductRepository,
+  createCloudDBCartRepository,
+  createCloudDBFavoriteRepository,
+  createCloudDBInquiryRepository,
 };

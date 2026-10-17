@@ -23,6 +23,9 @@ const { CsAgentRepository } = require('./CsAgentRepository');
 const { TechnicianRepository } = require('./TechnicianRepository');
 const { ServiceRepository } = require('./ServiceRepository');
 const { ProductRepository } = require('./ProductRepository');
+const { CartRepository } = require('./CartRepository');
+const { FavoriteRepository } = require('./FavoriteRepository');
+const { InquiryRepository } = require('./InquiryRepository');
 
 module.exports = {
   ClockPort,
@@ -44,4 +47,7 @@ module.exports = {
   TechnicianRepository,
   ServiceRepository,
   ProductRepository,
+  CartRepository,
+  FavoriteRepository,
+  InquiryRepository,
 };
