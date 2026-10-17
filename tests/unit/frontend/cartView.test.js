@@ -20,10 +20,11 @@ const { CartCode, MAX_LINE_QUANTITY } = require('../../../utils/cartCodes');
 const NOW = 1_700_000_000_000;
 
 /** 商品現況（`fetchProducts()` 的形狀） */
-const PRD_1 = { productId: 'prd-1', name: '冷媒 R410', category: '冷媒', priceCents: 2500, stock: 20, isActive: true, thumb: 'https://x/1.png', specs: [{ specId: 'std', name: '標準罐' }] };
-const PRD_2 = { productId: 'prd-2', name: '排水管接頭', category: '管件', priceCents: 800, stock: 3, isActive: true, thumb: 'https://x/2.png', specs: [] };
-const PRD_3 = { productId: 'prd-3', name: '濾網（通用型）', category: '耗材', priceCents: 450, stock: 0, isActive: true, thumb: '', specs: [] };
-const PRD_4 = { productId: 'prd-4', name: '舊款溫控器', category: '零件', priceCents: 3200, stock: 5, isActive: false, thumb: '', specs: [] };
+// T6a.3：主圖走 images[]；購物車明細的 specId 是 **skuId**（§7.4）
+const PRD_1 = { productId: 'prd-1', name: '冷媒 R410', category: '冷媒', priceCents: 2500, stock: 20, isActive: true, images: ['https://x/1.png'], specs: [{ specId: 'size', title: '規格', values: ['標準罐'] }], skus: [{ skuId: 'std', specValues: ['標準罐'], priceCents: 2500, stock: 20 }] };
+const PRD_2 = { productId: 'prd-2', name: '排水管接頭', category: '管件', priceCents: 800, stock: 3, isActive: true, images: ['https://x/2.png'], specs: [], skus: [] };
+const PRD_3 = { productId: 'prd-3', name: '濾網（通用型）', category: '耗材', priceCents: 450, stock: 0, isActive: true, images: [], specs: [], skus: [] };
+const PRD_4 = { productId: 'prd-4', name: '舊款溫控器', category: '零件', priceCents: 3200, stock: 5, isActive: false, images: [], specs: [], skus: [] };
 
 const CATALOG = {
   'prd-1': PRD_1,

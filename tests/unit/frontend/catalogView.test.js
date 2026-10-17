@@ -133,8 +133,9 @@ test('mergeByCategory：服務在上、零件在下（T3.6 §9.1 的決策）', 
 
 test('toCardModel：餵給既有 goods-card 的欄位', async (t) => {
   await t.test('服務與零件用同一套欄位', () => {
-    const s = view.toCardModel({ ...svc({ serviceId: 's1', name: '水管疏通', thumb: 'x.png', priceCents: 8000 }), itemType: 'service' });
-    const p = view.toCardModel({ ...prd({ productId: 'p1', name: '接頭', thumb: 'y.png', priceCents: 800 }), itemType: 'product' });
+    // T6a.3：主圖走 images[0]
+    const s = view.toCardModel({ ...svc({ serviceId: 's1', name: '水管疏通', images: ['x.png'], priceCents: 8000 }), itemType: 'service' });
+    const p = view.toCardModel({ ...prd({ productId: 'p1', name: '接頭', images: ['y.png'], priceCents: 800 }), itemType: 'product' });
 
     assert.equal(s.id, 's1');
     assert.equal(s.title, '水管疏通');

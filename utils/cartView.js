@@ -79,11 +79,16 @@ function maxQuantityOf(product) {
   return MAX_LINE_QUANTITY;
 }
 
-/** 已選規格的顯示名稱（`goods-card` 吃 string[]） */
+/**
+ * 已選規格的顯示名稱（`goods-card` 吃 string[]）。
+ *
+ * ⚠️ T6a.3：購物車明細的 `specId` 現在是 **skuId**（§7.4），
+ * 所以規格名要從 `product.skus[].specValues` 取，而不是舊的扁平 `specs`。
+ */
 function specNamesOf(product, item) {
-  if (!item.specId || !product || !Array.isArray(product.specs)) return [];
-  const spec = product.specs.find((s) => s.specId === item.specId);
-  return spec ? [spec.name] : [];
+  if (!item.specId || !product || !Array.isArray(product.skus)) return [];
+  const sku = product.skus.find((s) => s.skuId === item.specId);
+  return sku && Array.isArray(sku.specValues) ? sku.specValues : [];
 }
 
 /**
@@ -106,7 +111,8 @@ function toLine(item, product, issue, isSelected) {
 
     // ── 呈現（欄位名配合 goods-card）──
     title: missing ? MISSING_TITLE : product.name,
-    thumb: missing ? '' : product.thumb || '',
+    // ⚠️ T6a.3：主圖改讀 `images[0]`（資料模型的 `thumb` 已移除，§7.4）
+    thumb: missing ? '' : Array.isArray(product.images) && product.images.length > 0 ? product.images[0] || '' : '',
     desc: missing ? '' : product.category || '',
     price: item.addedPriceCents,
     quantity: item.quantity,

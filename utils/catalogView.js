@@ -157,7 +157,8 @@ function toCardModel(item) {
     /** 型別＋id：呼叫端靠它決定點擊後去哪裡 */
     id: isService ? item.serviceId : item.productId,
     itemType: item.itemType,
-    thumb: item.thumb || '',
+    // ⚠️ T6a.3：主圖改讀 `images[0]`（資料模型的 `thumb` 已移除，§7.4）
+    thumb: Array.isArray(item.images) && item.images.length > 0 ? item.images[0] || '' : '',
     title: item.name,
     /** 分（`price` 元件吃分） */
     price: item.priceCents,

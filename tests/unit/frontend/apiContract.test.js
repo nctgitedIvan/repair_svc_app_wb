@@ -131,8 +131,43 @@ test('⚠️ fake 資料必須讓邊界情況可見（人工驗收 C4/C5 的前�
     }
   });
 
-  await t.test('至少一個零件有規格（驗收 SKU 切換）', () => {
-    assert.ok(PRODUCTS.some((p) => Array.isArray(p.specs) && p.specs.length > 1));
+  // T6a.3：規格是「維度 + 組合（SKU）」的兩層結構（docs/01 §7.4.2）
+  await t.test('至少一個零件有規格維度與多個 SKU（驗收 SKU 切換）', () => {
+    assert.ok(
+      PRODUCTS.some((p) => Array.isArray(p.specs) && p.specs.some((s) => Array.isArray(s.values) && s.values.length > 1) && Array.isArray(p.skus) && p.skus.length > 1),
+      '缺少「多值維度 + 多 SKU」的零件',
+    );
+  });
+
+  await t.test('⚠️ specs 與 skus 必須成對出現（§7.4.2）', () => {
+    for (const p of PRODUCTS) {
+      const paired = (p.specs.length === 0) === (p.skus.length === 0);
+      assert.ok(paired, `${p.productId} 的 specs／skus 不成對`);
+      if (p.specs.length > 0) {
+        for (const sku of p.skus) {
+          assert.equal(
+            sku.specValues.length,
+            p.specs.length,
+            `${sku.skuId} 的 specValues 數量與維度數不符`,
+          );
+        }
+      }
+    }
+  });
+
+  await t.test('⚠️ 有 SKU 的商品，每個 SKU 都有價格與庫存', () => {
+    for (const p of PRODUCTS) {
+      for (const sku of p.skus) {
+        assert.ok(Number.isInteger(sku.priceCents), `${sku.skuId} 缺 priceCents`);
+        assert.ok(Number.isInteger(sku.stock), `${sku.skuId} 缺 stock`);
+      }
+    }
+  });
+
+  await t.test('每個零件／服務都有 images（主圖＝images[0]）', () => {
+    for (const item of [...PRODUCTS, ...SERVICES]) {
+      assert.ok(Array.isArray(item.images) && item.images.length > 0, `${item.name} 缺少 images`);
+    }
   });
 
   // 購物車列、商品列表、商品詳情都要顯示圖片（T4 起用）。
