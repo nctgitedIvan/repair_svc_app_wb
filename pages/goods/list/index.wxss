@@ -2,6 +2,46 @@ page {
   background-color: #fff;
 }
 
+/* ── T5-2：搜尋 ── */
+.search-wrap {
+  padding: 20rpx 24rpx 8rpx;
+  background-color: #fff;
+}
+
+/* ── T5-2：一級分類 chips（水平滾動） ── */
+.category-chips {
+  width: 100%;
+  white-space: nowrap;
+  background-color: #fff;
+}
+
+.category-chips__inner {
+  display: inline-flex;
+  padding: 8rpx 24rpx 20rpx;
+}
+
+.category-chip {
+  flex-shrink: 0;
+  height: 56rpx;
+  line-height: 56rpx;
+  padding: 0 28rpx;
+  margin-right: 16rpx;
+  border-radius: 28rpx;
+  background-color: #f5f5f5;
+  color: #666666;
+  font-size: 24rpx;
+}
+
+.category-chip--active {
+  background-color: #ffece9;
+  color: #fa4126;
+  font-weight: 500;
+}
+
+.filter-container {
+  background-color: #fff;
+}
+
 .goods-list-container {
   display: block;
 }
@@ -96,4 +136,67 @@ page {
 
 .goods-list-container .price-ipts-wrap .price-ipt {
   border-radius: 8rpx;
+}
+
+/* ── T5-2：載入中／失敗／空態／載入更多 ── */
+.goods-list-container .list-loading {
+  padding: 80rpx 0;
+  text-align: center;
+  color: #999999;
+  font-size: 26rpx;
+}
+
+.goods-list-container .load-error {
+  padding: 120rpx 60rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.goods-list-container .load-error__text {
+  font-size: 30rpx;
+  color: #333333;
+}
+
+.goods-list-container .load-error__tip {
+  margin-top: 16rpx;
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.goods-list-container .load-error__btn {
+  margin-top: 48rpx;
+  padding: 0 64rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  border-radius: 36rpx;
+  border: 2rpx solid #fa4126;
+  color: #fa4126;
+  font-size: 26rpx;
+}
+
+.goods-list-container .empty-clear {
+  margin-top: 32rpx;
+  text-align: center;
+  color: #fa4126;
+  font-size: 26rpx;
+}
+
+.goods-list-container .load-more-btn {
+  margin: 24rpx auto 40rpx;
+  width: 240rpx;
+  height: 72rpx;
+  line-height: 72rpx;
+  text-align: center;
+  border-radius: 36rpx;
+  border: 2rpx solid #fa4126;
+  color: #fa4126;
+  font-size: 26rpx;
+}
+
+.goods-list-container .price-tip {
+  margin-top: 20rpx;
+  color: #999999;
+  font-size: 22rpx;
+  line-height: 32rpx;
 }

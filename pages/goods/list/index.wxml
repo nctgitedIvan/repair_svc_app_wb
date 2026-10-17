@@ -1,4 +1,31 @@
 <view class="goods-list-container">
+  <!-- T5-2：關鍵字（即時過濾；清空即恢復全部） -->
+  <view class="search-wrap">
+    <t-search
+      value="{{keyword}}"
+      placeholder="搜尋服務或零件"
+      shape="round"
+      clearable
+      bind:change="onSearchChange"
+    />
+  </view>
+
+  <!-- T5-2：一級分類 chips（水平滾動） -->
+  <scroll-view class="category-chips" scroll-x>
+    <view class="category-chips__inner">
+      <view
+        wx:for="{{categoryOptions}}"
+        wx:key="name"
+        class="category-chip {{category === item.value ? 'category-chip--active' : ''}}"
+        data-category="{{item.value}}"
+        bindtap="onCategoryChange"
+      >
+        {{item.name}}
+      </view>
+    </view>
+  </scroll-view>
+
+  <!-- 綜合／價格升冪降冪／價格區間（沿用既有元件） -->
   <filter
     wr-class="filter-container"
     bind:change="handleFilterChange"
@@ -35,12 +62,27 @@
             bindchange="onMaxValAction"
           />
         </view>
+        <view class="price-tip">輸入的是「元」；最低價不可大於最高價</view>
       </view>
     </filter-popup>
   </filter>
-  <view class="empty-wrap" wx:if="{{goodsList.length === 0 && hasLoaded}}">
-    <t-empty t-class="empty-tips" size="240rpx" description="暂无相关商品" />
+
+  <!-- 載入中 -->
+  <view class="list-loading" wx:if="{{loading}}">載入中…</view>
+
+  <!-- 載入失敗（與「查無資料」分開） -->
+  <view class="load-error" wx:if="{{loadError && !loading}}">
+    <view class="load-error__text">列表載入失敗</view>
+    <view class="load-error__tip">請檢查網路後再試一次</view>
+    <view class="load-error__btn" bindtap="onRetry">重新載入</view>
   </view>
+
+  <!-- 查無資料 -->
+  <view class="empty-wrap" wx:if="{{!loading && !loadError && goodsList.length === 0 && hasLoaded}}">
+    <t-empty t-class="empty-tips" size="240rpx" description="沒有符合條件的服務或零件" />
+    <view class="empty-clear" bindtap="onClearFilters">清除篩選</view>
+  </view>
+
   <view class="category-goods-list" wx:if="{{goodsList.length}}">
     <goods-list
       wr-class="wr-goods-list"
@@ -49,6 +91,19 @@
       bind:addcart="handleAddCart"
     />
   </view>
-  <load-more wx:if="{{goodsList.length > 0}}" status="{{loadMoreStatus}}" no-more-text="没有更多了" />
+
+  <!-- T5-2：載入更多（本機分頁，pageSize=10） -->
+  <view
+    class="load-more-btn"
+    wx:if="{{loadMoreStatus === 0 && goodsList.length > 0}}"
+    bindtap="onLoadMore"
+  >
+    載入更多
+  </view>
+  <load-more
+    wx:if="{{goodsList.length > 0 && loadMoreStatus !== 0}}"
+    status="{{loadMoreStatus}}"
+    no-more-text="沒有更多了"
+  />
 </view>
 <t-toast id="t-toast" />

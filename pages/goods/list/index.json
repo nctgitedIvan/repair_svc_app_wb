@@ -2,6 +2,7 @@
   "navigationBarTitleText": "商品列表",
   "usingComponents": {
     "t-input": "tdesign-miniprogram/input/input",
+    "t-search": "tdesign-miniprogram/search/search",
     "t-empty": "tdesign-miniprogram/empty/empty",
     "t-toast": "tdesign-miniprogram/toast/toast",
     "goods-list": "/components/goods-list/index",

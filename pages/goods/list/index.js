@@ -61,6 +61,8 @@ Page({
     loadError: false,
     /** 目前的一級分類名稱（空＝全部） */
     category: '',
+    /** 一級分類 chips：`{ name, value }`（value 是分類名稱；空字串＝全部） */
+    categoryOptions: [],
     /** 目前關鍵字 */
     keyword: '',
   },
@@ -94,7 +96,15 @@ Page({
       ]);
       this.catalog = { services: services.list, products: products.list };
       this.categoryTree = catalogView.buildCategoryTree(categories.list);
-      this.refresh(true);
+      this.setData(
+        {
+          categoryOptions: [
+            { name: '全部', value: '' },
+            ...this.categoryTree.map((node) => ({ name: node.name, value: node.name })),
+          ],
+        },
+        () => this.refresh(true),
+      );
     } catch (err) {
       console.warn('[goods-list] 載入目錄失敗', err);
       this.catalog = null;
@@ -133,7 +143,10 @@ Page({
 
   /** 「综合／价格／筛选」變更（T5-2 的 UI 事件） */
   handleFilterChange(e) {
-    const { layout = 0, overall = 1, sorts = '' } = e.detail || {};
+    const { layout = 0, sorts = '' } = e.detail || {};
+    // ⚠️ 「综合」的 active 狀態由 overall 決定；以 sorts 為唯一真相，
+    //    避免使用者連點「综合」時把 overall 切成 0（畫面看起來像取消選取）。
+    const overall = sorts ? 0 : 1;
     this.setData({ layout, overall, sorts, loadMoreStatus: 0 }, () => this.refresh(true));
   },
 
@@ -150,8 +163,35 @@ Page({
   },
 
   onReachBottom() {
+    this.onLoadMore();
+  },
+
+  /** 「載入更多」按鈕（T5-2）；本機分頁是同步的，按一下直接補下一頁 */
+  onLoadMore() {
     if (this.data.loadMoreStatus !== 0 || !this.catalog) return;
     this.refresh(false);
+  },
+
+  /** 載入失敗後重試（T5-2 的錯誤畫面） */
+  onRetry() {
+    this.load();
+  },
+
+  /** 空態的「清除篩選」；回到全部＋綜合 */
+  onClearFilters() {
+    this.setData(
+      {
+        keyword: '',
+        category: '',
+        minVal: '',
+        maxVal: '',
+        sorts: '',
+        overall: 1,
+        layout: 0,
+        loadMoreStatus: 0,
+      },
+      () => this.refresh(true),
+    );
   },
 
   /** 點卡片 → 詳情頁（商品／服務共用同一頁） */
@@ -244,12 +284,18 @@ Page({
     this.setData({ minVal: '', maxVal: '' });
   },
 
-  /** 價格區間確認：min > max 時留在 popup 並提示，不套用 */
+  /** 價格區間確認：格式錯誤或 min > max 時留在 popup 並提示，不套用 */
   confirm() {
-    const min = toCents(this.data.minVal);
-    const max = toCents(this.data.maxVal);
+    const { minVal, maxVal } = this.data;
+    const min = toCents(minVal);
+    const max = toCents(maxVal);
+
+    if ((minVal !== '' && min === null) || (maxVal !== '' && max === null)) {
+      Toast({ context: this, selector: '#t-toast', message: '請輸入正確的價格', icon: '' });
+      return;
+    }
     if (min !== null && max !== null && min > max) {
-      Toast({ context: this, selector: '#t-toast', message: '請輸入正確的價格區間', icon: '' });
+      Toast({ context: this, selector: '#t-toast', message: '最低價不可大於最高價', icon: '' });
       return;
     }
 
