@@ -120,12 +120,12 @@
 | 項目 | 值 |
 |---|---|
 | 分支 | `refactor/hexagonal` |
-| 最後程式 commit | **電話／三頁對接（`9287335`）**；本次為 handoff 更新 |
+| 最後程式 commit | **電話／三頁對接（`9287335`）**；本次為上雲文件 commit |
 | 基線 | `main` = `a747010`（TDesign 模版原始狀態） |
 | Tag | `p0-done`、`p1-done`、`pre-p7a2a-tabbar`、`pre-p7a2a-t35`、`pre-p7a2a-t4`、`pre-p7a2a-t36`、`pre-p7a2a-t361`、`pre-p7a2a-t6a`（**P2／P3／P5／P8 未另打 tag**） |
 | 備份分支 | `backup-origin-main`、`backup-origin-refactor` |
 | 遠端 | `git@github.com:nctgitedIvan/repair_svc_app_wb.git`（**已 push 到 `origin/refactor/hexagonal`**） |
-| 領先／落後 | 以 `git rev-list --count main..HEAD` 為準（本版為 **131**，含本次 handoff commit） |
+| 領先／落後 | 以 `git rev-list --count main..HEAD` 為準（本版為 **132**，含本次文件 commit） |
 
 > ⚠️ 這一格**每次更新都容易過時**（前兩版都寫錯：23→63→實際 90）。
 > **請一律以指令輸出為準** —— 見 §10 第 1 點。
@@ -354,6 +354,17 @@
 
 **驗證**：`npm run verify` 全綠（**1369**）；`admin-web` build exit 0；Mock 電話 PATCH 與稽核實測通過。
 
+### 6.1.4 ✅ 上雲準備文件（2026-10-17）
+
+| 文件 | 內容 |
+|---|---|
+| **`docs/05-上雲部署手冊.md`** | repair-test 開通、`setup-db`（22 集合／索引／權限）、`probe-tx`、四支核心函數、CloudDB 契約測試、`apiMode` 切換、bootstrap CloudDB 注入模板 |
+| **`docs/06-P6-微信支付預案.md`** | 服務商分帳模式、PaymentGateway／WeChatPay adapter 介面、回調驗簽／冪等／密鑰、支付／分帳／退款流程圖、測試與上線順序 |
+| **`docs/07-上雲後待辦清單.md`** | P0／P6／P7b／P7a-2b／P8／P3-P5 路由／Toast 佔位／假資料／只寫未跑／舊電商殘留 |
+
+> ⚠️ **重要現況**：`services/api/real/**` 仍是全部 `notImplemented()`；
+> 四支核心雲函數仍是健康檢查骨架。**不要現在切 `apiMode='cloud'`**。
+
 ### 之後
 
 `P9`（整合測試與驗收）→ 未來有雲環境：`setup-db` → `probe-tx` → CloudDB 契約測試 → 切換 bootstrap。
@@ -411,6 +422,9 @@
 | **`docs/P7a-2a-T5-計畫.md`** | **T5（商品列表）逐檔計畫（✅ 已完成）**：現況診斷、純函式設計、搜尋／分類／排序／分頁、commit 切分、驗收 C1–C12 |
 | **`docs/P7a-2a-T6b-計畫.md`** | **T6b（客服詢問）逐檔計畫（✅ 已完成）**：inquiries schema、本機 Storage、P5 Use Case 契約、驗收 C1–C9 |
 | **`docs/P7a-2a-T7-計畫.md`** | **T7（結算頁）逐檔計畫（✅ 已完成）**：§3.8 契約、金額、地址、模擬提交、驗收 C0–C10 |
+| **`docs/05-上雲部署手冊.md`** | **上雲 SOP**：repair-test、setup-db、probe-tx、四支核心函數、契約測試、apiMode／CloudDB bootstrap |
+| **`docs/06-P6-微信支付預案.md`** | **P6 預案**：服務商分帳、PaymentGateway 擴充、回調驗簽／冪等、退款／回退流程圖 |
+| **`docs/07-上雲後待辦清單.md`** | **TODO 盤點**：P0／P6／P7b／P7a-2b／P8／Toast／假資料／只寫未跑／舊電商殘留 |
 | `docs/P1-計畫.md` / `P1-驗收報告.md` | P1 計畫與 23 項驗收 |
 | **`docs/SESSION-HANDOFF.md`** | **本文件** |
 

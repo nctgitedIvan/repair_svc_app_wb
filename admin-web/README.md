@@ -99,4 +99,5 @@ npm run dev
 - Mock 資料存在記憶體，重啟 server 會重置。
 - 尚未接 P2 CloudDB／P5 Use Cases；正式版由 P8 的 `admin-api` 取代 Mock Server。
 - 圖片上傳目前回傳 data URL／佔位圖；正式圖片上傳走雲存儲（P8 後續）。
-- 尚未實作退款審批、分帳、分類管理、權限組管理（下一階段）。
+- 退款審批、分帳、分類管理、權限管理已於第二階段完成（Mock）。
+- 尚未接真 `admin-api`／CloudDB；正式安全規範見 `docs/01` §4.9。
