@@ -1,11 +1,30 @@
 @import '../../../style/global.wxss';
 page {
   width: 100vw;
+  /*
+   * ⚠️ T6a.2（診斷報告 §3）：**最後一道防線**。
+   *
+   * 這一頁沒有它之前，只要任何一個元素超出 1rpx，整頁就能左右滑 ——
+   * 一滑，750rpx 的大圖看起來就像「被切掉」，貼右緣的文字也像「跑出頁面」。
+   * 真正的原因（固定寬度超出）已一併修掉；這一行是防止日後再犯。
+   */
+  overflow-x: hidden;
+}
+
+/* ⚠️ T6a.2：全域對 image 只設了 box-sizing／display，沒有寬度上限 */
+image {
+  max-width: 100%;
 }
 
 .goods-detail-page .goods-info {
   margin: 0 auto;
-  padding: 26rpx 0 28rpx 30rpx;
+  /*
+   * ⚠️ T6a.2：原本是 `padding: 26rpx 0 28rpx 30rpx`（**右邊 0**）——
+   * 那是 TDesign 假設「內容都是全寬圖」的寫法。這一頁現在大量靠右的文字
+   * （型別標籤、分享按鈕），右緣會直接貼到螢幕邊。
+   * 補上右 padding 30rpx 讓左右對稱（內容盒 750−60 = 690rpx）。
+   */
+  padding: 26rpx 30rpx 28rpx;
   background-color: #fff;
 }
 
@@ -105,6 +124,9 @@ page {
   color: #333333;
   line-height: 44rpx;
   white-space: pre-wrap;
+  /* T6a.2：中文會自然換行，但長英數（型號／URL）會撐出去；也是未來 detail_html 的前置 */
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 /* ⚠️ 以下（`.sold-num` 起）為已無對應節點的舊區塊樣式，見上方說明 */
@@ -157,7 +179,15 @@ page {
 }
 
 .goods-detail-page .goods-info .goods-title .goods-name {
-  width: 600rpx;
+  /*
+   * ⚠️ T6a.2：原本寫死 `width: 600rpx`，配上右側的分享按鈕（104rpx + 26rpx margin）
+   * ＝ 730rpx，而內容盒只有 720rpx → **超出 10rpx**。
+   * 改為讓它吃掉剩餘寬度；`min-width: 0` 是 flex 子項能正確縮到比內容窄的關鍵
+   * （否則長名稱會把整列撐開）。
+   */
+  flex: 1;
+  min-width: 0;
+  width: auto;
   font-weight: 500;
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -170,7 +200,9 @@ page {
 
 .goods-detail-page .goods-info .goods-title .goods-tag {
   width: 104rpx;
-  margin-left: 26rpx;
+  /* T6a.2：分享按鈕不參與壓縮，讓名稱去換行（名稱可縮、按鈕不可縮） */
+  flex-shrink: 0;
+  margin-left: 20rpx;
 }
 
 .goods-detail-page .goods-info .goods-title .goods-tag .shareBtn {
@@ -235,6 +267,8 @@ page {
 .spu-select .content {
   display: flex;
   flex: 1;
+  /* T6a.2：flex 子項加 min-width: 0，長規格名才不會把整列撐開 */
+  min-width: 0;
   justify-content: space-between;
   align-items: center;
 }

@@ -80,7 +80,14 @@
  */
 .bar-separately,
 .bar-buy {
-  width: 254rpx;
+  /*
+   * ⚠️ T6a.2（診斷報告 §1.3）：254rpx → **240rpx**。
+   * 2×110（左側圖示）＋ 2×240（按鈕）＝ 700rpx ≤ 718rpx（footer 扣掉 padding）
+   * → 原本的 728rpx 會超出 10rpx。
+   * `flex-shrink: 0`：按鈕不參與壓縮（文字不會被挤），改由左側圖示區收縮。
+   */
+  width: 240rpx;
+  flex-shrink: 0;
   height: 80rpx;
   color: #fff;
   display: flex;
