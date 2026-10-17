@@ -33,14 +33,15 @@ const ItemType = Object.freeze({
 });
 
 /**
- * 「加購」這個動作對一筆項目該做什麼（T3.6.1）。
+ * 「加購」這個動作對一筆項目該做什麼（T3.6.1；T5-3 補售完）。
  *
- * 三種結果，規則各有依據：
+ * 四種結果，規則各有依據：
  *
  * | 結果 | 條件 | 依據 |
  * |---|---|---|
- * | `ADD` | 零件、**沒有規格** | 可以直接寫入購物車，不需要再問什麼 |
- * | `CHOOSE_SPEC` | 零件、**有規格** | 直接加會漏掉規格（`prd-1` 有標準罐／大罐）→ 必須先選 |
+ * | `ADD` | 零件、**沒有規格**、未售完 | 可以直接寫入購物車，不需要再問什麼 |
+ * | `CHOOSE_SPEC` | 零件、**有規格**、未售完 | 直接加會漏掉規格（`prd-1` 有標準罐／大罐）→ 必須先選 |
+ * | `SOLD_OUT` | 零件、**整件售完** | 不管有沒有規格都先擋下（有規格也不必再選一個買不到的組合） |
  * | `SERVICE` | 服務 | §3.7.2：**服務永遠不進購物車**（`cart.addItem` 也會拒絕） |
  *
  * ⚠️ 這是**規則**，所以放在純函式裡並有測試 —— 畫面只負責照結果執行。
@@ -50,18 +51,25 @@ const ItemType = Object.freeze({
 const AddAction = Object.freeze({
   ADD: 'add',
   CHOOSE_SPEC: 'choose-spec',
+  SOLD_OUT: 'sold-out',
   SERVICE: 'service-not-cartable',
 });
 
 /**
  * 依項目決定加購行為。
  *
- * @param {{ itemType?: string, specCount?: number }} item 卡片 model 或原始項目
+ * @param {{ itemType?: string, specCount?: number, isSoldOut?: boolean, stock?: number,
+ *           specs?: Array, skus?: Array }} item 卡片 model 或原始項目
  * @returns {string|null} `AddAction` 的其中一個；`item` 為空時回 `null`
  */
 function addActionFor(item) {
   if (!item) return null;
   if (item.itemType === ItemType.SERVICE) return AddAction.SERVICE;
+
+  // 卡片 model 帶 isSoldOut；原始項目則用同一條規則即時算
+  const soldOut = typeof item.isSoldOut === 'boolean' ? item.isSoldOut : isSoldOutItem(item);
+  if (soldOut) return AddAction.SOLD_OUT;
+
   // 原始項目用 specs 陣列，卡片 model 用預先算好的 specCount
   const specCount = Number.isInteger(item.specCount)
     ? item.specCount

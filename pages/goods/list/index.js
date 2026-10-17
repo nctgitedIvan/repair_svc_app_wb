@@ -109,7 +109,7 @@ Page({
       console.warn('[goods-list] 載入目錄失敗', err);
       this.catalog = null;
       this.setData({ hasLoaded: true, loading: false, loadError: true, goodsList: [] });
-      Toast({ context: this, selector: '#t-toast', message: '列表載入失敗，請稍後再試', icon: '' });
+      Toast({ context: this, selector: '#t-toast', message: '列表載入失敗，請檢查網路後再試', icon: '' });
     }
   },
 
@@ -217,8 +217,8 @@ Page({
    * | 情況 | 行為 |
    * |---|---|
    * | 服務 | Toast（§3.7.2：服務永遠不進購物車） |
+   * | 零件、整件售完 | Toast「已售完」（T5-3：售完優先於選規格） |
    * | 零件、有規格 | 導向詳情頁選規格（T6a 已完成） |
-   * | 零件、無規格、已售完 | Toast「已售完」 |
    * | 零件、無規格 | 直接寫入本機購物車 |
    */
   handleAddCart(e) {
@@ -231,12 +231,12 @@ Page({
       Toast({ context: this, selector: '#t-toast', message: '服務請直接下單，無需加入購物車', icon: '' });
       return;
     }
-    if (action === catalogView.AddAction.CHOOSE_SPEC) {
-      this.navigateToDetail(card);
+    if (action === catalogView.AddAction.SOLD_OUT) {
+      Toast({ context: this, selector: '#t-toast', message: '此商品已售完', icon: '' });
       return;
     }
-    if (card.isSoldOut) {
-      Toast({ context: this, selector: '#t-toast', message: '此商品已售完', icon: '' });
+    if (action === catalogView.AddAction.CHOOSE_SPEC) {
+      this.navigateToDetail(card);
       return;
     }
 

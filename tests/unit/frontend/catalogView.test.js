@@ -193,6 +193,20 @@ test('addActionFor：加購行為的分流（T3.6.1）', async (t) => {
     assert.equal(view.addActionFor({ itemType: 'product' }), view.AddAction.ADD);
   });
 
+  await t.test('⚠️ T5-3：整件售完 → SOLD_OUT，且優先於「選規格」', () => {
+    assert.equal(view.addActionFor({ itemType: 'product', specCount: 0, isSoldOut: true }), view.AddAction.SOLD_OUT);
+    assert.equal(view.addActionFor({ itemType: 'product', specCount: 2, isSoldOut: true }), view.AddAction.SOLD_OUT);
+  });
+
+  await t.test('T5-3：原始項目沒有 isSoldOut 時，用庫存即時判斷', () => {
+    assert.equal(view.addActionFor({ itemType: 'product', specs: [], stock: 0 }), view.AddAction.SOLD_OUT);
+    assert.equal(view.addActionFor({ itemType: 'product', specs: [], stock: 2 }), view.AddAction.ADD);
+  });
+
+  await t.test('T5-3：服務即使標記售完也回 SERVICE（服務沒有售完概念）', () => {
+    assert.equal(view.addActionFor({ itemType: 'service', isSoldOut: true }), view.AddAction.SERVICE);
+  });
+
   await t.test('null/undefined → null（呼叫端自己防護）', () => {
     assert.equal(view.addActionFor(null), null);
     assert.equal(view.addActionFor(undefined), null);
@@ -205,6 +219,11 @@ test('addActionFor：加購行為的分流（T3.6.1）', async (t) => {
     const actions = cards.map((c) => view.addActionFor(c));
     assert.ok(actions.includes(view.AddAction.SERVICE), '冷氣維修是服務');
     assert.ok(actions.includes(view.AddAction.CHOOSE_SPEC), '冷媒 R410 有兩種規格');
+  });
+
+  await t.test('T5-3：真實資料的 prd-3（stock 0）→ SOLD_OUT', () => {
+    const card = view.toCardModel({ ...PRODUCTS.find((p) => p.productId === 'prd-3'), itemType: 'product' });
+    assert.equal(view.addActionFor(card), view.AddAction.SOLD_OUT);
   });
 });
 

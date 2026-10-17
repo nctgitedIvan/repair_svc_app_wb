@@ -142,11 +142,9 @@ Page({
    * | 情況 | 行為 |
    * |---|---|
    * | 零件、無規格 | 直接寫入本機購物車 |
-   * | 零件、有規格 | Toast 提示（⚠️ **T6a 完成後改為導向商品詳情選規格**） |
+   * | 零件、有規格 | **導向商品詳情選規格**（T5-3／M8；T6a 已完成） |
+   * | 零件、整件售完 | Toast「已售完」（T5-3） |
    * | 服務 | Toast 提示（§3.7.2：服務永遠不進購物車） |
-   *
-   * ⚠️ **「有規格 → 導向詳情頁」要等 T6a**：詳情頁目前對 `prd-*` 查不到資料
-   *    （見 `docs/P7a-2a-T3.6.1-診斷報告.md` §1.1），導過去只會看到 ¥0.00 的空白頁。
    */
   onAddCart(e) {
     const card = this.cardAt(e);
@@ -157,8 +155,13 @@ Page({
       Toast({ context: this, selector: '#t-toast', message: '服務請直接下單，無需加入購物車', icon: '' });
       return;
     }
+    if (action === catalogView.AddAction.SOLD_OUT) {
+      Toast({ context: this, selector: '#t-toast', message: '此商品已售完', icon: '' });
+      return;
+    }
     if (action === catalogView.AddAction.CHOOSE_SPEC) {
-      Toast({ context: this, selector: '#t-toast', message: '此商品有多種規格，請至商品詳情選擇', icon: '' });
+      // T6a 已完成：詳情頁可以選規格並加入購物車
+      wx.navigateTo({ url: `/pages/goods/details/index?productId=${card.id}` });
       return;
     }
 
