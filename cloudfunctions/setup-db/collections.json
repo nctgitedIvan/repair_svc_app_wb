@@ -182,6 +182,15 @@
     {
       "name": "audit_logs",
       "indexes": [
+        { "name": "chain_id", "unique": false, "fields": [{ "field": "chain_id", "order": "asc" }] },
+        {
+          "name": "chain_id_seq_unique",
+          "unique": true,
+          "fields": [
+            { "field": "chain_id", "order": "asc" },
+            { "field": "seq", "order": "asc" }
+          ]
+        },
         { "name": "operator_id", "unique": false, "fields": [{ "field": "operator_id", "order": "asc" }] },
         {
           "name": "target",

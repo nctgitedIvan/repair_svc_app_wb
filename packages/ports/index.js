@@ -14,6 +14,10 @@ const { OrderRepository } = require('./OrderRepository');
 const { UserRepository } = require('./UserRepository');
 const { UnitOfWork, UnitOfWorkTransaction } = require('./UnitOfWork');
 const { SettlementGateway, SettlementMode, SettlementStatus } = require('./SettlementGateway');
+const { IdSequenceRepository } = require('./IdSequenceRepository');
+const { AuditLogRepository } = require('./AuditLogRepository');
+const { SystemConfigRepository } = require('./SystemConfigRepository');
+const { CategoryRepository } = require('./CategoryRepository');
 
 module.exports = {
   ClockPort,
@@ -26,4 +30,8 @@ module.exports = {
   SettlementGateway,
   SettlementMode,
   SettlementStatus,
+  IdSequenceRepository,
+  AuditLogRepository,
+  SystemConfigRepository,
+  CategoryRepository,
 };
